@@ -1,0 +1,49 @@
+A clean, professional horizontal tech logo layout on a pure white background.
+ Left side: A minimalist 3D icon made of glowing Cyan (#00D4FF) glass and Deep Navy (#0B132B) matte metal. The icon is a simple, forward-moving abstract shape combining a lowercase “b”, an upward sweeping checkmark, and a glowing dot beneath it to represent the Persian letter “ب”. It conveys an affirmative “task completed” energy. Right side: clean, futuristic, minimalist sans-serif typography placeholder. Simple, fast brand recognition, premium corporate brand identity, crisp studio lighting, 8k.
+use the brand name for typography placeholder . 
+brand name in En : belboore 
+brand name in Fa : بل بوره
+
+
+The Color Pallet :
+
+Color Palette:
+
+Tech Blue
+Role: Primary Accent
+Hex: #0052FF
+Electric Cyan
+Role: Interactive Glow
+Hex: #00D4FF
+Ice-Slate
+Role: Canvas Light
+Hex: #FAF9FC
+Deep Navy
+Role: Canvas Dark
+Hex: #0B132B
+Slate Card Base
+Hex: #1C2541
+Obsidian Base
+Hex: #02040A
+
+On the right side, the English word "boore" should be combined with Persian.
+We use the English double "o" to combine it with the Persian "vaw" and "eh".
+So that on the left side we have an icon of Persian and English "bel"
+And on the right side we have English-Persian "bora".
+
+
+The concept and meaning of our brand name is to make things very easy and simple. Chill and finish your card. Fast and easy
+This feeling should be in the logo icon
+
+
+
+update the above prompt with these new context about color pallet and two notes for feeling like chill and do any thing and also the combining Fa and Eng typography
+
+
+
+
+---
+
+The Updated AI Prompt:
+
+A clean, fluid, and premium horizontal tech logo layout on a bright Ice-Slate (#FAF9FC) background. Left side: A highly minimalist, aerodynamic 3D icon combining a lowercase “b”, a sweeping Persian “ب” with a glowing dot beneath it, and an upward checkmark. The icon is made of glowing Electric Cyan (#00D4FF) glass and Tech Blue (#0052FF) matte metal. It features smooth, frictionless curves with no sharp edges, perfectly capturing a “chill, easy, fast, and task completed” energy. Right side: Futuristic Deep Navy (#0B132B) custom typography blending the English word “belboore” and Persian “بل بوره”. The typography creatively merges the English double “oo” in “boore” with the loops of the Persian letters “و” (vaw) and “ه” (eh), forming a seamless dual-language ligature. Minimalist corporate brand identity, effortless vibe, crisp studio lighting, 8k.
