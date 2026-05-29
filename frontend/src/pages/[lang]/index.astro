@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ToolCard from '../../components/ui/ToolCard.astro';
+import Icon from '../../components/icons/Icon.astro';
+import { isLang } from '../../i18n/config';
+import { makeSeo } from '../../lib/seo';
+import { tools } from '../../lib/tools';
+import { categories } from '../../lib/categories';
+import { SITE } from '../../data/site';
+import { websiteSchema } from '../../lib/schema';
+const lang = Astro.params.lang || 'fa';
+if (!isLang(lang)) throw new Error('invalid lang');
+export function getStaticPaths(){return [{params:{lang:'fa'}},{params:{lang:'en'}}];}
+const seo = makeSeo(lang, `/${lang}/`, lang==='fa'?'بل بوره | میز کار دیجیتال':'Belboore | Digital Work Desk', lang==='fa'?'همه ابزارهای دیجیتال ضروری در یکجا.':'All essential digital tools in one clean work desk.');
+const featured = tools.filter((t)=>t.featured && t.type==='built-in');
+const externals = tools.filter((t)=>t.type==='redirect');
+const siteSchema = websiteSchema(`${SITE.domain}/${lang}/`, 'Belboore', seo.description, lang);
+---
+<BaseLayout {...seo} lang={lang}>
+  <script type="application/ld+json" set:html={JSON.stringify(siteSchema)} />
+  <section class="hero">
+    <h1>{lang==='fa'?'همه ابزارهای دیجیتال ضروری، در یک میز کار ساده و همیشه دم دست':'All your essential digital tools, on one clean work desk'}</h1>
+    <p class="muted">{lang==='fa'?'جستجو، اجرا، و ادامه کار بدون پیچیدگی. رایگان و متن باز.':'Search, launch, and continue your workflow. Free and open-source.'}</p>
+    <div class="search"><Icon name="search" /><input id="search" placeholder={lang==='fa'?'ابزار مورد نظر را جستجو کنید...':'Search tools, tags, or use-cases...'} /></div>
+    <div id="hero-list" class="grid"></div>
+  </section>
+  <div class="section-title"><h2>{lang==='fa'?'ابزارهای ویژه':'Featured Tools'}</h2></div>
+  <div class="grid">{featured.map((t)=><ToolCard tool={t} lang={lang} />)}</div>
+  <div class="section-title"><h2>{lang==='fa'?'دسته بندی ها':'Categories'}</h2></div>
+  <div class="grid">{categories.map((c)=><a class="card" href={`/${lang}/categories/${c.slug}`}><span class="icon-wrap"><Icon name={c.slug} /></span><h3>{lang==='fa'?c.fa.title:c.en.title}</h3><p class="muted">{lang==='fa'?c.fa.description:c.en.description}</p></a>)}</div>
+  <div class="section-title"><h2>{lang==='fa'?'ابزارهای خارجی مفید':'Useful External Tools'}</h2></div>
+  <div class="grid">{externals.map((t)=><ToolCard tool={t} lang={lang} />)}</div>
+</BaseLayout>
+<script>
+  import { tools } from '../../lib/tools';
+  import { trackEvent } from '../../lib/analytics';
+  const q = document.getElementById('search');
+  const listNode = document.getElementById('hero-list');
+  const lang = location.pathname.split('/')[1];
+  const k='belboore-recent';
+  const title = (tool) => lang === 'fa' ? tool.fa.title : tool.en.title;
+  const card = (tool) => `<a class="card" href="/${lang}/tools/${tool.slug}">${title(tool)}</a>`;
+  const emptyRecent = `<div class="card muted">${lang==='fa'?'ابزار اخیر ندارید. از جستجو شروع کنید.':'No recent tools yet. Start by searching.'}</div>`;
+  const recent = JSON.parse(localStorage.getItem(k) || '[]').map((s)=>tools.find((x)=>x.slug===s)).filter(Boolean);
+  const showRecent = ()=> listNode.innerHTML = recent.length ? recent.map(card).join('') : emptyRecent;
+  const showSearch=(items)=> listNode.innerHTML = items.length ? items.slice(0,6).map(card).join('') : `<div class="card muted">${lang==='fa'?'نتیجه ای پیدا نشد.':'No matching tools found.'}</div>`;
+  showRecent();
+  q?.addEventListener('input',()=>{const v=q.value.trim().toLowerCase();if(!v){showRecent();return;}trackEvent('search_use',{query:v});showSearch(tools.filter(tool=>JSON.stringify(tool).toLowerCase().includes(v)));});
+</script>

@@ -1,0 +1,28 @@
+---
+import CategoryLayout from '../../../layouts/CategoryLayout.astro';
+import Icon from '../../../components/icons/Icon.astro';
+import ToolCard from '../../../components/ui/ToolCard.astro';
+import { categories } from '../../../lib/categories';
+import { tools } from '../../../lib/tools';
+import { isLang } from '../../../i18n/config';
+import { makeSeo } from '../../../lib/seo';
+import { SITE } from '../../../data/site';
+import { breadcrumbSchema, collectionPageSchema } from '../../../lib/schema';
+export function getStaticPaths(){return ['fa','en'].flatMap((lang)=>categories.map((c)=>({params:{lang,slug:c.slug}})));}
+const { lang='fa', slug='' } = Astro.params;
+if(!isLang(lang)) throw new Error('bad lang');
+const category = categories.find((c)=>c.slug===slug); if(!category) throw new Error('not found');
+const seo = makeSeo(lang, `/${lang}/categories/${slug}`, lang==='fa'?category.fa.seoTitle:category.en.seoTitle, lang==='fa'?category.fa.seoDescription:category.en.seoDescription);
+const list = tools.filter((t)=>t.categorySlug===slug);
+const cTitle = lang==='fa'?category.fa.title:category.en.title;
+const cDesc = lang==='fa'?category.fa.description:category.en.description;
+const collectionSchema = collectionPageSchema(`${SITE.domain}/${lang}/categories/${slug}`, cTitle, cDesc, lang);
+const crumbs = breadcrumbSchema([{name: lang==='fa'?'خانه':'Home', item:`${SITE.domain}/${lang}/`},{name: lang==='fa'?'دسته بندی ها':'Categories', item:`${SITE.domain}/${lang}/categories/${slug}`},{name:cTitle,item:`${SITE.domain}/${lang}/categories/${slug}`}]);
+---
+<CategoryLayout seo={seo} lang={lang}>
+  <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
+  <section class="hero"><span class="icon-wrap"><Icon name={slug} /></span><h1>{lang==='fa'?category.fa.title:category.en.title}</h1><p class="muted">{lang==='fa'?category.fa.description:category.en.description}</p></section>
+  <section><h2>{lang==='fa'?'ابزارهای این دسته':'Tools in this category'}</h2><div class="grid">{list.map((t)=><ToolCard tool={t} lang={lang} />)}</div></section>
+  {category.status==='coming-soon' && <section class="card"><h2>{lang==='fa'?'به زودی':'Coming soon'}</h2><p>{lang==='fa'?'این دسته در حال توسعه است. تا آن زمان ابزارهای مرتبط را بررسی کنید.':'This category is in progress. Explore adjacent tools in the meantime.'}</p><a href={`/${lang}/`}>{lang==='fa'?'بازگشت به ابزارها':'Browse available tools'}</a></section>}
+</CategoryLayout>

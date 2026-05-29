@@ -1,0 +1,18 @@
+---
+import Icon from '../icons/Icon.astro';
+const { tool, lang } = Astro.props;
+const text = lang === 'fa' ? tool.fa : tool.en;
+const logoBySlug: Record<string, string> = {
+  cach: '/logos/cach.png',
+  haamcall: '/logos/haamcall.png',
+};
+const logo = logoBySlug[tool.slug];
+---
+<a class="tool-card" href={`/${lang}/tools/${tool.slug}`}>
+  <span class="icon-wrap">
+    {logo ? <img src={logo} alt={text.title} class="tool-logo" loading="lazy" /> : <Icon name={tool.slug} />}
+  </span>
+  <h3>{text.title}</h3>
+  <p>{text.shortDescription}</p>
+  <span class="badge">{tool.type === 'redirect' ? (lang==='fa'?'خارجی':'External') : (lang==='fa'?'داخلی':'Built-in')}</span>
+</a>

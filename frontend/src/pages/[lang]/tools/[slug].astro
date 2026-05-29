@@ -1,0 +1,46 @@
+---
+import ToolLayout from '../../../layouts/ToolLayout.astro';
+import Icon from '../../../components/icons/Icon.astro';
+import ToolCard from '../../../components/ui/ToolCard.astro';
+import { tools } from '../../../lib/tools';
+import { isLang } from '../../../i18n/config';
+import { makeSeo } from '../../../lib/seo';
+import { SITE } from '../../../data/site';
+import { breadcrumbSchema, softwareToolSchema } from '../../../lib/schema';
+export function getStaticPaths(){return ['fa','en'].flatMap((lang)=>tools.map((t)=>({params:{lang,slug:t.slug}})));}
+const { lang='fa', slug='' } = Astro.params; if(!isLang(lang)) throw new Error('bad lang');
+const tool = tools.find((t)=>t.slug===slug); if(!tool) throw new Error('not found');
+const text = lang==='fa'?tool.fa:tool.en;
+const seo = makeSeo(lang, `/${lang}/tools/${slug}`, text.seoTitle, text.seoDescription);
+const related = tools.filter((t)=>tool.relatedToolSlugs.includes(t.slug));
+const appSchema = softwareToolSchema(`${SITE.domain}/${lang}/tools/${slug}`, lang, tool, text);
+const crumbs = breadcrumbSchema([{name: lang==='fa'?'خانه':'Home', item:`${SITE.domain}/${lang}/`},{name: lang==='fa'?'ابزارها':'Tools', item:`${SITE.domain}/${lang}/tools/${slug}`},{name:text.title,item:`${SITE.domain}/${lang}/tools/${slug}`}]);
+---
+<ToolLayout seo={seo} lang={lang}>
+  <script type="application/ld+json" set:html={JSON.stringify(appSchema)} />
+  <script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
+  <section class="hero">
+    <span class="icon-wrap"><Icon name={tool.slug} /></span>
+    <h1>{text.title}</h1><p class="muted">{text.longDescription}</p>
+  </section>
+  {tool.type==='redirect' ? <section class="card"><p>{lang==='fa'?'این ابزار خارجی است و در تب جدید باز می شود.':'This is an external tool and opens in a new tab.'}</p><a id="redirect-cta" href={tool.outboundUrl} target="_blank" rel="noopener noreferrer"><button>{lang==='fa'?'باز کردن ابزار خارجی':'Open External Tool'}</button></a></section> : <section class="card"><div data-tool={tool.slug}></div></section>}
+  <section class="card"><h2>{lang==='fa'?'نحوه استفاده':'How to use'}</h2><ul>{text.howTo.map((i)=><li>{i}</li>)}</ul></section>
+  <section><h2>{lang==='fa'?'ابزارهای مرتبط':'Related tools'}</h2><div class="grid">{related.map((t)=><ToolCard tool={t} lang={lang} />)}</div></section>
+</ToolLayout>
+<script>
+  import { trackEvent } from '../../../lib/analytics';
+  const slug = location.pathname.split('/').pop() || '';
+  trackEvent('tool_view',{slug});
+  const rk='belboore-recent';
+  const r = JSON.parse(localStorage.getItem(rk) || '[]').filter((s)=>s!==slug);
+  localStorage.setItem(rk, JSON.stringify([slug, ...r].slice(0,6)));
+  document.getElementById('redirect-cta')?.addEventListener('click',()=>trackEvent('redirect_click',{slug}));
+
+  const el=document.querySelector('[data-tool]'); if (!el) {}
+  else {
+    const s=el.getAttribute('data-tool');
+    if(s==='text-case-converter'){el.innerHTML='<textarea id="in" rows="7" placeholder="Paste text"></textarea><p><button id="lo">lowercase</button> <button id="up">UPPERCASE</button> <button id="ti">Title Case</button> <button id="se">Sentence case</button> <button id="cp">Copy</button> <button id="cl">Clear</button></p><div class="muted" id="meta"></div><pre id="out" class="tool-output"></pre>';const i=el.querySelector('#in'),o=el.querySelector('#out'),m=el.querySelector('#meta');const sync=()=>{const v=i.value;o.textContent=v;m.textContent=`${v.length} chars · ${v.trim()?v.trim().split(/\s+/).length:0} words`;};i.oninput=sync;sync();el.querySelector('#lo').onclick=()=>o.textContent=i.value.toLowerCase();el.querySelector('#up').onclick=()=>o.textContent=i.value.toUpperCase();el.querySelector('#ti').onclick=()=>o.textContent=i.value.replace(/\w\S*/g,t=>t[0].toUpperCase()+t.slice(1).toLowerCase());el.querySelector('#se').onclick=()=>o.textContent=i.value.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g,c=>c.toUpperCase());el.querySelector('#cp').onclick=()=>navigator.clipboard.writeText(o.textContent||'');el.querySelector('#cl').onclick=()=>{i.value='';sync();};}
+    if(s==='json-formatter-validator'){el.innerHTML='<textarea id="j" rows="11" placeholder="{\n  \"hello\": \"world\"\n}"></textarea><p><button id="fmt">Format</button> <button id="min">Minify</button> <button id="val">Validate</button> <button id="cp">Copy</button> <button id="cl">Clear</button></p><pre id="out" class="tool-output"></pre>';const j=el.querySelector('#j'),o=el.querySelector('#out');const parse=()=>JSON.parse(j.value);el.querySelector('#fmt').onclick=()=>{try{o.textContent=JSON.stringify(parse(),null,2);}catch(e){o.textContent=e.message;}};el.querySelector('#min').onclick=()=>{try{o.textContent=JSON.stringify(parse());}catch(e){o.textContent=e.message;}};el.querySelector('#val').onclick=()=>{try{parse();o.textContent='Valid JSON';}catch(e){o.textContent=e.message;}};el.querySelector('#cp').onclick=()=>navigator.clipboard.writeText(o.textContent||'');el.querySelector('#cl').onclick=()=>{j.value='';o.textContent='';};}
+    if(['image-compressor','image-converter','image-resizer'].includes(s)){el.innerHTML='<label class="card">Drop image or choose file<input id="file" type="file" accept="image/*" /></label><p><select id="fmt"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option><option value="image/webp">WEBP</option></select> <input id="quality" type="range" min="0.2" max="1" step="0.1" value="0.8" /> <button id="run">Process</button></p><canvas id="cv" style="max-width:100%"></canvas><p class="muted" id="stats"></p><a id="dl"></a>';const f=el.querySelector('#file'),cv=el.querySelector('#cv'),ctx=cv.getContext('2d'),fmt=el.querySelector('#fmt'),quality=el.querySelector('#quality'),stats=el.querySelector('#stats'),dl=el.querySelector('#dl');el.querySelector('#run').onclick=()=>{const file=f.files?.[0];if(!file)return;const img=new Image();img.onload=()=>{let w=img.width,h=img.height;if(s==='image-resizer'){w=Math.round(w*0.7);h=Math.round(h*0.7);}cv.width=w;cv.height=h;ctx.drawImage(img,0,0,w,h);const q=s==='image-compressor'?Number(quality.value):0.95;const t=s==='image-converter'?fmt.value:'image/jpeg';const out=cv.toDataURL(t,q);dl.href=out;dl.download='belboore-output';dl.textContent='Download output';stats.textContent=`${Math.round(file.size/1024)}KB → ~${Math.round((out.length*3/4)/1024)}KB`;};img.src=URL.createObjectURL(file);};}
+  }
+</script>

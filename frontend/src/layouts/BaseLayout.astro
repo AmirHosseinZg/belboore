@@ -1,0 +1,24 @@
+---
+import '../styles/global.css';
+import AppHeader from '../components/ui/AppHeader.astro';
+import AppFooter from '../components/ui/AppFooter.astro';
+const { title, description, lang, canonical, alternates, ogImage='/favicon.svg' } = Astro.props;
+---
+<html lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:type" content="website" /><meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href={canonical} />
+    {alternates?.map((a) => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={alternates?.[0]?.href} />
+  </head>
+  <body>
+    <AppHeader lang={lang} pathname={Astro.url.pathname} />
+    <main class="container main"><slot /></main>
+    <AppFooter lang={lang} />
+  </body>
+</html>
