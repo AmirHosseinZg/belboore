@@ -1,8 +1,133 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { makeSeo } from '../../lib/seo'; import { isLang } from '../../i18n/config';
-export function getStaticPaths(){return [{params:{lang:'fa'}},{params:{lang:'en'}}];}
-const lang=Astro.params.lang||'fa'; if(!isLang(lang)) throw new Error('bad lang');
-const seo=makeSeo(lang,`/${lang}/about`,lang==='fa'?'درباره بل بوره':'About Belboore',lang==='fa'?'پلتفرم ابزار دیجیتال رایگان و متن باز.':'Free and open-source digital toolbox platform.');
+import { ui } from '../../i18n/ui';
+import type { Lang } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/about`;
 ---
-<BaseLayout {...seo} lang={lang}><h1>{lang==='fa'?'درباره بل بوره':'About Belboore'}</h1><p>{lang==='fa'?'بل بوره یک جعبه ابزار دیجیتال رایگان و متن باز است.':'Belboore is a free open-source digital toolbox.'}</p></BaseLayout>
+
+<BaseLayout
+  lang={lang}
+  pathname={pathname}
+  title={t['about.heading']}
+  description={t['about.description']}
+>
+  <div class="page" dir={dir}>
+    <div class="container">
+      <header class="page-header">
+        <h1 class="page-header__title">{t['about.heading']}</h1>
+        <p class="page-header__desc">{t['about.description']}</p>
+      </header>
+
+      <div class="about-grid">
+        <div class="about-card surface-card">
+          <div class="about-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-tech-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <h2 class="about-card__title">{t['about.mission']}</h2>
+          <p class="about-card__text">{t['about.mission.text']}</p>
+        </div>
+
+        <div class="about-card surface-card">
+          <div class="about-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-tech-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+            </svg>
+          </div>
+          <h2 class="about-card__title">{t['about.openSource']}</h2>
+          <p class="about-card__text">{t['about.openSource.text']}</p>
+        </div>
+
+        <div class="about-card surface-card">
+          <div class="about-card__icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--color-tech-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+          </div>
+          <h2 class="about-card__title">{t['about.bilingual']}</h2>
+          <p class="about-card__text">{t['about.bilingual.text']}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: var(--space-12);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-12);
+    text-align: center;
+  }
+
+  .page-header__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-extrabold);
+    margin-bottom: var(--space-4);
+  }
+
+  .page-header__desc {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: var(--leading-relaxed);
+  }
+
+  .about-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .about-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    padding: var(--space-8);
+  }
+
+  .about-card__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--color-tech-blue-subtle);
+  }
+
+  .about-card__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+  }
+
+  .about-card__text {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin: 0;
+  }
+
+  @media (max-width: 768px) {
+    .about-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

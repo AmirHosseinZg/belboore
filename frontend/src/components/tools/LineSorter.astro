@@ -1,0 +1,104 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="Line Sorter">
+  <ToolPrimitives />
+  <ToolUtils />
+  <div class="tool-toolbar">
+    <div class="tool-field" style="flex: 0 0 auto;">
+      <label class="tool-field__label" for="ls-order">Sort Order</label>
+      <select id="ls-order" class="tool-select">
+        <option value="alpha-asc">Alphabetical (A-Z)</option>
+        <option value="alpha-desc">Alphabetical (Z-A)</option>
+        <option value="len-asc">By Length (short&rarr;long)</option>
+        <option value="len-desc">By Length (long&rarr;short)</option>
+        <option value="random">Random</option>
+      </select>
+    </div>
+    <label class="tool-checkbox">
+      <input type="checkbox" id="ls-unique" />
+      Remove duplicate lines
+    </label>
+    <label class="tool-checkbox">
+      <input type="checkbox" id="ls-trim" checked />
+      Trim whitespace
+    </label>
+  </div>
+  <div class="tool-toolbar">
+    <button type="button" id="ls-sort" class="tool-btn tool-btn--primary">Sort</button>
+    <button type="button" id="ls-copy" class="tool-btn">Copy</button>
+    <button type="button" id="ls-clear" class="tool-btn">Clear</button>
+  </div>
+  <div class="tool-grid-2">
+    <div class="tool-field">
+      <label class="tool-field__label" for="ls-input">Input</label>
+      <textarea id="ls-input" class="tool-textarea" placeholder="Enter lines to sort, one per line..."></textarea>
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="ls-output">Output</label>
+      <div id="ls-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Sorted lines will appear here</div>
+    </div>
+  </div>
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    All processing happens in your browser. Your data is never uploaded.
+  </div>
+</ToolWorkspace>
+
+<script>
+  const lsInput = document.getElementById('ls-input') as HTMLTextAreaElement;
+  const lsOutput = document.getElementById('ls-output')!;
+  const lsOrder = document.getElementById('ls-order') as HTMLSelectElement;
+  const lsUnique = document.getElementById('ls-unique') as HTMLInputElement;
+  const lsTrim = document.getElementById('ls-trim') as HTMLInputElement;
+
+  function shuffleArr(arr: string[]): string[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function sort() {
+    const val = lsInput.value;
+    let lines = val.split('\n');
+
+    if (lsTrim.checked) lines = lines.map((l) => l.trim());
+    if (lsUnique.checked) lines = [...new Set(lines)];
+
+    const order = lsOrder.value;
+    if (order === 'alpha-asc') {
+      lines.sort((a, b) => a.localeCompare(b));
+    } else if (order === 'alpha-desc') {
+      lines.sort((a, b) => b.localeCompare(a));
+    } else if (order === 'len-asc') {
+      lines.sort((a, b) => a.length - b.length);
+    } else if (order === 'len-desc') {
+      lines.sort((a, b) => b.length - a.length);
+    } else if (order === 'random') {
+      lines = shuffleArr(lines);
+    }
+
+    const result = lines.join('\n');
+    if (!result) { window.__belbooreTools.showEmpty(lsOutput, 'Sorted lines will appear here'); return; }
+    window.__belbooreTools.showOutput(lsOutput, result);
+  }
+
+  document.getElementById('ls-sort')!.addEventListener('click', sort);
+
+  document.getElementById('ls-copy')!.addEventListener('click', async () => {
+    const text = lsOutput.textContent || '';
+    if (!text || lsOutput.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, document.getElementById('ls-copy')!, 1500);
+  });
+
+  document.getElementById('ls-clear')!.addEventListener('click', () => {
+    lsInput.value = '';
+    window.__belbooreTools.showEmpty(lsOutput, 'Sorted lines will appear here');
+  });
+</script>

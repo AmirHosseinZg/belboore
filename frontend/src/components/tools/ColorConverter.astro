@@ -1,0 +1,217 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="Color Converter">
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="tool-toolbar">
+    <label class="tool-field__label" for="cc-input">Color Value</label>
+    <input id="cc-input" class="tool-input" placeholder="#3b82f6" value="#3b82f6" aria-label="Color value" />
+    <select id="cc-format" class="tool-select">
+      <option value="hex" selected>HEX (#fff)</option>
+      <option value="rgb">RGB</option>
+      <option value="hsl">HSL</option>
+    </select>
+    <button id="cc-convert" type="button" class="tool-btn tool-btn--primary">Convert</button>
+  </div>
+  <div id="cc-error" class="tool-error" style="display: none;"></div>
+  <div id="cc-swatch" class="tool-swatch" style="display: none;"></div>
+  <div id="cc-results" class="tool-grid-2" style="margin-top: var(--space-4);">
+    <div class="tool-result">
+      <div class="tool-result__value" id="cc-hex">#3b82f6</div>
+      <div class="tool-result__label">HEX</div>
+      <button class="tool-btn tool-btn--ghost cc-copy-btn" type="button" data-target="cc-hex" style="margin-top: var(--space-2);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="cc-rgb">rgb(59, 130, 246)</div>
+      <div class="tool-result__label">RGB</div>
+      <button class="tool-btn tool-btn--ghost cc-copy-btn" type="button" data-target="cc-rgb" style="margin-top: var(--space-2);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="cc-hsl">hsl(217, 91%, 60%)</div>
+      <div class="tool-result__label">HSL</div>
+      <button class="tool-btn tool-btn--ghost cc-copy-btn" type="button" data-target="cc-hsl" style="margin-top: var(--space-2);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="cc-hsv">hsv(217, 76%, 96%)</div>
+      <div class="tool-result__label">HSV</div>
+      <button class="tool-btn tool-btn--ghost cc-copy-btn" type="button" data-target="cc-hsv" style="margin-top: var(--space-2);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy
+      </button>
+    </div>
+  </div>
+</ToolWorkspace>
+
+<style>
+  .tool-swatch {
+    width: 100%;
+    height: 48px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    margin-top: var(--space-4);
+  }
+</style>
+
+<script>
+  const ccInput = document.getElementById('cc-input') as HTMLInputElement;
+  const ccFormat = document.getElementById('cc-format') as HTMLSelectElement;
+  const ccError = document.getElementById('cc-error')!;
+  const ccSwatch = document.getElementById('cc-swatch')!;
+  const ccHex = document.getElementById('cc-hex')!;
+  const ccRgb = document.getElementById('cc-rgb')!;
+  const ccHsl = document.getElementById('cc-hsl')!;
+  const ccHsv = document.getElementById('cc-hsv')!;
+
+  function parseHex(v: string) {
+    v = v.trim().replace(/^#/, '');
+    if (v.length === 3) v = v[0] + v[0] + v[1] + v[1] + v[2] + v[2];
+    if (!/^[0-9a-fA-F]{6}$/.test(v)) return null;
+    return { r: parseInt(v.slice(0, 2), 16), g: parseInt(v.slice(2, 4), 16), b: parseInt(v.slice(4, 6), 16) };
+  }
+
+  function parseRgbStr(v: string) {
+    v = v.trim();
+    const m = v.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+    if (m) return { r: clamp(parseInt(m[1]), 0, 255), g: clamp(parseInt(m[2]), 0, 255), b: clamp(parseInt(m[3]), 0, 255) };
+    return null;
+  }
+
+  function parseHslStr(v: string) {
+    v = v.trim();
+    const m = v.match(/hsl\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*\)/);
+    if (m) return hslToRgb(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]));
+    return null;
+  }
+
+  function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)); }
+
+  function rgbToHsl(r: number, g: number, b: number) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s: number, l = (max + min) / 2;
+    if (max === min) { h = s = 0; }
+    else {
+      const d = max - min;
+      s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+  }
+
+  function rgbToHsv(r: number, g: number, b: number) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s: number, v = max;
+    const d = max - min;
+    s = max === 0 ? 0 : d / max;
+    if (max !== min) {
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
+  }
+
+  function hslToRgb(h: number, s: number, l: number) {
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; }
+    else if (h < 120) { r = x; g = c; }
+    else if (h < 180) { g = c; b = x; }
+    else if (h < 240) { g = x; b = c; }
+    else if (h < 300) { r = x; b = c; }
+    else { r = c; b = x; }
+    return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+  }
+
+  function componentToHex(c: number) {
+    const hex = c.toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  }
+
+  function rgbToHexStr(r: number, g: number, b: number) {
+    return '#' + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  }
+
+  function convertColor() {
+    const raw = ccInput.value;
+    const fmt = ccFormat.value;
+    let rgb: { r: number; g: number; b: number } | null = null;
+
+    if (!raw.trim()) {
+      ccHex.textContent = '\u2014';
+      ccRgb.textContent = '\u2014';
+      ccHsl.textContent = '\u2014';
+      ccHsv.textContent = '\u2014';
+      ccSwatch.style.display = 'none';
+      window.__belbooreTools.clearErrorBox(ccError);
+      return;
+    }
+
+    if (fmt === 'hex') {
+      rgb = parseHex(raw);
+      if (!rgb) {
+        rgb = parseRgbStr(raw) || parseHslStr(raw);
+      }
+    } else if (fmt === 'rgb') {
+      rgb = parseRgbStr(raw);
+    } else if (fmt === 'hsl') {
+      rgb = parseHslStr(raw);
+    }
+
+    if (!rgb) {
+      window.__belbooreTools.setErrorBox(ccError, 'Invalid color format. Use #RGB, #RRGGBB, rgb(r,g,b), or hsl(h,s%,l%)');
+      ccSwatch.style.display = 'none';
+      return;
+    }
+    window.__belbooreTools.clearErrorBox(ccError);
+
+    const { r, g, b } = rgb;
+    const hexStr = rgbToHexStr(r, g, b);
+    const hsl = rgbToHsl(r, g, b);
+    const hsv = rgbToHsv(r, g, b);
+
+    ccHex.textContent = hexStr;
+    ccRgb.textContent = 'rgb(' + r + ', ' + g + ', ' + b + ')';
+    ccHsl.textContent = 'hsl(' + hsl.h + ', ' + hsl.s + '%, ' + hsl.l + '%)';
+    ccHsv.textContent = 'hsv(' + hsv.h + ', ' + hsv.s + '%, ' + hsv.v + '%)';
+
+    ccSwatch.style.display = '';
+    ccSwatch.style.backgroundColor = hexStr;
+  }
+
+  document.getElementById('cc-convert')!.addEventListener('click', convertColor);
+  ccInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') convertColor(); });
+  ccFormat.addEventListener('change', convertColor);
+
+  document.querySelectorAll('.cc-copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const targetId = (this as HTMLElement).getAttribute('data-target');
+      const el = document.getElementById(targetId!);
+      const text = el ? el.textContent : '';
+      if (!text || text === '\u2014') return;
+      window.__belbooreTools.copyToClipboard(text, btn as HTMLElement, 1500);
+    });
+  });
+
+  convertColor();
+</script>

@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ui } from '../../i18n/ui';
+import type { Lang } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/404`;
+---
+
+<BaseLayout
+  lang={lang}
+  pathname={pathname}
+  title={t['error.notFound']}
+  description={t['error.notFoundMessage']}
+  noIndex
+>
+  <div class="not-found" dir={dir}>
+    <div class="container">
+      <div class="not-found__content">
+        <span class="not-found__code">404</span>
+        <h1 class="not-found__title">{t['error.notFound']}</h1>
+        <p class="not-found__message">{t['error.notFoundMessage']}</p>
+        <a href={`/${lang}/`} class="btn btn-primary btn-lg">
+          {t['error.goHome']}
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .not-found {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding-block: var(--space-20);
+  }
+
+  .not-found__content {
+    text-align: center;
+  }
+
+  .not-found__code {
+    display: block;
+    font-size: clamp(6rem, 15vw, 10rem);
+    font-weight: var(--weight-extrabold);
+    line-height: 1;
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-electric-cyan));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-4);
+  }
+
+  .not-found__title {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-4);
+  }
+
+  .not-found__message {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-8);
+  }
+</style>

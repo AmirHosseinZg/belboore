@@ -1,0 +1,199 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="Unit Converter">
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="tool-toolbar">
+    <label class="tool-field__label" for="uc-category">Category</label>
+    <select id="uc-category" class="tool-select">
+      <option value="length" selected>Length</option>
+      <option value="weight">Weight</option>
+      <option value="temperature">Temperature</option>
+      <option value="area">Area</option>
+      <option value="volume">Volume</option>
+      <option value="speed">Speed</option>
+      <option value="time">Time</option>
+    </select>
+  </div>
+  <div class="tool-grid-2">
+    <div class="tool-field">
+      <label class="tool-field__label" for="uc-from-val">From</label>
+      <input id="uc-from-val" class="tool-input" type="number" value="1" step="any" />
+      <select id="uc-from-unit" class="tool-select" style="margin-top: var(--space-2);"></select>
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="uc-to-unit">To</label>
+      <div id="uc-to-result" class="tool-result__value" role="status" aria-live="polite" style="padding: var(--space-2) 0; min-height: 2em;">—</div>
+      <select id="uc-to-unit" class="tool-select" style="margin-top: var(--space-2);"></select>
+    </div>
+  </div>
+  <div id="uc-empty" class="tool-output tool-output--empty" style="margin-top: var(--space-4);">Enter a value to convert</div>
+  <div class="tool-toolbar" style="margin-top: var(--space-3);">
+    <button id="uc-copy" type="button" class="tool-btn">Copy</button>
+    <button id="uc-clear" type="button" class="tool-btn">Clear</button>
+  </div>
+</ToolWorkspace>
+
+<script>
+  const units: Record<string, { name: string; key: string; toBase: number | ((v: number) => number); fromBase?: (v: number) => number }[]> = {
+    length: [
+      { name: 'Millimeter', key: 'mm', toBase: 0.001 },
+      { name: 'Centimeter', key: 'cm', toBase: 0.01 },
+      { name: 'Meter', key: 'm', toBase: 1 },
+      { name: 'Kilometer', key: 'km', toBase: 1000 },
+      { name: 'Inch', key: 'inch', toBase: 0.0254 },
+      { name: 'Foot', key: 'foot', toBase: 0.3048 },
+      { name: 'Yard', key: 'yard', toBase: 0.9144 },
+      { name: 'Mile', key: 'mile', toBase: 1609.344 },
+    ],
+    weight: [
+      { name: 'Milligram', key: 'mg', toBase: 0.000001 },
+      { name: 'Gram', key: 'g', toBase: 0.001 },
+      { name: 'Kilogram', key: 'kg', toBase: 1 },
+      { name: 'Ton', key: 'ton', toBase: 1000 },
+      { name: 'Ounce', key: 'oz', toBase: 0.0283495 },
+      { name: 'Pound', key: 'lb', toBase: 0.453592 },
+    ],
+    temperature: [
+      {
+        name: 'Celsius', key: 'celsius',
+        toBase: function (v: number) { return v; },
+        fromBase: function (v: number) { return v; },
+      },
+      {
+        name: 'Fahrenheit', key: 'fahrenheit',
+        toBase: function (v: number) { return (v - 32) * 5 / 9; },
+        fromBase: function (v: number) { return v * 9 / 5 + 32; },
+      },
+      {
+        name: 'Kelvin', key: 'kelvin',
+        toBase: function (v: number) { return v - 273.15; },
+        fromBase: function (v: number) { return v + 273.15; },
+      },
+    ],
+    area: [
+      { name: 'Square Meter', key: 'm2', toBase: 1 },
+      { name: 'Square Kilometer', key: 'km2', toBase: 1000000 },
+      { name: 'Hectare', key: 'ha', toBase: 10000 },
+      { name: 'Acre', key: 'acre', toBase: 4046.86 },
+      { name: 'Square Foot', key: 'ft2', toBase: 0.092903 },
+    ],
+    volume: [
+      { name: 'Milliliter', key: 'ml', toBase: 0.000001 },
+      { name: 'Liter', key: 'l', toBase: 0.001 },
+      { name: 'Cubic Meter', key: 'm3', toBase: 1 },
+      { name: 'Gallon', key: 'gallon', toBase: 0.00378541 },
+      { name: 'Cubic Foot', key: 'ft3', toBase: 0.0283168 },
+    ],
+    speed: [
+      { name: 'Meter per second', key: 'ms', toBase: 1 },
+      { name: 'Kilometer per hour', key: 'kmh', toBase: 0.277778 },
+      { name: 'Mile per hour', key: 'mph', toBase: 0.44704 },
+      { name: 'Knot', key: 'knot', toBase: 0.514444 },
+    ],
+    time: [
+      { name: 'Millisecond', key: 'ms', toBase: 0.001 },
+      { name: 'Second', key: 'sec', toBase: 1 },
+      { name: 'Minute', key: 'min', toBase: 60 },
+      { name: 'Hour', key: 'hour', toBase: 3600 },
+      { name: 'Day', key: 'day', toBase: 86400 },
+      { name: 'Week', key: 'week', toBase: 604800 },
+      { name: 'Month (30d)', key: 'month', toBase: 2592000 },
+      { name: 'Year (365d)', key: 'year', toBase: 31536000 },
+    ],
+  };
+
+  const ucCategory = document.getElementById('uc-category') as HTMLSelectElement;
+  const ucFromVal = document.getElementById('uc-from-val') as HTMLInputElement;
+  const ucFromUnit = document.getElementById('uc-from-unit') as HTMLSelectElement;
+  const ucToResult = document.getElementById('uc-to-result')!;
+  const ucToUnit = document.getElementById('uc-to-unit') as HTMLSelectElement;
+  const ucEmpty = document.getElementById('uc-empty')!;
+  const ucCopy = document.getElementById('uc-copy')!;
+  const ucClear = document.getElementById('uc-clear')!;
+
+  function populateUnits(cat: string) {
+    const list = units[cat];
+    let html = '';
+    for (let i = 0; i < list.length; i++) {
+      html += '<option value="' + list[i].key + '">' + list[i].name + '</option>';
+    }
+    ucFromUnit.innerHTML = html;
+    ucToUnit.innerHTML = html;
+    if (cat === 'temperature') {
+      ucToUnit.selectedIndex = 1;
+    } else if (list.length > 1) {
+      ucToUnit.selectedIndex = 1;
+    }
+  }
+
+  function convert() {
+    const cat = ucCategory.value;
+    const val = parseFloat(ucFromVal.value);
+
+    if (isNaN(val)) {
+      ucToResult.textContent = '—';
+      ucEmpty.style.display = '';
+      return;
+    }
+    ucEmpty.style.display = 'none';
+
+    const list = units[cat];
+    let fromUnit: typeof list[0] | null = null, toUnit: typeof list[0] | null = null;
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].key === ucFromUnit.value) fromUnit = list[i];
+      if (list[i].key === ucToUnit.value) toUnit = list[i];
+    }
+    if (!fromUnit || !toUnit) {
+      ucToResult.textContent = '—';
+      return;
+    }
+
+    let result: number;
+    if (typeof fromUnit.toBase === 'function') {
+      const base = (fromUnit.toBase as (v: number) => number)(val);
+      result = (toUnit.fromBase as (v: number) => number)(base);
+    } else {
+      const base = val * (fromUnit.toBase as number);
+      result = base / (toUnit.toBase as number);
+    }
+
+    ucToResult.textContent = formatNum(result);
+  }
+
+  function formatNum(n: number) {
+    if (Math.abs(n) < 1e-10) return '0';
+    if (Math.abs(n) >= 1e6 || (Math.abs(n) < 0.000001 && n !== 0)) return n.toExponential(6);
+    return parseFloat(n.toPrecision(12)).toString();
+  }
+
+  populateUnits(ucCategory.value);
+
+  ucCategory.addEventListener('change', function () {
+    populateUnits(ucCategory.value);
+    convert();
+  });
+
+  ucFromVal.addEventListener('input', convert);
+  ucFromUnit.addEventListener('change', convert);
+  ucToUnit.addEventListener('change', convert);
+
+  ucCopy.addEventListener('click', function () {
+    const text = ucToResult.textContent || '';
+    if (!text || text === '—') return;
+    window.__belbooreTools.copyToClipboard(text, ucCopy as HTMLElement, 1500);
+  });
+
+  ucClear.addEventListener('click', function () {
+    ucFromVal.value = '';
+    ucToResult.textContent = '—';
+    ucEmpty.style.display = '';
+  });
+
+  convert();
+</script>

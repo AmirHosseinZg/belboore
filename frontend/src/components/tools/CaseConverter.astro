@@ -1,0 +1,102 @@
+---
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolWorkspace from './ToolWorkspace.astro';
+---
+
+<ToolPrimitives />
+<ToolUtils />
+
+<ToolWorkspace title="Case Converter">
+  <div class="tool-toolbar">
+    <button type="button" id="cc-upper" class="tool-btn tool-btn--primary">UPPERCASE</button>
+    <button type="button" id="cc-lower" class="tool-btn">lowercase</button>
+    <button type="button" id="cc-title" class="tool-btn">Title Case</button>
+    <button type="button" id="cc-sentence" class="tool-btn">Sentence case</button>
+    <button type="button" id="cc-camel" class="tool-btn">camelCase</button>
+    <button type="button" id="cc-pascal" class="tool-btn">PascalCase</button>
+    <button type="button" id="cc-snake" class="tool-btn">snake_case</button>
+    <button type="button" id="cc-kebab" class="tool-btn">kebab-case</button>
+  </div>
+  <div class="tool-toolbar">
+    <button type="button" id="cc-copy" class="tool-btn">Copy</button>
+    <button type="button" id="cc-clear" class="tool-btn">Clear</button>
+  </div>
+  <div class="tool-grid-2">
+    <div class="tool-field">
+      <label class="tool-field__label" for="cc-input">Input</label>
+      <textarea id="cc-input" class="tool-textarea" placeholder="Type or paste your text here..."></textarea>
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="cc-output">Output</label>
+      <div id="cc-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Converted text will appear here</div>
+    </div>
+  </div>
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    All processing happens in your browser. Your data is never uploaded.
+  </div>
+</ToolWorkspace>
+
+<script>
+  const ciInput = document.getElementById('cc-input') as HTMLTextAreaElement;
+  const ciOutput = document.getElementById('cc-output')!;
+
+  function showOutput(text: string) {
+    window.__belbooreTools.showOutput(ciOutput, text);
+  }
+  function showEmpty(text: string) {
+    window.__belbooreTools.showEmpty(ciOutput, text);
+  }
+  function getText(): string { return ciInput.value; }
+
+  function toTitleCase(s: string): string {
+    return s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  }
+
+  function toSentenceCase(s: string): string {
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+
+  function toCamelCase(s: string): string {
+    return s.replace(/(?:^\w|[A-Z]|\b\w)/g, (m, i) => i === 0 ? m.toLowerCase() : m.toUpperCase()).replace(/\s+/g, '');
+  }
+
+  function toPascalCase(s: string): string {
+    return s.replace(/(?:^\w|[A-Z]|\b\w)/g, (m) => m.toUpperCase()).replace(/\s+/g, '');
+  }
+
+  function toSnakeCase(s: string): string {
+    return s.toLowerCase().replace(/\s+/g, '_');
+  }
+
+  function toKebabCase(s: string): string {
+    return s.toLowerCase().replace(/\s+/g, '-');
+  }
+
+  function convert(fn: (s: string) => string) {
+    const val = getText().trim();
+    if (!val) { showEmpty('Converted text will appear here'); return; }
+    showOutput(fn(val));
+  }
+
+  document.getElementById('cc-upper')!.addEventListener('click', () => convert((s) => s.toUpperCase()));
+  document.getElementById('cc-lower')!.addEventListener('click', () => convert((s) => s.toLowerCase()));
+  document.getElementById('cc-title')!.addEventListener('click', () => convert(toTitleCase));
+  document.getElementById('cc-sentence')!.addEventListener('click', () => convert(toSentenceCase));
+  document.getElementById('cc-camel')!.addEventListener('click', () => convert(toCamelCase));
+  document.getElementById('cc-pascal')!.addEventListener('click', () => convert(toPascalCase));
+  document.getElementById('cc-snake')!.addEventListener('click', () => convert(toSnakeCase));
+  document.getElementById('cc-kebab')!.addEventListener('click', () => convert(toKebabCase));
+
+  document.getElementById('cc-copy')!.addEventListener('click', () => {
+    const text = ciOutput.textContent || '';
+    if (!text || ciOutput.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, document.getElementById('cc-copy')!, 1500);
+  });
+
+  document.getElementById('cc-clear')!.addEventListener('click', () => {
+    ciInput.value = '';
+    showEmpty('Converted text will appear here');
+  });
+</script>

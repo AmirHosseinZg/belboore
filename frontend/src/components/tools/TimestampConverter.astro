@@ -1,0 +1,131 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="Timestamp Converter">
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="tool-toolbar">
+    <div class="tool-field" style="flex: 1;">
+      <label class="tool-field__label" for="tc-ts">Unix Timestamp (seconds)</label>
+      <input id="tc-ts" class="tool-input" type="number" placeholder="e.g. 1717171200" />
+    </div>
+    <div class="tool-field" style="flex: 1;">
+      <label class="tool-field__label" for="tc-date">Human-readable Date</label>
+      <input id="tc-date" class="tool-input" type="datetime-local" />
+    </div>
+    <button id="tc-now" type="button" class="tool-btn tool-btn--primary">Now</button>
+  </div>
+  <div id="tc-output" class="tool-output tool-output--empty" style="margin-top: var(--space-4);" role="status" aria-live="polite">Enter a timestamp or pick a date</div>
+  <div class="tool-toolbar" style="margin-top: var(--space-3);">
+    <button id="tc-copy" type="button" class="tool-btn">Copy</button>
+  </div>
+</ToolWorkspace>
+
+<script>
+  const tcTs = document.getElementById('tc-ts') as HTMLInputElement;
+  const tcDate = document.getElementById('tc-date') as HTMLInputElement;
+  const tcNow = document.getElementById('tc-now')!;
+  const tcOutput = document.getElementById('tc-output')!;
+  const tcCopy = document.getElementById('tc-copy')!;
+
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function pad(n: number) { return n < 10 ? '0' + n : '' + n; }
+
+  function toLocalISO(d: Date) {
+    const off = d.getTimezoneOffset();
+    const sign = off <= 0 ? '+' : '-';
+    const abs = Math.abs(off);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) +
+      'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()) +
+      sign + pad(Math.floor(abs / 60)) + ':' + pad(abs % 60);
+  }
+
+  function relativeTime(d: Date) {
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const abs = Math.abs(diff);
+    const sec = Math.floor(abs / 1000);
+    if (sec < 5) return 'just now';
+    if (sec < 60) return sec + ' second' + (sec === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + ' minute' + (min === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + ' hour' + (hr === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+    const days = Math.floor(hr / 24);
+    if (days < 30) return days + ' day' + (days === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+    const months = Math.floor(days / 30);
+    if (months < 12) return months + ' month' + (months === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+    const years = Math.floor(days / 365);
+    return years + ' year' + (years === 1 ? '' : 's') + (diff > 0 ? ' ago' : ' from now');
+  }
+
+  function renderOutput(ts: number, d: Date) {
+    const lines = [
+      'Unix Timestamp: ' + ts,
+      'ISO 8601:       ' + d.toISOString(),
+      'Local:          ' + d.toLocaleString(),
+      'UTC:            ' + d.toUTCString(),
+      'Relative:       ' + relativeTime(d),
+    ];
+    window.__belbooreTools.showOutput(tcOutput, lines.join('\n'));
+  }
+
+  function updateFromTimestamp() {
+    const val = tcTs.value.trim();
+    if (!val) {
+      if (!tcDate.value) window.__belbooreTools.showEmpty(tcOutput, 'Enter a timestamp or pick a date');
+      return;
+    }
+    const ts = parseInt(val, 10);
+    if (isNaN(ts)) { window.__belbooreTools.showEmpty(tcOutput, 'Enter a timestamp or pick a date'); return; }
+    const d = new Date(ts * 1000);
+    if (isNaN(d.getTime())) { window.__belbooreTools.showEmpty(tcOutput, 'Enter a timestamp or pick a date'); return; }
+
+    tcDate.value = toLocalISO(d).slice(0, 16);
+    renderOutput(ts, d);
+  }
+
+  function updateFromDate() {
+    const val = tcDate.value;
+    if (!val) return;
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return;
+    const ts = Math.floor(d.getTime() / 1000);
+
+    tcTs.value = String(ts);
+    renderOutput(ts, d);
+  }
+
+  function debouncedUpdateFromTimestamp() {
+    clearTimeout(debounceTimer as number);
+    debounceTimer = setTimeout(updateFromTimestamp, 150);
+  }
+
+  function debouncedUpdateFromDate() {
+    clearTimeout(debounceTimer as number);
+    debounceTimer = setTimeout(updateFromDate, 150);
+  }
+
+  tcTs.addEventListener('input', debouncedUpdateFromTimestamp);
+  tcDate.addEventListener('input', debouncedUpdateFromDate);
+  tcDate.addEventListener('change', debouncedUpdateFromDate);
+
+  tcNow.addEventListener('click', function () {
+    const d = new Date();
+    const ts = Math.floor(d.getTime() / 1000);
+    tcTs.value = String(ts);
+    tcDate.value = toLocalISO(d).slice(0, 16);
+    renderOutput(ts, d);
+  });
+
+  tcCopy.addEventListener('click', function () {
+    const text = tcOutput.textContent || '';
+    if (!text || tcOutput.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, tcCopy, 1500);
+  });
+</script>

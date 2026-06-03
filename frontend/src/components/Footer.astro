@@ -1,0 +1,173 @@
+---
+import { ui } from '../i18n/ui';
+import type { Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props as Props;
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+---
+
+<footer class="footer" dir={dir}>
+  <div class="footer__grid container">
+    <div class="footer__brand">
+      <a href={`/${lang}`} class="footer__logo">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="url(#footer-logo-grad)" />
+          <defs>
+            <linearGradient id="footer-logo-grad" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#0052FF" />
+              <stop offset="100%" stop-color="#00D4FF" />
+            </linearGradient>
+          </defs>
+          <path d="M8 20V12L16 16L24 12V20L16 24L8 20Z" fill="white" opacity="0.95" />
+        </svg>
+        <span class="footer__logo-text">{t['site.name']}</span>
+      </a>
+      <p class="footer__description">{t['site.description']}</p>
+    </div>
+
+    <div class="footer__links">
+      <h4 class="footer__heading">{t['nav.tools']}</h4>
+      <a href={`/${lang}/tools`} class="footer__link">{t['nav.tools']}</a>
+      <a href={`/${lang}/categories`} class="footer__link">{t['nav.categories']}</a>
+    </div>
+
+    <div class="footer__links">
+      <h4 class="footer__heading">{t['site.name']}</h4>
+      <a href={`/${lang}/about`} class="footer__link">{t['nav.about']}</a>
+      <a href={`/${lang}/contribute`} class="footer__link">{t['nav.contribute']}</a>
+      <a href="https://github.com" class="footer__link" target="_blank" rel="noopener noreferrer">GitHub</a>
+    </div>
+  </div>
+
+  <div class="footer__bottom container">
+    <p class="footer__copyright">&copy; {new Date().getFullYear()} {t['site.name']}. {t['footer.rights']}</p>
+    <div class="footer__bottom-links">
+      <a href={`/${lang}/about`} class="footer__bottom-link">{t['footer.openSource']}</a>
+      <span class="footer__dot">·</span>
+      <a href={`/${lang}/about`} class="footer__bottom-link">{t['footer.privacy']}</a>
+      <span class="footer__dot">·</span>
+      <a href={`/${lang}/about`} class="footer__bottom-link">{t['footer.terms']}</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    background: var(--surface-primary);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-8);
+  }
+
+  .footer__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: var(--space-12);
+    padding-bottom: var(--space-12);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: var(--space-8);
+  }
+
+  .footer__brand {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .footer__logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+  }
+
+  .footer__logo-text {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-extrabold);
+    color: var(--text-primary);
+  }
+
+  .footer__description {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    line-height: var(--leading-relaxed);
+    max-width: 320px;
+    margin: 0;
+  }
+
+  .footer__links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .footer__heading {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+  }
+
+  .footer__link {
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .footer__link:hover {
+    color: var(--text-link);
+  }
+
+  .footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .footer__copyright {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .footer__bottom-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .footer__bottom-link {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .footer__bottom-link:hover {
+    color: var(--text-secondary);
+  }
+
+  .footer__dot {
+    color: var(--border-strong);
+  }
+
+  @media (max-width: 768px) {
+    .footer__grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-8);
+    }
+
+    .footer__bottom {
+      flex-direction: column;
+      text-align: center;
+    }
+  }
+</style>

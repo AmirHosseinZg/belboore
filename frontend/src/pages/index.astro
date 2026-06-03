@@ -1,3 +1,5 @@
 ---
-return Astro.redirect('/fa/');
+import { defaultLang } from '../i18n/utils';
+
+return Astro.redirect(`/${defaultLang}`, 302);
 ---

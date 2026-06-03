@@ -1,28 +1,158 @@
 ---
-import CategoryLayout from '../../../layouts/CategoryLayout.astro';
-import Icon from '../../../components/icons/Icon.astro';
-import ToolCard from '../../../components/ui/ToolCard.astro';
-import { categories } from '../../../lib/categories';
-import { tools } from '../../../lib/tools';
-import { isLang } from '../../../i18n/config';
-import { makeSeo } from '../../../lib/seo';
-import { SITE } from '../../../data/site';
-import { breadcrumbSchema, collectionPageSchema } from '../../../lib/schema';
-export function getStaticPaths(){return ['fa','en'].flatMap((lang)=>categories.map((c)=>({params:{lang,slug:c.slug}})));}
-const { lang='fa', slug='' } = Astro.params;
-if(!isLang(lang)) throw new Error('bad lang');
-const category = categories.find((c)=>c.slug===slug); if(!category) throw new Error('not found');
-const seo = makeSeo(lang, `/${lang}/categories/${slug}`, lang==='fa'?category.fa.seoTitle:category.en.seoTitle, lang==='fa'?category.fa.seoDescription:category.en.seoDescription);
-const list = tools.filter((t)=>t.categorySlug===slug);
-const cTitle = lang==='fa'?category.fa.title:category.en.title;
-const cDesc = lang==='fa'?category.fa.description:category.en.description;
-const collectionSchema = collectionPageSchema(`${SITE.domain}/${lang}/categories/${slug}`, cTitle, cDesc, lang);
-const crumbs = breadcrumbSchema([{name: lang==='fa'?'خانه':'Home', item:`${SITE.domain}/${lang}/`},{name: lang==='fa'?'دسته بندی ها':'Categories', item:`${SITE.domain}/${lang}/categories/${slug}`},{name:cTitle,item:`${SITE.domain}/${lang}/categories/${slug}`}]);
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { ui } from '../../../i18n/ui';
+import type { Lang } from '../../../i18n/utils';
+import { categories, getCategory } from '../../../data/categories';
+import { getToolsByCategory } from '../../../data/tools';
+import ToolCard from '../../../components/ToolCard.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ].flatMap(({ params }) =>
+    categories.map(cat => ({
+      params: { ...params, slug: cat.slug },
+    }))
+  );
+}
+
+const { lang, slug } = Astro.params as { lang: Lang; slug: string };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/categories/${slug}`;
+
+const category = getCategory(slug);
+
+if (!category) {
+  return Astro.redirect(`/${lang}/`);
+}
+
+const name = category.name[lang];
+const desc = category.description[lang];
+const categoryTools = getToolsByCategory(slug);
 ---
-<CategoryLayout seo={seo} lang={lang}>
-  <script type="application/ld+json" set:html={JSON.stringify(collectionSchema)} />
-  <script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
-  <section class="hero"><span class="icon-wrap"><Icon name={slug} /></span><h1>{lang==='fa'?category.fa.title:category.en.title}</h1><p class="muted">{lang==='fa'?category.fa.description:category.en.description}</p></section>
-  <section><h2>{lang==='fa'?'ابزارهای این دسته':'Tools in this category'}</h2><div class="grid">{list.map((t)=><ToolCard tool={t} lang={lang} />)}</div></section>
-  {category.status==='coming-soon' && <section class="card"><h2>{lang==='fa'?'به زودی':'Coming soon'}</h2><p>{lang==='fa'?'این دسته در حال توسعه است. تا آن زمان ابزارهای مرتبط را بررسی کنید.':'This category is in progress. Explore adjacent tools in the meantime.'}</p><a href={`/${lang}/`}>{lang==='fa'?'بازگشت به ابزارها':'Browse available tools'}</a></section>}
-</CategoryLayout>
+
+<BaseLayout
+  lang={lang}
+  pathname={pathname}
+  title={name}
+  description={desc}
+>
+  <div class="page" dir={dir}>
+    <div class="container">
+      <nav class="breadcrumb">
+        <a href={`/${lang}/`}>{t['nav.home']}</a>
+        <span class="breadcrumb__sep">/</span>
+        <span>{name}</span>
+      </nav>
+
+      <header class="page-header">
+        <div class="page-header__icon">{category.icon}</div>
+        <h1 class="page-header__title">{name}</h1>
+        <p class="page-header__desc">{desc}</p>
+        <span class="page-header__count">
+          {categoryTools.length} {lang === 'fa' ? 'ابزار' : 'tools'}
+        </span>
+      </header>
+
+      {categoryTools.length > 0 ? (
+        <div class="tools-grid">
+          {categoryTools.map(tool => (
+            <ToolCard tool={tool} lang={lang} />
+          ))}
+        </div>
+      ) : (
+        <p class="empty-state">{t['categories.empty']}</p>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: var(--space-12);
+    min-height: 60vh;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb a {
+    color: var(--text-tertiary);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--text-link);
+  }
+
+  .breadcrumb__sep {
+    color: var(--border-strong);
+  }
+
+  .page-header {
+    margin-bottom: var(--space-10);
+  }
+
+  .page-header__icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .page-header__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-extrabold);
+    margin-bottom: var(--space-3);
+  }
+
+  .page-header__desc {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    max-width: 560px;
+    line-height: var(--leading-relaxed);
+  }
+
+  .page-header__count {
+    display: inline-block;
+    margin-top: var(--space-4);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+    padding: var(--space-1) var(--space-4);
+    background: var(--surface-tertiary);
+    border-radius: var(--radius-full);
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 1024px) {
+    .tools-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-20);
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

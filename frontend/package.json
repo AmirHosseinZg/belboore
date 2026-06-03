@@ -1,5 +1,5 @@
 {
-  "name": "",
+  "name": "belboore",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -9,14 +9,18 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "astro": "^6.4.2",
-    "clsx": "^2.1.1"
+    "astro": "^6.4.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
     "prettier": "^3.8.3"
   }
 }

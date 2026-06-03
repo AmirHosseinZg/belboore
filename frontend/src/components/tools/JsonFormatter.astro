@@ -1,0 +1,99 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="JSON Formatter & Validator">
+  <ToolPrimitives />
+  <ToolUtils />
+  <div class="tool-toolbar">
+    <button type="button" id="json-format" class="tool-btn tool-btn--primary">Format</button>
+    <button type="button" id="json-minify" class="tool-btn">Minify</button>
+    <button type="button" id="json-validate" class="tool-btn">Validate</button>
+    <button type="button" id="json-copy" class="tool-btn">Copy</button>
+    <button type="button" id="json-clear" class="tool-btn">Clear</button>
+  </div>
+  <div id="json-error" class="tool-error" style="display: none;" role="alert"></div>
+  <div class="tool-grid-2">
+    <div class="tool-field">
+      <label class="tool-field__label" for="json-input">Input</label>
+      <textarea id="json-input" class="tool-textarea" placeholder='Paste your JSON here... {"example": "data"}'></textarea>
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="json-output">Output</label>
+      <div id="json-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Formatted JSON will appear here</div>
+    </div>
+  </div>
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    All processing happens in your browser. Your data is never uploaded.
+  </div>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('json-input') as HTMLTextAreaElement;
+  const output = document.getElementById('json-output')!;
+  const errorDiv = document.getElementById('json-error')!;
+
+  let lastParsed: { value: string; parsed: unknown } | null = null;
+
+  function parseJson(val: string): unknown {
+    if (lastParsed && lastParsed.value === val) return lastParsed.parsed;
+    const parsed = JSON.parse(val);
+    lastParsed = { value: val, parsed };
+    return parsed;
+  }
+
+  document.getElementById('json-format')!.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Formatted JSON will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    try {
+      const obj = parseJson(val);
+      window.__belbooreTools.showOutput(output, JSON.stringify(obj, null, 2));
+      window.__belbooreTools.clearErrorBox(errorDiv);
+    } catch (e: any) {
+      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
+      window.__belbooreTools.showEmpty(output, 'Fix the errors above and try again');
+    }
+  });
+
+  document.getElementById('json-minify')!.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Minified JSON will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    try {
+      const obj = parseJson(val);
+      window.__belbooreTools.showOutput(output, JSON.stringify(obj));
+      window.__belbooreTools.clearErrorBox(errorDiv);
+    } catch (e: any) {
+      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
+    }
+  });
+
+  document.getElementById('json-validate')!.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.clearErrorBox(errorDiv); window.__belbooreTools.showEmpty(output, 'Paste JSON to validate'); return; }
+    try {
+      const obj = parseJson(val);
+      window.__belbooreTools.clearErrorBox(errorDiv);
+      const count = typeof obj === 'object' && obj !== null ? Object.keys(obj).length : 1;
+      window.__belbooreTools.showOutput(output, 'Valid JSON — ' + count + ' top-level ' + (count === 1 ? 'key' : 'keys'));
+    } catch (e: any) {
+      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
+      window.__belbooreTools.showEmpty(output, 'Invalid JSON — see error above');
+    }
+  });
+
+  document.getElementById('json-copy')!.addEventListener('click', async () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, document.getElementById('json-copy')!, 1500);
+  });
+
+  document.getElementById('json-clear')!.addEventListener('click', () => {
+    input.value = '';
+    lastParsed = null;
+    window.__belbooreTools.showEmpty(output, 'Formatted JSON will appear here');
+    window.__belbooreTools.clearErrorBox(errorDiv);
+  });
+</script>

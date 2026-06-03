@@ -1,0 +1,214 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { ui } from '../../../i18n/ui';
+import type { Lang } from '../../../i18n/utils';
+import { tools } from '../../../data/tools';
+import ToolCard from '../../../components/ToolCard.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/tools`;
+---
+
+<BaseLayout
+  lang={lang}
+  pathname={pathname}
+  title={t['tools.heading']}
+  description={t['tools.description']}
+>
+  <div class="page" dir={dir}>
+    <div class="container">
+      <header class="page-header">
+        <h1 class="page-header__title">{t['tools.heading']}</h1>
+        <p class="page-header__desc">{t['tools.description']}</p>
+      </header>
+
+      <div class="search-section">
+        <div class="search-box">
+          <svg class="search-box__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+          </svg>
+          <input
+            type="text"
+            id="tools-search"
+            class="search-box__input"
+            data-testid="tools-search"
+            placeholder={t['home.search.placeholder']}
+            autocomplete="off"
+          />
+          <span class="search-box__count" id="tools-count">{tools.length} {lang === 'fa' ? 'ابزار' : 'tools'}</span>
+        </div>
+      </div>
+
+      <div id="tools-results">
+        <div class="tools-grid">
+          {tools.map(tool => (
+            <ToolCard tool={tool} lang={lang} />
+          ))}
+        </div>
+      </div>
+
+      <div id="tools-empty" class="empty-state" style="display: none;">
+        <p>{t['tools.empty']}</p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+(function() {
+  const searchInput = document.getElementById('tools-search') as HTMLInputElement;
+  const resultsDiv = document.getElementById('tools-results');
+  const emptyDiv = document.getElementById('tools-empty');
+  const countSpan = document.getElementById('tools-count');
+  if (!searchInput || !resultsDiv || !emptyDiv || !countSpan) return;
+
+  const lang = document.documentElement.lang || 'fa';
+  const label = lang === 'fa' ? 'ابزار' : 'tools';
+
+  const allCards = Array.from(resultsDiv.querySelectorAll('.tool-card')) as HTMLElement[];
+
+  function filterTools(query: string) {
+    const q = query.toLowerCase().trim();
+    let visible = 0;
+
+    allCards.forEach(card => {
+      const text = (card.textContent || '').toLowerCase();
+      const matches = !q || text.includes(q);
+      (card as HTMLElement).style.display = matches ? '' : 'none';
+      if (matches) visible++;
+    });
+
+    countSpan.textContent = visible + ' ' + label;
+    emptyDiv.style.display = visible === 0 ? '' : 'none';
+    resultsDiv.style.display = visible === 0 ? 'none' : '';
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const initialQuery = params.get('q') || '';
+  if (initialQuery) {
+    searchInput.value = initialQuery;
+    filterTools(initialQuery);
+  }
+
+  searchInput.addEventListener('input', () => {
+    filterTools(searchInput.value);
+  });
+
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      searchInput.value = '';
+      filterTools('');
+    }
+  });
+})();
+</script>
+
+<style>
+  .page {
+    padding-block: var(--space-12);
+    min-height: 60vh;
+  }
+
+  .page-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .page-header__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-extrabold);
+    margin-bottom: var(--space-3);
+  }
+
+  .page-header__desc {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    max-width: 560px;
+    line-height: var(--leading-relaxed);
+  }
+
+  .search-section {
+    margin-bottom: var(--space-8);
+  }
+
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2) var(--space-5);
+    box-shadow: var(--shadow-sm);
+    transition: all var(--duration-normal) var(--ease-out);
+    max-width: 560px;
+  }
+
+  .search-box:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: var(--shadow-md), var(--shadow-glow-blue);
+  }
+
+  .search-box__icon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .search-box__input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: var(--text-base);
+    color: var(--text-primary);
+    font-family: inherit;
+    line-height: 1.5;
+    padding-block: var(--space-1);
+  }
+
+  .search-box__input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .search-box__count {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--text-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 1024px) {
+    .tools-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tools-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-20);
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+  }
+</style>

@@ -1,8 +1,0 @@
----
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { makeSeo } from '../../lib/seo'; import { isLang } from '../../i18n/config';
-export function getStaticPaths(){return [{params:{lang:'fa'}},{params:{lang:'en'}}];}
-const lang=Astro.params.lang||'fa'; if(!isLang(lang)) throw new Error('bad lang');
-const seo=makeSeo(lang,`/${lang}/about`,lang==='fa'?'درباره بل بوره':'About Belboore',lang==='fa'?'پلتفرم ابزار دیجیتال رایگان و متن باز.':'Free and open-source digital toolbox platform.');
----
-<BaseLayout {...seo} lang={lang}><h1>{lang==='fa'?'درباره بل بوره':'About Belboore'}</h1><p>{lang==='fa'?'بل بوره یک جعبه ابزار دیجیتال رایگان و متن باز است.':'Belboore is a free open-source digital toolbox.'}</p></BaseLayout>

@@ -1,0 +1,72 @@
+<script>
+  window.__belbooreTools = {
+    copyToClipboard(text, btnEl, feedbackMs) {
+      if (!text) return;
+      const ms = feedbackMs || 1500;
+      navigator.clipboard.writeText(text).then(() => {
+        btnEl.classList.add('tool-btn--copied');
+        const origHTML = btnEl.innerHTML;
+        btnEl.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+        setTimeout(() => {
+          btnEl.innerHTML = origHTML;
+          btnEl.classList.remove('tool-btn--copied');
+        }, ms);
+      }).catch(() => {});
+    },
+
+    showOutput(el, text) {
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('tool-output--empty', 'tool-output--error');
+    },
+
+    showError(el, text) {
+      if (!el) return;
+      el.textContent = text;
+      el.classList.remove('tool-output--empty');
+      el.classList.add('tool-output--error');
+    },
+
+    showEmpty(el, text) {
+      if (!el) return;
+      el.textContent = text || '—';
+      el.classList.add('tool-output--empty');
+      el.classList.remove('tool-output--error');
+    },
+
+    setErrorBox(el, text) {
+      if (!el) return;
+      el.textContent = text;
+      el.style.display = text ? '' : 'none';
+    },
+
+    clearErrorBox(el) {
+      if (!el) return;
+      el.style.display = 'none';
+      el.textContent = '';
+    },
+
+    debounce(fn, delay) {
+      let timer;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    },
+
+    setBtn(id, handler) {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', handler);
+      return el;
+    },
+
+    setCopyBtn(id, getTextFn) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const text = getTextFn();
+        if (text) window.__belbooreTools.copyToClipboard(text, btn, 1500);
+      });
+    },
+  };
+</script>

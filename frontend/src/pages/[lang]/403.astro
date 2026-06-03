@@ -1,0 +1,86 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { ui } from '../../i18n/ui';
+import type { Lang } from '../../i18n/utils';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/403`;
+const title = lang === 'fa' ? 'دسترسی ممنوع' : 'Access Denied';
+const message = lang === 'fa'
+  ? 'شما مجوز دسترسی به این صفحه را ندارید.'
+  : 'You do not have permission to access this page.';
+---
+
+<BaseLayout lang={lang} pathname={pathname} title={title} description={message} noIndex>
+  <div class="error-page" dir={dir}>
+    <div class="container">
+      <div class="error-page__content">
+        <span class="error-page__code">403</span>
+        <h1 class="error-page__title">{title}</h1>
+        <p class="error-page__message">{message}</p>
+        <div class="error-page__actions">
+          <a href={`/${lang}`} class="btn btn-primary btn-lg">
+            {lang === 'fa' ? 'بازگشت به خانه' : 'Go Home'}
+          </a>
+          <a href={`/${lang}/tools`} class="btn btn-secondary btn-lg">
+            {t['nav.tools']}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding-block: var(--space-20);
+  }
+
+  .error-page__content {
+    text-align: center;
+  }
+
+  .error-page__code {
+    display: block;
+    font-size: clamp(6rem, 15vw, 10rem);
+    font-weight: var(--weight-extrabold);
+    line-height: 1;
+    background: linear-gradient(135deg, var(--color-electric-cyan), var(--color-tech-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: var(--space-4);
+  }
+
+  .error-page__title {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-4);
+  }
+
+  .error-page__message {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-8);
+  }
+
+  .error-page__actions {
+    display: flex;
+    gap: var(--space-4);
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+</style>

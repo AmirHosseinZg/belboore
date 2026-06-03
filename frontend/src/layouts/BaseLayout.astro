@@ -1,24 +1,84 @@
 ---
-import '../styles/global.css';
-import AppHeader from '../components/ui/AppHeader.astro';
-import AppFooter from '../components/ui/AppFooter.astro';
-const { title, description, lang, canonical, alternates, ogImage='/favicon.svg' } = Astro.props;
+import SEO from '../components/SEO.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { languages } from '../i18n/utils';
+import { ui } from '../i18n/ui';
+import type { Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  pathname: string;
+  ogImage?: string;
+  noIndex?: boolean;
+}
+
+const {
+  lang,
+  title,
+  description,
+  pathname,
+  ogImage,
+  noIndex,
+} = Astro.props;
+
+const config = languages[lang];
+const dir = config.dir;
+const t = ui[lang];
 ---
-<html lang={lang} dir={lang === 'fa' ? 'rtl' : 'ltr'}>
+
+<!doctype html>
+<html lang={lang} dir={dir}>
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <meta property="og:title" content={title} /><meta property="og:description" content={description} /><meta property="og:type" content="website" /><meta property="og:image" content={ogImage} />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="canonical" href={canonical} />
-    {alternates?.map((a) => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
-    <link rel="alternate" hreflang="x-default" href={alternates?.[0]?.href} />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0052FF" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
+    <SEO
+      lang={lang}
+      title={title}
+      description={description}
+      pathname={pathname}
+      ogImage={ogImage}
+      noIndex={noIndex}
+    />
   </head>
   <body>
-    <AppHeader lang={lang} pathname={Astro.url.pathname} />
-    <main class="container main"><slot /></main>
-    <AppFooter lang={lang} />
+    <a href="#main-content" class="skip-link">
+      {lang === 'fa' ? 'رفتن به محتوا' : 'Skip to content'}
+    </a>
+    <Header lang={lang} pathname={pathname} />
+
+    <main id="main-content">
+      <slot />
+    </main>
+
+    <Footer lang={lang} />
   </body>
 </html>
+
+<style is:global>
+  @import '../styles/global.css';
+
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: 16px;
+    z-index: var(--z-toast);
+    padding: var(--space-3) var(--space-6);
+    background: var(--color-tech-blue);
+    color: white;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-sm);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    transition: top var(--duration-fast) var(--ease-out);
+  }
+
+  .skip-link:focus {
+    top: 12px;
+  }
+</style>

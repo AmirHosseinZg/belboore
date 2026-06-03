@@ -1,0 +1,94 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="Word &amp; Character Counter">
+  <ToolPrimitives />
+  <ToolUtils />
+  <div class="tool-field">
+    <label class="tool-field__label" for="wc-input">Text</label>
+    <textarea id="wc-input" class="tool-textarea" style="min-height: 200px;" placeholder="Start typing to see statistics..."></textarea>
+  </div>
+  <div id="wc-stats" class="tool-grid-2" style="margin-top: var(--space-4);" aria-live="polite">
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-words">0</div>
+      <div class="tool-result__label">Words</div>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-chars-ns">0</div>
+      <div class="tool-result__label">Characters (no spaces)</div>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-chars-ws">0</div>
+      <div class="tool-result__label">Characters (with spaces)</div>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-sentences">0</div>
+      <div class="tool-result__label">Sentences</div>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-paragraphs">0</div>
+      <div class="tool-result__label">Paragraphs</div>
+    </div>
+    <div class="tool-result">
+      <div class="tool-result__value" id="wc-reading">0 min</div>
+      <div class="tool-result__label">Est. Reading Time</div>
+    </div>
+  </div>
+  <div id="wc-empty" class="tool-output tool-output--empty" style="margin-top: var(--space-4); display: none;">
+    Start typing to see statistics
+  </div>
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    All processing happens in your browser. Your data is never uploaded.
+  </div>
+</ToolWorkspace>
+
+<script>
+  const wcInput = document.getElementById('wc-input') as HTMLTextAreaElement;
+  const wcWords = document.getElementById('wc-words')!;
+  const wcCharsNS = document.getElementById('wc-chars-ns')!;
+  const wcCharsWS = document.getElementById('wc-chars-ws')!;
+  const wcSentences = document.getElementById('wc-sentences')!;
+  const wcParagraphs = document.getElementById('wc-paragraphs')!;
+  const wcReading = document.getElementById('wc-reading')!;
+  const wcEmpty = document.getElementById('wc-empty')!;
+  const wcStats = document.getElementById('wc-stats')!;
+
+  let debounceTimer = null;
+
+  function update() {
+    const text = wcInput.value;
+    if (!text.trim()) {
+      wcStats.style.display = 'none';
+      wcEmpty.style.display = '';
+      return;
+    }
+    wcStats.style.display = '';
+    wcEmpty.style.display = 'none';
+
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    const wordCount = words.length;
+
+    wcWords.textContent = String(wordCount);
+    wcCharsNS.textContent = String(text.replace(/\s/g, '').length);
+    wcCharsWS.textContent = String(text.length);
+
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
+    wcSentences.textContent = String(sentences.length);
+
+    const paragraphs = text.split(/\n\s*\n/).filter((p) => p.trim().length > 0);
+    wcParagraphs.textContent = String(paragraphs.length || (text.trim() ? 1 : 0));
+
+    const minutes = Math.max(1, Math.ceil(wordCount / 200));
+    wcReading.textContent = minutes + ' min';
+  }
+
+  wcInput.addEventListener('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(update, 200);
+  });
+  update();
+</script>

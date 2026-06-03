@@ -1,0 +1,108 @@
+---
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+---
+
+<ToolWorkspace title="URL Encoder / Decoder">
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="tool-toolbar">
+    <button id="url-encode-full" class="tool-btn tool-btn--primary" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 8 16 13"/><line x1="21" y1="8" x2="9" y2="8"/><polyline points="5 8 5 3 20 3"/></svg>
+      Encode URL
+    </button>
+    <button id="url-decode-full" class="tool-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><line x1="3" y1="8" x2="15" y2="8"/><polyline points="19 8 19 3 4 3"/></svg>
+      Decode URL
+    </button>
+    <button id="url-encode-comp" class="tool-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Encode Component
+    </button>
+    <button id="url-decode-comp" class="tool-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Decode Component
+    </button>
+    <button id="url-copy" class="tool-btn" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Copy
+    </button>
+    <button id="url-clear" class="tool-btn tool-btn--ghost" type="button" aria-label="Clear">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      Clear
+    </button>
+  </div>
+  <div class="tool-grid-2">
+    <div class="tool-field">
+      <label class="tool-field__label" for="url-input">Input</label>
+      <textarea id="url-input" class="tool-textarea" placeholder="Enter URL or text to encode/decode..."></textarea>
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="url-output">Output</label>
+      <div id="url-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Encoded / decoded result will appear here</div>
+    </div>
+  </div>
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    All processing happens in your browser. Your data is never uploaded.
+  </div>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('url-input') as HTMLTextAreaElement;
+  const output = document.getElementById('url-output')!;
+
+  document.getElementById('url-encode-full')!.addEventListener('click', () => {
+    const val = input.value;
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
+    try {
+      window.__belbooreTools.showOutput(output, encodeURI(val));
+    } catch (e: any) {
+      window.__belbooreTools.showError(output, 'Encoding failed: ' + e.message);
+    }
+  });
+
+  document.getElementById('url-decode-full')!.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
+    try {
+      window.__belbooreTools.showOutput(output, decodeURI(val));
+    } catch (e: any) {
+      window.__belbooreTools.showError(output, 'Decoding failed: ' + e.message);
+    }
+  });
+
+  document.getElementById('url-encode-comp')!.addEventListener('click', () => {
+    const val = input.value;
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
+    try {
+      window.__belbooreTools.showOutput(output, encodeURIComponent(val));
+    } catch (e: any) {
+      window.__belbooreTools.showError(output, 'Encoding failed: ' + e.message);
+    }
+  });
+
+  document.getElementById('url-decode-comp')!.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
+    try {
+      window.__belbooreTools.showOutput(output, decodeURIComponent(val));
+    } catch (e: any) {
+      window.__belbooreTools.showError(output, 'Decoding failed: ' + e.message);
+    }
+  });
+
+  document.getElementById('url-copy')!.addEventListener('click', () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    const btn = document.getElementById('url-copy')!;
+    window.__belbooreTools.copyToClipboard(text, btn, 1500);
+  });
+
+  document.getElementById('url-clear')!.addEventListener('click', () => {
+    input.value = '';
+    window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here');
+  });
+</script>

@@ -1,0 +1,82 @@
+---
+import { ui } from '../i18n/ui';
+import type { TranslationKey } from '../i18n/ui';
+import { languages } from '../i18n/utils';
+import type { Lang } from '../i18n/utils';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+  description?: string;
+  pathname: string;
+  ogImage?: string;
+  noIndex?: boolean;
+}
+
+const {
+  lang,
+  title,
+  description,
+  pathname,
+  ogImage = '/favicon.svg',
+  noIndex = false,
+} = Astro.props;
+
+const t = (key: TranslationKey) => ui[lang][key];
+const siteName = t('site.name');
+const fullTitle = title ? `${title} — ${siteName}` : `${siteName} — ${t('site.tagline')}`;
+const desc = description || t('site.description');
+const canonical = new URL(pathname, Astro.site).href;
+
+const pathWithoutLang = pathname.replace(/^\/(en|fa)/, '') || '/';
+---
+
+<title>{fullTitle}</title>
+<meta name="description" content={desc} />
+<link rel="canonical" href={canonical} />
+
+{noIndex && <meta name="robots" content="noindex" />}
+
+{Object.entries(languages).map(([code, config]) => {
+  const altUrl = new URL(`/${code}${pathWithoutLang}`, Astro.site).href;
+  return <link rel="alternate" hreflang={code} href={altUrl} />;
+})}
+<link rel="alternate" hreflang="x-default" href={new URL(`/fa${pathWithoutLang}`, Astro.site).href} />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={desc} />
+<meta property="og:url" content={canonical} />
+<meta property="og:site_name" content={siteName} />
+<meta property="og:image" content={new URL(ogImage, Astro.site).href} />
+<meta property="og:locale" content={lang === 'fa' ? 'fa_IR' : 'en_US'} />
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={fullTitle} />
+<meta name="twitter:description" content={desc} />
+<meta name="twitter:image" content={new URL(ogImage, Astro.site).href} />
+
+<script type="application/ld+json" set:html={JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: siteName,
+  url: Astro.site?.href,
+  description: t('site.description.long'),
+  inLanguage: [lang],
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${Astro.site?.href}${lang}/tools?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+})} />
+
+{/* Preconnect to Google Fonts for Vazirmatn */}
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"
+  rel="stylesheet"
+/>

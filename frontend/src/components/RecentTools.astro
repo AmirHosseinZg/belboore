@@ -1,0 +1,102 @@
+<div id="recent-tools" class="recent-section">
+  <h3 class="recent-section__title" id="recent-title"></h3>
+  <div class="recent-section__grid" id="recent-grid"></div>
+  <p class="recent-section__empty" id="recent-empty"></p>
+</div>
+
+<script>
+(function() {
+  const STORAGE_KEY = 'belboore-recent-tools';
+  const MAX_RECENT = 6;
+  const lang = document.documentElement.lang || 'fa';
+  const tEmpty = lang === 'fa' ? 'ابزارهایی که اخیراً استفاده کرده‌اید اینجا نمایش داده می‌شوند.' : 'Your recently used tools will appear here.';
+  const tTitle = lang === 'fa' ? 'اخیراً استفاده شده' : 'Recently Used';
+
+  const container = document.getElementById('recent-tools');
+  const titleEl = document.getElementById('recent-title');
+  const gridEl = document.getElementById('recent-grid');
+  const emptyEl = document.getElementById('recent-empty');
+  if (!container || !titleEl || !gridEl || !emptyEl) return;
+
+  function getRecentTools(): Array<{slug: string; name: string; icon: string; type: string; url?: string}> {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch { return []; }
+  }
+
+  function render() {
+    const recent = getRecentTools();
+    if (recent.length === 0) {
+      container.style.display = 'none';
+      return;
+    }
+
+    container.style.display = '';
+    titleEl.textContent = tTitle;
+    emptyEl.style.display = 'none';
+
+    const base = '/' + lang;
+    gridEl.innerHTML = recent.map(t => {
+      const href = t.type === 'builtin' ? base + '/tools/' + t.slug : (t.url || '#');
+      const isExternal = t.type === 'external';
+      const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const extIcon = isExternal ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' : '';
+      return `<a href="${href}" class="recent-card surface-card surface-card--interactive"${target}>
+        <span class="recent-card__icon">${t.icon}</span>
+        <span class="recent-card__name">${t.name}</span>
+        ${extIcon}
+      </a>`;
+    }).join('');
+  }
+
+  render();
+  document.addEventListener('astro:after-swap', render);
+})();
+</script>
+
+<style>
+  .recent-section {
+    margin-top: var(--space-10);
+  }
+
+  .recent-section__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-6);
+  }
+
+  .recent-section__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .recent-section__empty {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  .recent-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  .recent-card__icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+
+  .recent-card__name {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>

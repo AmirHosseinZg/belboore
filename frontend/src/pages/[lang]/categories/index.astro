@@ -1,0 +1,97 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { ui } from '../../../i18n/ui';
+import type { Lang } from '../../../i18n/utils';
+import { categories } from '../../../data/categories';
+import { tools } from '../../../data/tools';
+import CategoryCard from '../../../components/CategoryCard.astro';
+
+export function getStaticPaths() {
+  return [
+    { params: { lang: 'en' } },
+    { params: { lang: 'fa' } },
+  ];
+}
+
+const { lang } = Astro.params as { lang: Lang };
+const t = ui[lang];
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+const pathname = `/${lang}/categories`;
+---
+
+<BaseLayout
+  lang={lang}
+  pathname={pathname}
+  title={t['categories.heading']}
+  description={t['categories.description']}
+>
+  <div class="page" dir={dir}>
+    <div class="container">
+      <header class="page-header">
+        <h1 class="page-header__title">{t['categories.heading']}</h1>
+        <p class="page-header__desc">{t['categories.description']}</p>
+      </header>
+
+      {categories.length > 0 ? (
+        <div class="categories-grid">
+          {categories.map(cat => (
+            <CategoryCard category={cat} lang={lang} />
+          ))}
+        </div>
+      ) : (
+        <p class="empty-state">{t['categories.empty']}</p>
+      )}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .page {
+    padding-block: var(--space-12);
+    min-height: 60vh;
+  }
+
+  .page-header {
+    margin-bottom: var(--space-10);
+    text-align: center;
+  }
+
+  .page-header__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-extrabold);
+    margin-bottom: var(--space-3);
+  }
+
+  .page-header__desc {
+    font-size: var(--text-lg);
+    color: var(--text-tertiary);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: var(--leading-relaxed);
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 1024px) {
+    .categories-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: var(--space-20);
+    color: var(--text-muted);
+    font-size: var(--text-lg);
+  }
+</style>
