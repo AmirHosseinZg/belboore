@@ -205,6 +205,11 @@ const recentMeta = JSON.stringify({
                   {t['tools.useNow']}
                   <img class="tool-detail__click-icon" src="/general-icons/click/click-white.svg" alt="" aria-hidden="true" />
                 </a>
+              ) : tool.type === 'builtin' ? (
+                <button type="button" class="btn btn-primary btn-lg tool-detail__use-disabled" disabled aria-disabled="true">
+                  {t['tools.useNow']}
+                  <img class="tool-detail__click-icon" src="/general-icons/click/click-white.svg" alt="" aria-hidden="true" />
+                </button>
               ) : null}
               <a href={`/${lang}/tools`} class="btn btn-ghost tool-detail__back-action" aria-label={t['tools.backToTools']}>
                 <img src="/general-icons/arrow/arrow-blue.svg" alt="" aria-hidden="true" />
@@ -466,6 +471,19 @@ const recentMeta = JSON.stringify({
     height: 22px;
     object-fit: contain;
     flex-shrink: 0;
+  }
+
+  .tool-detail__use-disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+    box-shadow: none;
+    filter: grayscale(0.2);
+  }
+
+  .tool-detail__use-disabled:hover {
+    background: var(--color-tech-blue);
+    box-shadow: none;
+    transform: none;
   }
 
   .tool-detail__actions .tool-detail__back-action {
