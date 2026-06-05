@@ -83,7 +83,7 @@ export const categories: Category[] = [
   {
     slug: 'general',
     icon: '🧰',
-    iconPath: '/category-icons/ask-2.webp',
+    iconPath: '/category-icons/general-.webp',
     name: { en: 'General Tools', fa: 'ابزارهای عمومی' },
     description: { en: 'Everyday calculators and utility tools for quick tasks.', fa: 'ماشین‌حساب‌ها و ابزارهای روزمره برای کارهای سریع.' },
     order: 10,
