@@ -12,43 +12,111 @@ const { category, lang } = Astro.props;
 const name = category.name[lang];
 const description = category.description[lang];
 const toolCount = tools.filter(t => t.category === category.slug).length;
+const hasImageIcon = Boolean(category.iconPath);
+const countLabel = lang === 'fa'
+  ? 'ابزار'
+  : toolCount === 1
+    ? 'tool'
+    : 'tools';
+const densityLabel = lang === 'fa'
+  ? (toolCount >= 4 ? 'پربار' : toolCount >= 2 ? 'منتخب' : 'در حال گسترش')
+  : (toolCount >= 4 ? 'Popular' : toolCount >= 2 ? 'Curated' : 'Growing');
 ---
 
 <a href={`/${lang}/categories/${category.slug}`} class="category-card surface-card surface-card--interactive">
-  <span class="category-card__icon">{category.icon}</span>
+  <div class="category-card__media">
+    {hasImageIcon ? (
+      <img
+        src={category.iconPath}
+        alt=""
+        width="88"
+        height="88"
+        loading="lazy"
+        decoding="async"
+        class="category-card__image"
+      />
+    ) : (
+      <span class="category-card__icon" aria-hidden="true">{category.icon}</span>
+    )}
+    <span class="category-card__pill">{densityLabel}</span>
+  </div>
   <div class="category-card__body">
     <h3 class="category-card__title">{name}</h3>
     <p class="category-card__desc">{description}</p>
   </div>
-  <span class="category-card__count">{toolCount} {lang === 'fa' ? 'ابزار' : (toolCount === 1 ? 'tool' : 'tools')}</span>
+  <div class="category-card__footer">
+    <span class="category-card__count">{toolCount} {countLabel}</span>
+    <span class="category-card__cta">
+      {lang === 'fa' ? 'مشاهده دسته' : 'Explore category'}
+    </span>
+  </div>
 </a>
 
 <style>
   .category-card {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
     padding: var(--space-6);
     text-decoration: none;
     color: inherit;
     transition: all var(--duration-normal) var(--ease-out);
+    min-height: 100%;
+  }
+
+  .category-card__media {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
   }
 
   .category-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
     font-size: 2rem;
     line-height: 1;
+    background:
+      radial-gradient(circle at top, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0)),
+      linear-gradient(135deg, var(--color-tech-blue-subtle), rgba(0, 212, 255, 0.12));
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .category-card__image {
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    filter: drop-shadow(0 12px 20px rgba(0, 82, 255, 0.14));
+  }
+
+  .category-card__pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--surface-tertiary);
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    white-space: nowrap;
   }
 
   .category-card__body {
     display: flex;
     flex-direction: column;
-    gap: var(--space-1);
+    gap: var(--space-2);
     flex: 1;
   }
 
   .category-card__title {
-    font-size: var(--text-base);
-    font-weight: var(--weight-semibold);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
   }
 
   .category-card__desc {
@@ -58,9 +126,35 @@ const toolCount = tools.filter(t => t.category === category.slug).length;
     margin: 0;
   }
 
+  .category-card__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border-subtle);
+  }
+
   .category-card__count {
     font-size: var(--text-xs);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
     color: var(--text-muted);
+  }
+
+  .category-card__cta {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-link);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    transition: transform var(--duration-fast) var(--ease-out);
+  }
+
+  .category-card:hover .category-card__cta {
+    transform: translateX(2px);
+  }
+
+  [dir="rtl"] .category-card:hover .category-card__cta {
+    transform: translateX(-2px);
   }
 </style>
