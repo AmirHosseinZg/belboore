@@ -11,6 +11,7 @@ export interface Tool {
   category: string;
   featured: boolean;
   icon: string;
+  iconPath?: string;
   url?: string;
   name: { en: string; fa: string };
   description: { en: string; fa: string };
@@ -40,6 +41,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: true,
     icon: '📱',
+    iconPath: '/tool-icons/QR.svg',
     name: { en: 'QR Code Generator', fa: 'سازنده QR Code' },
     description: { en: 'Generate QR codes from text, URLs, or any data. Download as PNG or SVG.', fa: 'تولید QR Code از متن، لینک یا هر داده‌ای. دانلود با فرمت PNG یا SVG.' },
     longDescription: { en: 'Create QR codes instantly for URLs, text, contact information, WiFi credentials, and more. Customize colors and download in high-quality PNG or SVG format. All processing happens in your browser.', fa: 'QR Code برای لینک‌ها، متن، اطلاعات تماس، اطلاعات WiFi و بیشتر بسازید. رنگ‌ها را سفارشی کنید و با کیفیت بالا در فرمت PNG یا SVG دانلود کنید. تمام پردازش در مرورگر شما انجام می‌شود.' },
@@ -52,6 +54,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: true,
     icon: '🗜️',
+    iconPath: '/tool-icons/compress.svg',
     url: 'https://squoosh.app',
     name: { en: 'Squoosh', fa: 'Squoosh' },
     description: { en: 'Compress and optimize images with live preview. By Google Chrome Labs.', fa: 'فشرده‌سازی و بهینه‌سازی تصاویر با پیش‌نمایش زنده. از Google Chrome Labs.' },
@@ -64,6 +67,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: false,
     icon: '✏️',
+    iconPath: '/tool-icons/pencil.svg',
     url: 'https://excalidraw.com',
     name: { en: 'Excalidraw', fa: 'Excalidraw' },
     description: { en: 'Hand-drawn style diagrams and sketches. Collaborative whiteboard tool.', fa: 'نمودارها و طرح‌های دست‌نویس. ابزار تخته‌سفید مشارکتی.' },
@@ -78,6 +82,7 @@ export const tools: Tool[] = [
     category: 'text',
     featured: true,
     icon: '📝',
+    iconPath: '/tool-icons/text-comparison.svg',
     name: { en: 'Text Diff Checker', fa: 'مقایسه متن' },
     description: { en: 'Compare two texts and see the differences highlighted line by line.', fa: 'دو متن را مقایسه کنید و تفاوت‌ها را خط به خط برجسته ببینید.' },
     longDescription: { en: 'A fast, client-side text comparison tool. Paste two texts and see additions, deletions, and changes highlighted instantly. No data leaves your browser.', fa: 'یک ابزار سریع مقایسه متن در سمت کاربر. دو متن را وارد کنید و اضافات، حذفیات و تغییرات را فوراً برجسته ببینید. هیچ داده‌ای از مرورگر خارج نمی‌شود.' },
@@ -90,6 +95,7 @@ export const tools: Tool[] = [
     category: 'text',
     featured: false,
     icon: '🔢',
+    iconPath: '/tool-icons/text-word-count.svg',
     name: { en: 'Word & Character Counter', fa: 'شمارنده کلمات و کاراکترها' },
     description: { en: 'Count words, characters, sentences, and paragraphs in real time.', fa: 'شمارش کلمات، کاراکترها، جملات و پاراگراف‌ها به صورت زنده.' },
     longDescription: { en: 'Real-time text statistics: words, characters (with and without spaces), sentences, paragraphs, and estimated reading time. Supports Persian, English, and mixed text.', fa: 'آمار زنده متن: کلمات، کاراکترها (با و بدون فاصله)، جملات، پاراگراف‌ها و زمان تخمینی مطالعه. پشتیبانی از متن فارسی، انگلیسی و ترکیبی.' },
