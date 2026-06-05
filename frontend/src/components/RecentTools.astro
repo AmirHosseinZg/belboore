@@ -1,5 +1,8 @@
 <div id="recent-tools" class="recent-section">
-  <h3 class="recent-section__title" id="recent-title"></h3>
+  <div class="recent-section__header">
+    <span class="recent-section__eyebrow" id="recent-eyebrow"></span>
+    <h3 class="recent-section__title" id="recent-title"></h3>
+  </div>
   <div class="recent-section__grid" id="recent-grid"></div>
   <p class="recent-section__empty" id="recent-empty"></p>
 </div>
@@ -7,22 +10,56 @@
 <script>
 (function() {
   const STORAGE_KEY = 'belboore-recent-tools';
-  const MAX_RECENT = 6;
   const lang = document.documentElement.lang || 'fa';
-  const tEmpty = lang === 'fa' ? 'ابزارهایی که اخیراً استفاده کرده‌اید اینجا نمایش داده می‌شوند.' : 'Your recently used tools will appear here.';
-  const tTitle = lang === 'fa' ? 'اخیراً استفاده شده' : 'Recently Used';
+  const copy = lang === 'fa'
+    ? {
+      eyebrow: 'دسترسی سریع',
+      title: 'اخیراً استفاده شده',
+      empty: 'ابزارهایی که اخیراً استفاده کرده‌اید اینجا نمایش داده می‌شوند.',
+      builtin: 'داخلی',
+      external: 'خارجی',
+      open: 'باز کردن',
+    }
+    : {
+      eyebrow: 'Quick access',
+      title: 'Recently Used',
+      empty: 'Your recently used tools will appear here.',
+      builtin: 'Built-in',
+      external: 'External',
+      open: 'Open',
+    };
 
   const container = document.getElementById('recent-tools');
+  const eyebrowEl = document.getElementById('recent-eyebrow');
   const titleEl = document.getElementById('recent-title');
   const gridEl = document.getElementById('recent-grid');
   const emptyEl = document.getElementById('recent-empty');
-  if (!container || !titleEl || !gridEl || !emptyEl) return;
+  if (!container || !eyebrowEl || !titleEl || !gridEl || !emptyEl) return;
 
-  function getRecentTools(): Array<{slug: string; name: string; icon: string; type: string; url?: string}> {
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getRecentTools() {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       return data ? JSON.parse(data) : [];
-    } catch { return []; }
+    } catch {
+      return [];
+    }
+  }
+
+  function renderIcon(tool) {
+    if (tool.iconPath) {
+      return `<img src="${escapeHtml(tool.iconPath)}" alt="" class="recent-card__icon-img" loading="lazy" decoding="async" />`;
+    }
+
+    return `<span class="recent-card__emoji">${escapeHtml(tool.icon)}</span>`;
   }
 
   function render() {
@@ -33,19 +70,30 @@
     }
 
     container.style.display = '';
-    titleEl.textContent = tTitle;
+    eyebrowEl.textContent = copy.eyebrow;
+    titleEl.textContent = copy.title;
+    emptyEl.textContent = copy.empty;
     emptyEl.style.display = 'none';
 
     const base = '/' + lang;
-    gridEl.innerHTML = recent.map(t => {
-      const href = t.type === 'builtin' ? base + '/tools/' + t.slug : (t.url || '#');
-      const isExternal = t.type === 'external';
+    gridEl.innerHTML = recent.map((tool) => {
+      const href = tool.type === 'builtin' ? base + '/tools/' + encodeURIComponent(tool.slug) : (tool.url || '#');
+      const isExternal = tool.type === 'external';
       const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-      const extIcon = isExternal ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' : '';
-      return `<a href="${href}" class="recent-card surface-card surface-card--interactive"${target}>
-        <span class="recent-card__icon">${t.icon}</span>
-        <span class="recent-card__name">${t.name}</span>
-        ${extIcon}
+      const typeLabel = isExternal ? copy.external : copy.builtin;
+      const typeClass = isExternal ? 'recent-card__badge--external' : 'recent-card__badge--builtin';
+
+      return `<a href="${escapeHtml(href)}" class="recent-card surface-card surface-card--interactive"${target} aria-label="${escapeHtml(copy.open + ' ' + tool.name)}">
+        <span class="recent-card__icon" aria-hidden="true">${renderIcon(tool)}</span>
+        <span class="recent-card__content">
+          <span class="recent-card__name">${escapeHtml(tool.name)}</span>
+          <span class="recent-card__meta">
+            <span class="recent-card__badge ${typeClass}">${typeLabel}</span>
+          </span>
+        </span>
+        <span class="recent-card__arrow" aria-hidden="true">
+          <img src="/general-icons/arrow/arrow-blue.svg" alt="" />
+        </span>
       </a>`;
     }).join('');
   }
@@ -55,48 +103,143 @@
 })();
 </script>
 
-<style>
-  .recent-section {
+<style is:global>
+  #recent-tools.recent-section {
     margin-top: var(--space-10);
   }
 
-  .recent-section__title {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
+  #recent-tools .recent-section__header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
     margin-bottom: var(--space-6);
   }
 
-  .recent-section__grid {
+  #recent-tools .recent-section__eyebrow {
+    color: var(--color-tech-blue);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+
+  #recent-tools .recent-section__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+  }
+
+  #recent-tools .recent-section__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-4);
   }
 
-  .recent-section__empty {
+  #recent-tools .recent-section__empty {
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
 
-  .recent-card {
-    display: flex;
+  #recent-tools .recent-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-4);
+    gap: var(--space-4);
+    min-height: 96px;
+    padding: var(--space-5);
     text-decoration: none;
     color: var(--text-primary);
   }
 
-  .recent-card__icon {
-    font-size: 1.25rem;
+  #recent-tools .recent-card__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(232, 240, 255, 0.66)),
+      var(--color-tech-blue-subtle);
+    border: 1px solid rgba(0, 82, 255, 0.08);
+    flex-shrink: 0;
+  }
+
+  #recent-tools .recent-card__icon-img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+  }
+
+  #recent-tools .recent-card__emoji {
+    font-size: 1.6rem;
     line-height: 1;
   }
 
-  .recent-card__name {
+  #recent-tools .recent-card__content {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  #recent-tools .recent-card__name {
     font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    flex: 1;
+    font-weight: var(--weight-semibold);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  #recent-tools .recent-card__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  #recent-tools .recent-card__badge {
+    width: fit-content;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: 0.68rem;
+    font-weight: var(--weight-semibold);
+  }
+
+  #recent-tools .recent-card__badge--builtin {
+    color: #047857;
+    background: rgba(209, 250, 229, 0.86);
+  }
+
+  #recent-tools .recent-card__badge--external {
+    color: #c2410c;
+    background: rgba(255, 237, 213, 0.92);
+  }
+
+  #recent-tools .recent-card__arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    background: var(--color-tech-blue-subtle);
+  }
+
+  #recent-tools .recent-card__arrow img {
+    width: 13px;
+    height: 13px;
+    transform: rotate(180deg);
+  }
+
+  [dir="ltr"] #recent-tools .recent-card__arrow img {
+    transform: rotate(0deg);
+  }
+
+  @media (max-width: 640px) {
+    #recent-tools .recent-section__grid {
+      grid-template-columns: 1fr;
+    }
+
+    #recent-tools .recent-card {
+      min-height: 88px;
+      padding: var(--space-4);
+    }
   }
 </style>

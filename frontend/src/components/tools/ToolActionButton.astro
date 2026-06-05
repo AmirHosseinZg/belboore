@@ -1,0 +1,53 @@
+---
+interface Props {
+  id?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const { id, type = 'button' } = Astro.props;
+---
+
+<button id={id} class="tool-action-button" type={type}>
+  <slot />
+</button>
+
+<style>
+  .tool-action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-width: 148px;
+    min-height: 46px;
+    align-self: center;
+    padding-block: var(--space-2);
+    padding-inline: var(--space-5);
+    border: 0;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-tech-blue-hover));
+    color: white;
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    cursor: pointer;
+    box-shadow: 0 12px 24px rgba(0, 82, 255, 0.18);
+    transition: transform var(--duration-fast) var(--ease-out),
+                box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .tool-action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(0, 82, 255, 0.22);
+  }
+
+  .tool-action-button:focus-visible {
+    outline: 3px solid var(--color-tech-blue-subtle);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 640px) {
+    .tool-action-button {
+      width: 100%;
+    }
+  }
+</style>
