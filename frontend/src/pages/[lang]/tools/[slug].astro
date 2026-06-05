@@ -18,6 +18,7 @@ import ColorConverter from '../../../components/tools/ColorConverter.astro';
 import HashGenerator from '../../../components/tools/HashGenerator.astro';
 import TimestampConverter from '../../../components/tools/TimestampConverter.astro';
 import UnitConverter from '../../../components/tools/UnitConverter.astro';
+import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
 
 export function getStaticPaths() {
   return [
@@ -66,6 +67,7 @@ const toolComponentMap: Record<string, any> = {
   'hash-generator': HashGenerator,
   'time-converter': TimestampConverter,
   'unit-converter': UnitConverter,
+  'markdown-preview': MarkdownEditor,
 };
 
 const ToolComponent = toolComponentMap[slug];
