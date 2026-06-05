@@ -120,6 +120,7 @@ export const tools: Tool[] = [
     type: 'builtin',
     category: 'text',
     featured: false,
+    iconPath: '/tool-icons/paragraph.svg',
     icon: '📄',
     name: { en: 'Lorem Ipsum Generator', fa: 'تولید متن ساختگی' },
     description: { en: 'Generate placeholder text for designs and mockups. Customize paragraphs, words, or bytes.', fa: 'تولید متن ساختگی برای طراحی‌ها و ماکت‌ها. قابل تنظیم بر اساس پاراگراف، کلمه یا بایت.' },
