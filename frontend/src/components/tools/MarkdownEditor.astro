@@ -199,7 +199,6 @@ console.log("Hello Markdown")
     </div>
 
     <div class="tool-note">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       {copy.note}
     </div>
   </div>
@@ -565,11 +564,11 @@ console.log("Hello Markdown")
     color: var(--text-primary);
     background:
       linear-gradient(90deg, rgba(0, 82, 255, 0.035) 0 1px, transparent 1px) 0 0 / 28px 28px,
-      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.92));
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 92%, transparent));
     border: 1px solid rgba(0, 82, 255, 0.14);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.82),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 42%, transparent);
     resize: vertical;
     unicode-bidi: plaintext;
     caret-color: var(--color-tech-blue);
@@ -584,7 +583,7 @@ console.log("Hello Markdown")
     box-shadow:
       0 0 0 4px var(--color-tech-blue-subtle),
       0 14px 34px rgba(0, 82, 255, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent);
   }
 
   .markdown-editor__textarea::placeholder {
@@ -634,13 +633,13 @@ console.log("Hello Markdown")
     padding: var(--space-6);
     color: var(--text-primary);
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 94%, transparent));
     border: 1px solid rgba(0, 82, 255, 0.12);
     line-height: 1.7;
     word-break: normal;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.82),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.48);
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 38%, transparent);
     unicode-bidi: plaintext;
   }
 
@@ -655,7 +654,7 @@ console.log("Hello Markdown")
     top: var(--space-5);
     justify-content: flex-end;
     padding: var(--space-3);
-    background: rgba(255, 255, 255, 0.92);
+    background: color-mix(in srgb, var(--surface-primary) 92%, transparent);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-xl);
     box-shadow: var(--shadow-lg);
@@ -671,7 +670,7 @@ console.log("Hello Markdown")
     padding: calc(var(--space-20) + var(--space-2)) var(--space-6) var(--space-6);
     background:
       radial-gradient(circle at 70% 0%, rgba(0, 82, 255, 0.12), transparent 34%),
-      rgba(248, 250, 252, 0.98);
+      color-mix(in srgb, var(--surface-secondary) 98%, transparent);
     border: 0;
     border-radius: 0;
     box-shadow: none;
@@ -705,6 +704,43 @@ console.log("Hello Markdown")
     padding-top: calc(var(--space-12) + var(--space-2));
     background: var(--surface-primary);
     box-shadow: var(--shadow-lg);
+  }
+
+  [data-theme="dark"] .markdown-editor__stage {
+    background:
+      radial-gradient(circle at top right, rgba(61, 139, 255, 0.12), transparent 34%),
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-secondary));
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .markdown-editor__textarea {
+    background:
+      linear-gradient(90deg, rgba(61, 139, 255, 0.055) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    border-color: rgba(61, 139, 255, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="dark"] .markdown-editor__preview {
+    background:
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    border-color: rgba(61, 139, 255, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="dark"] .markdown-editor--fullscreen .markdown-editor__toolbar {
+    background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .markdown-editor--fullscreen .markdown-editor__stage {
+    background:
+      radial-gradient(circle at 70% 0%, rgba(61, 139, 255, 0.16), transparent 34%),
+      var(--surface-secondary);
   }
 
   .markdown-editor__preview--empty {
