@@ -1,0 +1,334 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.textDiff.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="text-diff" dir={dir} data-empty={t['tools.textDiff.empty']}>
+    <div class="text-diff__grid">
+      <div class="text-diff__field">
+        <label class="text-diff__label" for="td-original">{t['tools.textDiff.originalText']}</label>
+        <TextArea id="td-original" className="text-diff__textarea" placeholder={t['tools.textDiff.originalPlaceholder']} />
+      </div>
+      <div class="text-diff__field">
+        <label class="text-diff__label" for="td-modified">{t['tools.textDiff.modifiedText']}</label>
+        <TextArea id="td-modified" className="text-diff__textarea" placeholder={t['tools.textDiff.modifiedPlaceholder']} />
+      </div>
+    </div>
+
+    <div class="text-diff__actions">
+      <label class="text-diff__case-toggle" for="td-case-sensitive">
+        <input id="td-case-sensitive" type="checkbox" />
+        <span>{t['tools.textDiff.caseSensitive']}</span>
+      </label>
+      <Button id="td-compare" variant="primary">{t['tools.textDiff.compare']}</Button>
+      <Button id="td-clear" variant="secondary">{t['tools.textDiff.clear']}</Button>
+    </div>
+
+    <div class="text-diff__result-wrap">
+      <p class="text-diff__label">{t['tools.textDiff.result']}</p>
+      <div id="td-result" class="text-diff__result text-diff__result--empty" role="status" aria-live="polite">
+        {t['tools.textDiff.empty']}
+      </div>
+      <p id="td-summary" class="text-diff__summary"></p>
+    </div>
+    
+  </section>
+</ToolWorkspace>
+
+<script>
+  const originalInput = document.getElementById('td-original');
+  const modifiedInput = document.getElementById('td-modified');
+  const compareBtn = document.getElementById('td-compare');
+  const clearBtn = document.getElementById('td-clear');
+  const caseSensitiveToggle = document.getElementById('td-case-sensitive');
+  const resultBox = document.getElementById('td-result');
+  const summary = document.getElementById('td-summary');
+  const root = document.querySelector('.text-diff');
+
+  if (!originalInput || !modifiedInput || !compareBtn || !clearBtn || !caseSensitiveToggle || !resultBox || !summary || !root) {
+    throw new Error('Text Diff tool initialization failed');
+  }
+
+  function tokenize(text) {
+    return text.match(/[\p{L}\p{N}_]+|[^\s\p{L}\p{N}_]+|\s+/gu) || [];
+  }
+
+  function escapeHtml(value) {
+    return value
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function buildLcsMatrix(a, b, normalize) {
+    const matrix = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        if (normalize(a[i - 1]) === normalize(b[j - 1])) {
+          matrix[i][j] = matrix[i - 1][j - 1] + 1;
+        } else {
+          matrix[i][j] = Math.max(matrix[i - 1][j], matrix[i][j - 1]);
+        }
+      }
+    }
+    return matrix;
+  }
+
+  function diffTokens(originalTokens, modifiedTokens, isCaseSensitive) {
+    const normalize = (value) => (isCaseSensitive ? value : value.toLocaleLowerCase());
+    const lcs = buildLcsMatrix(originalTokens, modifiedTokens, normalize);
+    const parts = [];
+    let i = originalTokens.length;
+    let j = modifiedTokens.length;
+
+    while (i > 0 && j > 0) {
+      if (normalize(originalTokens[i - 1]) === normalize(modifiedTokens[j - 1])) {
+        parts.push({ type: 'same', value: originalTokens[i - 1] });
+        i--;
+        j--;
+      } else if (lcs[i - 1][j] >= lcs[i][j - 1]) {
+        parts.push({ type: 'removed', value: originalTokens[i - 1] });
+        i--;
+      } else {
+        parts.push({ type: 'added', value: modifiedTokens[j - 1] });
+        j--;
+      }
+    }
+
+    while (i > 0) {
+      parts.push({ type: 'removed', value: originalTokens[i - 1] });
+      i--;
+    }
+    while (j > 0) {
+      parts.push({ type: 'added', value: modifiedTokens[j - 1] });
+      j--;
+    }
+
+    return parts.reverse();
+  }
+
+  function renderDiff() {
+    const original = originalInput.value.replace(/\r\n/g, '\n');
+    const modified = modifiedInput.value.replace(/\r\n/g, '\n');
+    const isCaseSensitive = caseSensitiveToggle.checked;
+
+    if (!original.trim() && !modified.trim()) {
+      resultBox.textContent = root.getAttribute('data-empty') || 'Diff result appears here.';
+      resultBox.classList.add('text-diff__result--empty');
+      summary.textContent = '';
+      return;
+    }
+
+    const parts = diffTokens(tokenize(original), tokenize(modified), isCaseSensitive);
+    let addedCount = 0;
+    let removedCount = 0;
+    let html = '';
+
+    parts.forEach((part) => {
+      const safeValue = escapeHtml(part.value);
+      if (part.type === 'added') {
+        addedCount++;
+        html += `<ins class="diff-add">${safeValue}</ins>`;
+      } else if (part.type === 'removed') {
+        removedCount++;
+        html += `<del class="diff-delete">${safeValue}</del>`;
+      } else {
+        html += `<span>${safeValue}</span>`;
+      }
+    });
+
+    resultBox.innerHTML = html;
+    resultBox.classList.remove('text-diff__result--empty');
+    summary.textContent = `${addedCount} ${root.getAttribute('data-added') || 'added'} • ${removedCount} ${root.getAttribute('data-removed') || 'removed'}`;
+  }
+
+  compareBtn.addEventListener('click', renderDiff);
+  clearBtn.addEventListener('click', () => {
+    originalInput.value = '';
+    modifiedInput.value = '';
+    caseSensitiveToggle.checked = false;
+    renderDiff();
+    originalInput.focus();
+  });
+
+  root.setAttribute('data-added', (document.documentElement.lang || 'en') === 'fa' ? 'افزوده' : 'added');
+  root.setAttribute('data-removed', (document.documentElement.lang || 'en') === 'fa' ? 'حذف‌شده' : 'removed');
+  caseSensitiveToggle.addEventListener('change', renderDiff);
+  renderDiff();
+</script>
+
+<style>
+  .text-diff {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .text-diff__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .text-diff__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .text-diff__label {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--weight-semibold);
+  }
+
+  .text-diff__textarea {
+    min-height: 220px;
+    font-family: var(--font-mono);
+  }
+
+  .text-diff__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .text-diff__case-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    margin-inline-end: auto;
+  }
+
+  .text-diff__case-toggle input {
+    inline-size: 16px;
+    block-size: 16px;
+    accent-color: var(--color-tech-blue);
+  }
+
+  .text-diff__result-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .text-diff__result {
+    min-height: 220px;
+    max-height: 520px;
+    overflow: auto;
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: #F8FAFC;
+    color: #0F172A;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .text-diff__result--empty {
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  :global(.diff-add),
+  :global(.diff-delete) {
+    text-decoration: none;
+    background: transparent;
+  }
+
+  :global(.diff-add) {
+    color: #16A34A;
+  }
+
+  :global(.diff-delete) {
+    color: #DC2626;
+  }
+
+  .text-diff__summary {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+
+  .text-diff__info,
+  .text-diff__faq {
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--surface-primary);
+  }
+
+  .text-diff__info h4,
+  .text-diff__faq h4 {
+    margin: 0 0 var(--space-2);
+  }
+
+  .text-diff__info p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  .text-diff__faq-list {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .text-diff__faq-item strong {
+    display: block;
+    margin-bottom: var(--space-1);
+  }
+
+  .text-diff__faq-item p {
+    margin: 0;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 900px) {
+    .text-diff__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .text-diff__actions {
+      align-items: stretch;
+    }
+
+    .text-diff__case-toggle {
+      width: 100%;
+      margin-inline-end: 0;
+    }
+  }
+</style>

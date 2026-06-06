@@ -17,6 +17,8 @@ export interface Tool {
   description: { en: string; fa: string };
   longDescription: { en: string; fa: string };
   howToUse?: { en: string; fa: string };
+  seoKeywords?: { en: string[]; fa: string[] };
+  faqItems?: { en: { q: string; a: string }[]; fa: { q: string; a: string }[] };
   tags: { en: string[]; fa: string[] };
   order?: number;
 }
@@ -88,6 +90,20 @@ export const tools: Tool[] = [
     description: { en: 'Compare two texts and see the differences highlighted line by line.', fa: 'دو متن را مقایسه کنید و تفاوت‌ها را خط به خط برجسته ببینید.' },
     longDescription: { en: 'A fast, client-side text comparison tool. Paste two texts and see additions, deletions, and changes highlighted instantly. No data leaves your browser.', fa: 'یک ابزار سریع مقایسه متن در سمت کاربر. دو متن را وارد کنید و اضافات، حذفیات و تغییرات را فوراً برجسته ببینید. هیچ داده‌ای از مرورگر خارج نمی‌شود.' },
     howToUse: { en: 'Paste or type your original text on the left and the modified text on the right. Differences are highlighted automatically.', fa: 'متن اصلی را در سمت چپ و متن تغییر یافته را در سمت راست وارد کنید. تفاوت‌ها به صورت خودکار برجسته می‌شوند.' },
+    seoKeywords: {
+      en: ['text diff checker', 'compare text', 'text differences', 'word diff', 'client-side diff'],
+      fa: ['مقایسه متن', 'تفاوت متن', 'ابزار diff', 'مقایسه کلمات', 'مقایسه سمت کاربر'],
+    },
+    faqItems: {
+      en: [
+        { q: 'Is my text sent to a server?', a: 'No. All text comparison happens locally in your browser.' },
+        { q: 'Can I compare long documents?', a: 'Yes, but very large texts may be slower on low-power devices.' },
+      ],
+      fa: [
+        { q: 'آیا متن من به سرور ارسال می‌شود؟', a: 'خیر. تمام مقایسه‌ها به‌صورت محلی در مرورگر شما انجام می‌شود.' },
+        { q: 'آیا می‌توانم متن‌های طولانی را مقایسه کنم؟', a: 'بله، اما متن‌های بسیار بزرگ ممکن است روی دستگاه‌های ضعیف کندتر باشند.' },
+      ],
+    },
     tags: { en: ['diff', 'compare', 'text', 'difference', 'merge'], fa: ['مقایسه', 'تفاوت', 'متن', 'ادغام'] },
   },
   {

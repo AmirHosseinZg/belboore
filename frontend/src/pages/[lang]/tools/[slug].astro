@@ -20,6 +20,7 @@ import TimestampConverter from '../../../components/tools/TimestampConverter.ast
 import UnitConverter from '../../../components/tools/UnitConverter.astro';
 import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
 import ImageToBase64 from '../../../components/tools/ImageToBase64.astro';
+import TextDiff from '../../../components/tools/TextDiff.astro';
 
 export function getStaticPaths() {
   return [
@@ -70,6 +71,7 @@ const toolComponentMap: Record<string, any> = {
   'unit-converter': UnitConverter,
   'markdown-preview': MarkdownEditor,
   'image-to-base64': ImageToBase64,
+  'text-diff': TextDiff,
 };
 
 const ToolComponent = toolComponentMap[slug];
