@@ -1,7 +1,7 @@
 ---
 import type { Lang } from '../../i18n/utils';
 import { languages } from '../../i18n/utils';
-import ToolDropdown from '../ui/ToolDropdown.astro';
+import Select from '../ui/Select.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolWorkspace from './ToolWorkspace.astro';
@@ -88,26 +88,30 @@ const copy = {
       </div>
 
       <div class="lorem-generator__settings">
-        <ToolDropdown
-          id="li-language"
-          label={copy.language}
-          value="latin"
-          options={[
-            { value: 'latin', label: copy.latin },
-            { value: 'persian', label: copy.persian },
-          ]}
-        />
+        <label class="lorem-generator__field" for="li-language">
+          <span>{copy.language}</span>
+          <Select
+            id="li-language"
+            selectedValue="latin"
+            options={[
+              { value: 'latin', label: copy.latin },
+              { value: 'persian', label: copy.persian },
+            ]}
+          />
+        </label>
 
-        <ToolDropdown
-          id="li-type"
-          label={copy.type}
-          value="paragraphs"
-          options={[
-            { value: 'paragraphs', label: copy.paragraphs },
-            { value: 'sentences', label: copy.sentences },
-            { value: 'words', label: copy.words },
-          ]}
-        />
+        <label class="lorem-generator__field" for="li-type">
+          <span>{copy.type}</span>
+          <Select
+            id="li-type"
+            selectedValue="paragraphs"
+            options={[
+              { value: 'paragraphs', label: copy.paragraphs },
+              { value: 'sentences', label: copy.sentences },
+              { value: 'words', label: copy.words },
+            ]}
+          />
+        </label>
 
         <label class="lorem-generator__field" for="li-amount">
           <span>{copy.amount}</span>
@@ -346,7 +350,6 @@ const copy = {
     liAmount.value = '3';
     liType.value = 'paragraphs';
     liLanguage.value = 'latin';
-    document.dispatchEvent(new CustomEvent('tool-dropdown:sync'));
     syncPresets();
     syncOutputDirection();
     showEmpty(liOutput.dataset.empty || 'Click Generate to create placeholder text');

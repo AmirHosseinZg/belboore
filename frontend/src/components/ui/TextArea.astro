@@ -1,0 +1,69 @@
+---
+interface Props {
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  rows?: number;
+  value?: string;
+  readonly?: boolean;
+  className?: string;
+}
+
+const {
+  id,
+  name,
+  placeholder = '',
+  rows = 6,
+  value = '',
+  readonly = false,
+  className = '',
+  ...rest
+} = Astro.props;
+---
+
+<textarea
+  id={id}
+  name={name}
+  class:list={['ui-textarea', className]}
+  placeholder={placeholder}
+  rows={rows}
+  readonly={readonly}
+  dir="auto"
+  {...rest}
+>{value}</textarea>
+
+<style>
+  .ui-textarea {
+    width: 100%;
+    min-height: 160px;
+    padding: var(--space-4);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    outline: none;
+    resize: vertical;
+    unicode-bidi: plaintext;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+
+  .ui-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .ui-textarea:focus {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  [data-theme='dark'] .ui-textarea {
+    background: var(--surface-elevated);
+    border-color: var(--border-default);
+  }
+</style>

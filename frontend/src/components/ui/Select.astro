@@ -1,0 +1,96 @@
+---
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+interface Props {
+  id: string;
+  name?: string;
+  options: SelectOption[];
+  selectedValue?: string;
+  className?: string;
+}
+
+const { id, name, options = [], selectedValue, className = '', ...rest } = Astro.props;
+---
+
+<div class:list={['ui-select', className]}>
+  <select id={id} name={name} class="ui-select__native" {...rest}>
+    {options.map((option) => (
+      <option value={option.value} selected={option.value === selectedValue}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+  <span class="ui-select__arrow" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="m6 9 6 6 6-6"></path>
+    </svg>
+  </span>
+</div>
+
+<style>
+  .ui-select {
+    position: relative;
+    width: 100%;
+  }
+
+  .ui-select__native {
+    appearance: none;
+    width: 100%;
+    min-height: 46px;
+    padding-inline: var(--space-4) calc(var(--space-6) + var(--space-3));
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 74%, transparent));
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+    outline: none;
+    cursor: pointer;
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .ui-select__native:hover {
+    border-color: color-mix(in srgb, var(--color-tech-blue) 34%, var(--border-default));
+    transform: translateY(-1px);
+  }
+
+  .ui-select__native:focus {
+    border-color: var(--color-tech-blue);
+    box-shadow:
+      0 0 0 4px var(--color-tech-blue-subtle),
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+  }
+
+  .ui-select__arrow {
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-tech-blue);
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  [data-theme='dark'] .ui-select__native {
+    background:
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    border-color: var(--border-default);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      var(--shadow-sm);
+  }
+</style>

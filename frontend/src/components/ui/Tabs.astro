@@ -1,0 +1,167 @@
+---
+interface TabItem {
+  id: string;
+  label: string;
+}
+
+interface Props {
+  id: string;
+  tabs: TabItem[];
+  activeId?: string;
+  className?: string;
+  ariaLabel?: string;
+}
+
+const { id, tabs = [], activeId, className = '', ariaLabel = 'Tabs' } = Astro.props;
+const initialActiveId = activeId || tabs[0]?.id;
+---
+
+<div
+  id={id}
+  class:list={['ui-tabs', className]}
+  data-ui-tabs
+  data-active-tab={initialActiveId}
+  role="tablist"
+  aria-label={ariaLabel}
+>
+  {tabs.map((tab) => {
+    const selected = tab.id === initialActiveId;
+    return (
+      <button
+        type="button"
+        id={`${id}-tab-${tab.id}`}
+        class:list={['ui-tabs__tab', selected && 'is-active']}
+        role="tab"
+        aria-selected={selected ? 'true' : 'false'}
+        aria-controls={`${id}-panel-${tab.id}`}
+        data-tab-id={tab.id}
+      >
+        {tab.label}
+      </button>
+    );
+  })}
+</div>
+
+<script is:inline>
+  if (!window.__belbooreUiTabsReady) {
+    window.__belbooreUiTabsReady = true;
+
+    const tabsRootSelector = '[data-ui-tabs]';
+    const tabButtonSelector = '[role="tab"][data-tab-id]';
+
+    function setActiveTab(root, tabId, focusTab = false) {
+      if (!root || !tabId) return;
+      root.setAttribute('data-active-tab', tabId);
+
+      const tabs = Array.from(root.querySelectorAll(tabButtonSelector));
+      tabs.forEach((tab) => {
+        const isActive = tab.dataset.tabId === tabId;
+        tab.classList.toggle('is-active', isActive);
+        tab.setAttribute('aria-selected', String(isActive));
+        tab.tabIndex = isActive ? 0 : -1;
+
+        const controls = tab.getAttribute('aria-controls');
+        const panel = controls ? document.getElementById(controls) : null;
+        if (panel) panel.hidden = !isActive;
+      });
+
+      const event = new CustomEvent('ui-tabs:change', {
+        bubbles: true,
+        detail: { tabId },
+      });
+      root.dispatchEvent(event);
+
+      if (focusTab) {
+        const activeTab = root.querySelector(`${tabButtonSelector}[data-tab-id="${tabId}"]`);
+        activeTab?.focus();
+      }
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const tab = target.closest(tabButtonSelector);
+      if (!tab) return;
+      const root = tab.closest(tabsRootSelector);
+      if (!root) return;
+      setActiveTab(root, tab.dataset.tabId || '', false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const tab = target.closest(tabButtonSelector);
+      if (!tab) return;
+      const root = tab.closest(tabsRootSelector);
+      if (!root) return;
+
+      const tabs = Array.from(root.querySelectorAll(tabButtonSelector));
+      const index = tabs.indexOf(tab);
+      if (index < 0) return;
+
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        const next = tabs[(index + 1) % tabs.length];
+        setActiveTab(root, next.dataset.tabId || '', true);
+      } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prev = tabs[(index - 1 + tabs.length) % tabs.length];
+        setActiveTab(root, prev.dataset.tabId || '', true);
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        setActiveTab(root, tabs[0]?.dataset.tabId || '', true);
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        setActiveTab(root, tabs[tabs.length - 1]?.dataset.tabId || '', true);
+      }
+    });
+
+    Array.from(document.querySelectorAll(tabsRootSelector)).forEach((root) => {
+      const activeId = root.getAttribute('data-active-tab');
+      if (activeId) setActiveTab(root, activeId);
+    });
+  }
+</script>
+
+<style>
+  .ui-tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .ui-tabs__tab {
+    border: 0;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .ui-tabs__tab:hover {
+    color: var(--text-primary);
+  }
+
+  .ui-tabs__tab.is-active {
+    color: var(--color-tech-blue);
+    background: var(--surface-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .ui-tabs__tab:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 2px;
+  }
+</style>
