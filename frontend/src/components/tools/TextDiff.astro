@@ -7,6 +7,7 @@ import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import TextArea from '../ui/TextArea.astro';
 import Button from '../ui/Button.astro';
+import Checkbox from '../ui/Checkbox.astro';
 
 interface Props {
   lang?: Lang;
@@ -34,10 +35,9 @@ const dir = languages[lang].dir;
     </div>
 
     <div class="text-diff__actions">
-      <label class="text-diff__case-toggle" for="td-case-sensitive">
-        <input id="td-case-sensitive" type="checkbox" />
-        <span>{t['tools.textDiff.caseSensitive']}</span>
-      </label>
+      <Checkbox id="td-case-sensitive" className="text-diff__case-toggle">
+        {t['tools.textDiff.caseSensitive']}
+      </Checkbox>
       <Button id="td-compare" variant="primary">{t['tools.textDiff.compare']}</Button>
       <Button id="td-clear" variant="secondary">{t['tools.textDiff.clear']}</Button>
     </div>
@@ -218,19 +218,7 @@ const dir = languages[lang].dir;
   }
 
   .text-diff__case-toggle {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    color: var(--text-secondary);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
     margin-inline-end: auto;
-  }
-
-  .text-diff__case-toggle input {
-    inline-size: 16px;
-    block-size: 16px;
-    accent-color: var(--color-tech-blue);
   }
 
   .text-diff__result-wrap {
