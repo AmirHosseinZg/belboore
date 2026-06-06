@@ -4,6 +4,9 @@ import { languages } from '../../i18n/utils';
 import { ui } from '../../i18n/ui';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Progress from '../ui/Progress.astro';
 
 interface Props {
   lang?: Lang;
@@ -37,6 +40,10 @@ const dir = languages[lang].dir;
 
     <p id="image-b64-warning" class="image-b64__warning" role="alert" hidden></p>
 
+    <div id="image-b64-progress-wrap" class="image-b64__progress-wrap" hidden>
+      <Progress id="image-b64-progress" label={t['tools.imageToBase64.uploadProgress']} value={0} max={100} />
+    </div>
+
     <div class="image-b64__preview-wrap">
       <p class="image-b64__label">{t['tools.imageToBase64.previewLabel']}</p>
       <img id="image-b64-preview" class="image-b64__preview" alt={t['tools.imageToBase64.previewAlt']} hidden />
@@ -46,31 +53,31 @@ const dir = languages[lang].dir;
     <div class="image-b64__output-wrap">
       <label for="image-b64-output" class="image-b64__label">{t['tools.imageToBase64.outputLabel']}</label>
       <div class="image-b64__output-shell">
-        <textarea
+        <TextArea
           id="image-b64-output"
-          class="tool-textarea tool-textarea--mono image-b64__output"
-          readonly
+          className="tool-textarea--mono image-b64__output"
+          readonly={true}
           placeholder={t['tools.imageToBase64.outputPlaceholder']}
-        ></textarea>
+        />
       </div>
     </div>
 
     <div class="image-b64__actions">
-      <button id="image-b64-copy" type="button" class="tool-btn image-b64__action image-b64__action--copy" disabled>
+      <Button id="image-b64-copy" variant="primary" className="image-b64__action image-b64__action--copy" disabled={true}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <rect x="9" y="9" width="13" height="13" rx="2"></rect>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
         <span>{t['tools.imageToBase64.copy']}</span>
-      </button>
-      <button id="image-b64-clear" type="button" class="tool-btn image-b64__action image-b64__action--clear">
+      </Button>
+      <Button id="image-b64-clear" variant="secondary" className="image-b64__action image-b64__action--clear">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M3 6h18"></path>
           <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path>
           <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
         </svg>
         <span>{t['tools.imageToBase64.clear']}</span>
-      </button>
+      </Button>
     </div>
   </section>
 </ToolWorkspace>
@@ -82,11 +89,13 @@ const dir = languages[lang].dir;
   const warning = document.getElementById('image-b64-warning');
   const preview = document.getElementById('image-b64-preview');
   const previewEmpty = document.getElementById('image-b64-preview-empty');
+  const progressWrap = document.getElementById('image-b64-progress-wrap');
+  const progress = document.getElementById('image-b64-progress');
   const output = document.getElementById('image-b64-output');
   const copyBtn = document.getElementById('image-b64-copy');
   const clearBtn = document.getElementById('image-b64-clear');
 
-  if (!root || !input || !dropzone || !warning || !preview || !previewEmpty || !output || !copyBtn || !clearBtn) {
+  if (!root || !input || !dropzone || !warning || !preview || !previewEmpty || !progressWrap || !progress || !output || !copyBtn || !clearBtn) {
     throw new Error('Image to Base64 tool initialization failed');
   }
 
@@ -98,6 +107,42 @@ const dir = languages[lang].dir;
   const copyFailedText = root.getAttribute('data-copy-failed') || 'Copy failed';
 
   let copyTimer = null;
+  let progressInterval = null;
+
+  function setProgress(value) {
+    window.__belbooreUiProgress?.setValue(progress, value, 100);
+  }
+
+  function showProgress() {
+    progressWrap.hidden = false;
+    setProgress(10);
+  }
+
+  function completeProgress() {
+    setProgress(100);
+    setTimeout(() => {
+      progressWrap.hidden = true;
+      setProgress(0);
+    }, 420);
+  }
+
+  function stopProgressSimulation() {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      progressInterval = null;
+    }
+  }
+
+  function startProgressSimulation() {
+    stopProgressSimulation();
+    let current = 10;
+    showProgress();
+    progressInterval = setInterval(() => {
+      current = Math.min(current + 10, 90);
+      setProgress(current);
+      if (current >= 90) stopProgressSimulation();
+    }, 120);
+  }
 
   function clearWarning() {
     warning.textContent = '';
@@ -111,6 +156,7 @@ const dir = languages[lang].dir;
 
   function setPreview(src) {
     preview.setAttribute('src', src);
+    preview.classList.add('is-visible');
     preview.hidden = false;
     previewEmpty.hidden = true;
   }
@@ -119,9 +165,13 @@ const dir = languages[lang].dir;
     input.value = '';
     output.value = '';
     preview.removeAttribute('src');
+    preview.classList.remove('is-visible');
     preview.hidden = true;
     previewEmpty.hidden = false;
     copyBtn.disabled = true;
+    progressWrap.hidden = true;
+    setProgress(0);
+    stopProgressSimulation();
     clearWarning();
     dropzone.classList.remove('is-dragover');
     if (copyTimer) {
@@ -146,6 +196,7 @@ const dir = languages[lang].dir;
     }
 
     clearWarning();
+    startProgressSimulation();
     const reader = new FileReader();
 
     reader.onload = () => {
@@ -154,9 +205,13 @@ const dir = languages[lang].dir;
       output.value = result;
       setPreview(result);
       copyBtn.disabled = false;
+      completeProgress();
     };
 
     reader.onerror = () => {
+      stopProgressSimulation();
+      setProgress(0);
+      progressWrap.hidden = true;
       showWarning(invalidFileText);
     };
 
@@ -293,6 +348,11 @@ const dir = languages[lang].dir;
     font-size: var(--text-sm);
   }
 
+  .image-b64__progress-wrap {
+    margin-top: calc(var(--space-1) * -1);
+    margin-bottom: var(--space-1);
+  }
+
   .image-b64__preview-wrap,
   .image-b64__output-wrap {
     display: flex;
@@ -310,6 +370,7 @@ const dir = languages[lang].dir;
   }
 
   .image-b64__preview {
+    display: none;
     width: min(100%, 320px);
     max-height: 220px;
     object-fit: contain;
@@ -317,6 +378,10 @@ const dir = languages[lang].dir;
     border: 1px solid var(--border-subtle);
     background: var(--surface-primary);
     padding: var(--space-2);
+  }
+
+  .image-b64__preview.is-visible {
+    display: block;
   }
 
   .image-b64__empty {
@@ -415,7 +480,7 @@ const dir = languages[lang].dir;
       padding: var(--space-5) var(--space-4);
     }
 
-    .image-b64__actions .tool-btn {
+    .image-b64__actions .image-b64__action {
       width: 100%;
       justify-content: center;
     }

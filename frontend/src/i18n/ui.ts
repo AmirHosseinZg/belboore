@@ -75,6 +75,7 @@ export const en = {
   'tools.imageToBase64.fileTooLarge': 'File is too large. Maximum size is 5MB.',
   'tools.imageToBase64.invalidFile': 'Please select a valid image file.',
   'tools.imageToBase64.copyFailed': 'Could not copy to clipboard. Please try again.',
+  'tools.imageToBase64.uploadProgress': 'Upload progress',
 
   'categories.heading': 'Categories',
   'categories.description': 'Explore tools organized by category.',
@@ -191,6 +192,7 @@ export const fa = {
   'tools.imageToBase64.fileTooLarge': 'حجم فایل زیاد است. حداکثر حجم ۵ مگابایت است.',
   'tools.imageToBase64.invalidFile': 'لطفاً یک فایل تصویر معتبر انتخاب کنید.',
   'tools.imageToBase64.copyFailed': 'کپی در کلیپ‌بورد انجام نشد. دوباره تلاش کنید.',
+  'tools.imageToBase64.uploadProgress': 'پیشرفت آپلود',
 
   'categories.heading': 'دسته‌بندی‌ها',
   'categories.description': 'ابزارها را بر اساس دسته‌بندی مرور کنید.',
