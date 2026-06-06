@@ -19,6 +19,7 @@ import HashGenerator from '../../../components/tools/HashGenerator.astro';
 import TimestampConverter from '../../../components/tools/TimestampConverter.astro';
 import UnitConverter from '../../../components/tools/UnitConverter.astro';
 import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
+import ImageToBase64 from '../../../components/tools/ImageToBase64.astro';
 
 export function getStaticPaths() {
   return [
@@ -68,6 +69,7 @@ const toolComponentMap: Record<string, any> = {
   'time-converter': TimestampConverter,
   'unit-converter': UnitConverter,
   'markdown-preview': MarkdownEditor,
+  'image-to-base64': ImageToBase64,
 };
 
 const ToolComponent = toolComponentMap[slug];
