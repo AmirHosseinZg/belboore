@@ -20,6 +20,7 @@
 *   **Extract Text from Images:** Upload a picture, and our AI will read and copy the text inside it for you. *(Draws boxes around the detected text)*.
 *   **QR Code Scanner:** Use your camera or upload a picture to instantly read any QR code.
 *   **Make a Branded QR Code:** Create your own QR codes and customize them with your personal colors and business logo.
+*   **File/Audio to QR Code:** Upload any file or audio clip and get a QR code linking to a permanent hosted URL. For small data (like WiFi passwords or short text), also generates a self-contained offline QR code with no server dependency.
 
 ### 🎥 Video Tools
 *Simple tools for your video files.*
@@ -41,6 +42,7 @@
 *   **Images to PDF:** Upload photos from your phone or computer and combine them into a single, neat PDF document. *(You can drag and drop to reorder them)*.
 *   **Merge PDFs:** Combine several different PDF files into one large document. *(Lets you preview and delete specific pages before merging)*.
 *   **PDF Compressor:** Make heavy PDF files smaller so they can be uploaded or emailed easily.
+*   **PDF to Markdown:** Convert PDF documents into structured, AI-readable Markdown files. Useful for feeding documents into LLMs or importing into knowledge bases.
 
 ### 📥 Downloader Tools
 *Save your favorite content to your device.*
@@ -74,7 +76,8 @@
 *Quick utilities for programmers.*
 
 *   **JSON Formatter:** Clean up messy JSON code so it is color-coded and easy to read.
-*   **Markdown Viewer:** Type Markdown on one side and see the live web preview on the other.
+*   **JSON Tree Viewer:** Explore JSON data in an interactive collapsible tree (like Vercel's viewer). Includes search, filter, and one-click path copying.
+*   **Markdown Viewer & Exporter:** Live split-pane Markdown editor with preview. Supports LaTeX math formulas, chemical equations, and full RTL text for Persian and Arabic documents. Customize fonts, background colors, and page styling, then export to HTML or PDF with your own custom CSS.
 *   **URL Encode/Decode:** Make text safe to put into a web URL.
 *   **UUID Generator:** Generate unique ID numbers in bulk (e.g., $10$ or $50$ at once).
 *   **Hash Generator:** Create secure cryptographic hashes (MD5, SHA-256) for data verification.
@@ -112,6 +115,7 @@
 *Helpful everyday utilities.*
 
 *   **Password Generator:** Create super-strong, random passwords so hackers can't guess them.
+*   **Instant URL:** Enter any text (like a WiFi password or a private message) and get a temporary short URL that displays it for a limited time before expiring.
 *   **Unit Converter:** Convert things like Miles to Kilometers, Pounds to Kilograms, or Celsius to Fahrenheit.
 *   **WiFi QR Code Maker:** Type in your home WiFi password and generate a QR code. Guests can just scan it to connect!
 *   **Local File Share (Mizban):** Quickly and securely send files to other computers in your office network at speeds up to $100$ $MB/s$.
