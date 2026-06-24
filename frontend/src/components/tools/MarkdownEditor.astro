@@ -1,0 +1,895 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { Copy, Expand, Minimize2, Shrink, Trash2 } from '@lucide/astro';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Tabs from '../ui/Tabs.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Markdown Editor',
+    editor: 'Editor',
+    preview: 'Preview',
+    editMode: 'Edit mode',
+    previewMode: 'Preview mode',
+    placeholder: 'Paste or write Markdown here...',
+    copyHtml: 'Copy HTML',
+    fullscreen: 'Fullscreen preview',
+    exitFullscreen: 'Exit fullscreen',
+    minimize: 'Minimize preview',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Your formatted preview will appear here.',
+    note: 'Markdown parsing happens in your browser. Your content is never uploaded.',
+    copied: 'Copied!',
+    example: `# Markdown Preview
+
+## Features
+
+- Live preview
+- Copy HTML
+- Clean formatting
+- **Bold**, *italic*, and \`code\`.
+
+\`\`\`js
+console.log("Hello Markdown")
+\`\`\`
+`,
+  },
+  fa: {
+    title: 'ویرایشگر Markdown',
+    editor: 'ویرایشگر',
+    preview: 'پیش‌نمایش',
+    editMode: 'حالت ویرایش',
+    previewMode: 'حالت پیش‌نمایش',
+    placeholder: 'Markdown خود را اینجا بنویسید یا جای‌گذاری کنید...',
+    copyHtml: 'کپی HTML',
+    fullscreen: 'نمایش تمام‌صفحه',
+    exitFullscreen: 'خروج از تمام‌صفحه',
+    minimize: 'کوچک کردن پیش‌نمایش',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه Markdown',
+    empty: 'پیش‌نمایش فرمت‌شده اینجا نمایش داده می‌شود.',
+    note: 'پردازش Markdown در مرورگر شما انجام می‌شود و محتوای شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+    example: `# پیش‌نمایش Markdown
+
+## قابلیت‌ها
+
+- پیش‌نمایش زنده
+- کپی HTML
+- فرمت تمیز
+- **Bold**، *italic* و \`code\`.
+
+\`\`\`js
+console.log("Hello Markdown")
+\`\`\`
+`,
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div
+    class="markdown-editor"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-example={copy.example}
+  >
+    <div class="tool-toolbar markdown-editor__toolbar">
+      <div class="markdown-editor__actions">
+        <Button id="md-copy-html" variant="primary" className="markdown-editor__action markdown-editor__action--copy" aria-label={copy.copyHtml} title={copy.copyHtml}>
+          <Copy />
+        </Button>
+        <Button id="md-fullscreen" variant="outline" className="markdown-editor__action markdown-editor__action--fullscreen" aria-label={copy.fullscreen} title={copy.fullscreen} data-label-open={copy.fullscreen} data-label-close={copy.exitFullscreen}>
+          <span class="markdown-editor__action-icon markdown-editor__action-icon--enter" aria-hidden="true">
+            <Expand />
+          </span>
+          <span class="markdown-editor__action-icon markdown-editor__action-icon--exit" aria-hidden="true">
+            <Shrink />
+          </span>
+        </Button>
+        <Button id="md-clear" variant="danger" className="markdown-editor__action markdown-editor__action--clear" aria-label={copy.clear} title={copy.clear}>
+          <Trash2 />
+        </Button>
+      </div>
+      <Tabs
+        id="md-mode-tabs"
+        className="markdown-editor__tabs"
+        ariaLabel={copy.title}
+        activeId="edit"
+        tabs={[
+          { id: 'edit', label: copy.editMode },
+          { id: 'preview', label: copy.previewMode },
+        ]}
+      />
+    </div>
+
+    <div class="markdown-editor__stage">
+      <div
+        id="md-mode-tabs-panel-edit"
+        class="tool-field markdown-editor__panel markdown-editor__panel--active"
+        role="tabpanel"
+        aria-labelledby="md-mode-tabs-tab-edit"
+        data-panel="edit"
+      >
+        <label class="tool-field__label" for="md-input">{copy.editor}</label>
+        <TextArea
+          id="md-input"
+          className="tool-textarea--mono markdown-editor__textarea"
+          placeholder={copy.placeholder}
+          spellcheck="false"
+        />
+      </div>
+
+      <div
+        id="md-mode-tabs-panel-preview"
+        class="tool-field markdown-editor__panel"
+        role="tabpanel"
+        aria-labelledby="md-mode-tabs-tab-preview"
+        data-panel="preview"
+        hidden
+      >
+        <div class="markdown-editor__preview-head">
+          <div class="markdown-editor__preview-label">{copy.preview}</div>
+          <Button id="md-minimize" variant="outline" className="markdown-editor__minimize" aria-label={copy.minimize} title={copy.minimize}>
+            <Minimize2 />
+          </Button>
+        </div>
+        <div id="md-preview" class="markdown-editor__preview markdown-editor__preview--empty" dir="auto" tabindex="-1" aria-live="polite">
+          {copy.empty}
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-note">
+      {copy.note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { marked } from 'marked';
+
+  const root = document.querySelector('.markdown-editor') as HTMLElement | null;
+  const input = document.getElementById('md-input') as HTMLTextAreaElement | null;
+  const preview = document.getElementById('md-preview') as HTMLDivElement | null;
+  const copyButton = document.getElementById('md-copy-html') as HTMLButtonElement | null;
+  const fullscreenButton = document.getElementById('md-fullscreen') as HTMLButtonElement | null;
+  const minimizeButton = document.getElementById('md-minimize') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('md-clear') as HTMLButtonElement | null;
+  const tabsRoot = document.getElementById('md-mode-tabs') as HTMLElement | null;
+
+  let currentHtml = '';
+
+  marked.use({
+    gfm: true,
+    breaks: false,
+  });
+
+  const allowedTags = new Set([
+    'A', 'BLOCKQUOTE', 'BR', 'CODE', 'DEL', 'EM', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6',
+    'HR', 'LI', 'OL', 'P', 'PRE', 'STRONG', 'TABLE', 'TBODY', 'TD', 'TH', 'THEAD',
+    'TR', 'UL',
+  ]);
+
+  const allowedAttrs: Record<string, string[]> = {
+    A: ['href', 'title'],
+    CODE: ['class'],
+  };
+
+  function getContentDirection(text: string) {
+    const firstStrongChar = text.match(/[\p{Script=Arabic}\p{Script=Hebrew}A-Za-z]/u)?.[0] || '';
+    return /[\p{Script=Arabic}\p{Script=Hebrew}]/u.test(firstStrongChar) ? 'rtl' : 'ltr';
+  }
+
+  function syncContentDirection(text: string) {
+    const direction = text.trim() ? getContentDirection(text) : 'auto';
+    input?.setAttribute('dir', direction);
+    preview?.setAttribute('dir', direction);
+  }
+
+  function isSafeUrl(value: string) {
+    if (value.startsWith('#')) return true;
+
+    try {
+      const url = new URL(value, window.location.origin);
+      return ['http:', 'https:', 'mailto:', 'tel:'].includes(url.protocol);
+    } catch {
+      return false;
+    }
+  }
+
+  function unwrapElement(element: Element) {
+    const parent = element.parentNode;
+    if (!parent) return;
+
+    while (element.firstChild) {
+      parent.insertBefore(element.firstChild, element);
+    }
+
+    element.remove();
+  }
+
+  function sanitizeHtml(html: string) {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+
+    Array.from(template.content.querySelectorAll('*')).forEach((element) => {
+      if (!allowedTags.has(element.tagName)) {
+        unwrapElement(element);
+        return;
+      }
+
+      Array.from(element.attributes).forEach((attr) => {
+        const allowed = allowedAttrs[element.tagName] || [];
+        const shouldKeep = allowed.includes(attr.name);
+
+        if (!shouldKeep) {
+          element.removeAttribute(attr.name);
+          return;
+        }
+
+        if (element.tagName === 'A' && attr.name === 'href' && !isSafeUrl(attr.value)) {
+          element.removeAttribute(attr.name);
+        }
+      });
+
+      if (element.tagName === 'A' && element.getAttribute('href')) {
+        element.setAttribute('target', '_blank');
+        element.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+
+    return template.innerHTML;
+  }
+
+  function renderMarkdown() {
+    if (!input || !preview || !root) return;
+
+    const markdown = input.value.trim();
+    syncContentDirection(markdown);
+
+    if (!markdown) {
+      currentHtml = '';
+      preview.textContent = root.dataset.empty || 'Your formatted preview will appear here.';
+      preview.classList.add('markdown-editor__preview--empty');
+      return;
+    }
+
+    currentHtml = sanitizeHtml(marked.parse(markdown, { async: false }) as string);
+    preview.innerHTML = currentHtml;
+    preview.classList.remove('markdown-editor__preview--empty');
+  }
+
+  const debouncedRender = window.__belbooreTools.debounce(renderMarkdown, 120);
+
+  input?.addEventListener('input', debouncedRender);
+
+  function setMode(mode: string) {
+    const targetTab = document.getElementById(`md-mode-tabs-tab-${mode}`) as HTMLButtonElement | null;
+    targetTab?.click();
+  }
+
+  tabsRoot?.addEventListener('ui-tabs:change', (event: Event) => {
+    const customEvent = event as CustomEvent<{ tabId?: string }>;
+    const mode = customEvent.detail?.tabId || 'edit';
+    if (mode === 'preview') {
+      renderMarkdown();
+    } else {
+      input?.focus();
+    }
+  });
+
+  function setPreviewFullscreen(active: boolean) {
+    if (!root || !fullscreenButton) return;
+
+    root.classList.toggle('markdown-editor--fullscreen', active);
+    fullscreenButton.setAttribute('aria-pressed', String(active));
+
+    const label = active
+      ? fullscreenButton.dataset.labelClose || 'Exit fullscreen'
+      : fullscreenButton.dataset.labelOpen || 'Fullscreen preview';
+
+    fullscreenButton.setAttribute('aria-label', label);
+    fullscreenButton.setAttribute('title', label);
+
+    if (active) {
+      setMode('preview');
+      document.body.style.overflow = 'hidden';
+      preview?.focus();
+    } else {
+      document.body.style.overflow = '';
+      fullscreenButton.focus();
+    }
+  }
+
+  fullscreenButton?.addEventListener('click', () => {
+    const isActive = root?.classList.contains('markdown-editor--fullscreen') || false;
+    setPreviewFullscreen(!isActive);
+  });
+
+  minimizeButton?.addEventListener('click', () => setPreviewFullscreen(false));
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && root?.classList.contains('markdown-editor--fullscreen')) {
+      setPreviewFullscreen(false);
+    }
+  });
+
+  copyButton?.addEventListener('click', () => {
+    if (!currentHtml) return;
+    window.__belbooreTools.copyToClipboard(currentHtml, copyButton, 1500);
+  });
+
+  clearButton?.addEventListener('click', () => {
+    if (!input) return;
+    input.value = '';
+    renderMarkdown();
+    input.focus();
+  });
+
+  renderMarkdown();
+</script>
+
+<style is:global>
+  .markdown-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .markdown-editor__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: 0;
+  }
+
+  .markdown-editor__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    order: 0;
+  }
+
+  .markdown-editor__tabs {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    margin-inline-start: auto;
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    order: 1;
+  }
+
+  .markdown-editor__action {
+    justify-content: center;
+    min-height: 40px;
+    width: 42px;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    font-weight: var(--weight-semibold);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .markdown-editor__action-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 22px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .markdown-editor__action svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .markdown-editor__action--copy {
+    color: white;
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-electric-cyan));
+    border-color: transparent;
+  }
+
+  .markdown-editor__action--copy:hover {
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 10px 24px rgba(0, 82, 255, 0.22);
+    transform: translateY(-1px);
+  }
+
+  .markdown-editor__action--fullscreen {
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+    border-color: rgba(0, 82, 255, 0.16);
+  }
+
+  .markdown-editor__action--fullscreen .markdown-editor__action-icon {
+    background: rgba(0, 82, 255, 0.1);
+  }
+
+  .markdown-editor__action--fullscreen:hover {
+    color: var(--color-tech-blue);
+    background: rgba(0, 82, 255, 0.12);
+    border-color: rgba(0, 82, 255, 0.24);
+  }
+
+  .markdown-editor__action-icon--exit {
+    display: none;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__action-icon--enter {
+    display: none;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__action-icon--exit {
+    display: inline-flex;
+  }
+
+  .markdown-editor__action--clear {
+    color: var(--color-error);
+    background: var(--color-error-subtle);
+    border-color: var(--color-error-border);
+  }
+
+  .markdown-editor__action--clear .markdown-editor__action-icon {
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  .markdown-editor__action--clear:hover {
+    color: white;
+    background: var(--color-error);
+    border-color: var(--color-error);
+  }
+
+  .markdown-editor__action--clear:hover .markdown-editor__action-icon {
+    background: rgba(255, 255, 255, 0.16);
+  }
+
+  .markdown-editor__tabs .ui-tabs__tab {
+    border: 0;
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-4);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .markdown-editor__tabs .ui-tabs__tab:hover {
+    color: var(--text-primary);
+  }
+
+  .markdown-editor__tabs .ui-tabs__tab.is-active {
+    color: var(--color-tech-blue);
+    background: var(--surface-primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  @media (max-width: 640px) {
+    .markdown-editor__toolbar {
+      flex-wrap: wrap;
+    }
+
+    .markdown-editor__tabs {
+      order: 0;
+      margin-inline-start: 0;
+    }
+
+    .markdown-editor__actions {
+      order: 1;
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
+
+  .markdown-editor__stage {
+    width: 100%;
+    padding: var(--space-3);
+    background:
+      radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-lg) + 4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .markdown-editor__panel {
+    min-width: 0;
+    gap: var(--space-3);
+  }
+
+  .markdown-editor__panel[hidden] {
+    display: none;
+  }
+
+  .markdown-editor__textarea,
+  .markdown-editor__preview {
+    width: 100%;
+    min-height: 620px;
+    max-height: 680px;
+    overflow: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .markdown-editor__textarea {
+    padding: var(--space-6);
+    font-size: var(--text-base);
+    line-height: 1.85;
+    color: var(--text-primary);
+    background:
+      linear-gradient(90deg, rgba(0, 82, 255, 0.035) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 92%, transparent));
+    border: 1px solid rgba(0, 82, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 42%, transparent);
+    resize: vertical;
+    unicode-bidi: plaintext;
+    caret-color: var(--color-tech-blue);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+
+  .markdown-editor__textarea:focus {
+    border-color: var(--color-tech-blue);
+    box-shadow:
+      0 0 0 4px var(--color-tech-blue-subtle),
+      0 14px 34px rgba(0, 82, 255, 0.08),
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+  }
+
+  .markdown-editor__textarea::placeholder {
+    color: color-mix(in srgb, var(--text-muted) 82%, transparent);
+  }
+
+  .markdown-editor__preview-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .markdown-editor__preview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .markdown-editor__minimize {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+    border: 1px solid rgba(0, 82, 255, 0.16);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .markdown-editor__minimize:hover {
+    background: rgba(0, 82, 255, 0.12);
+    border-color: rgba(0, 82, 255, 0.24);
+    transform: translateY(-1px);
+  }
+
+  .markdown-editor__preview {
+    padding: var(--space-6);
+    color: var(--text-primary);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 94%, transparent));
+    border: 1px solid rgba(0, 82, 255, 0.12);
+    line-height: 1.7;
+    word-break: normal;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 38%, transparent);
+    unicode-bidi: plaintext;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__toolbar,
+  .markdown-editor--fullscreen .markdown-editor__stage {
+    position: fixed;
+    z-index: 1000;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__toolbar {
+    inset-inline: var(--space-6);
+    top: var(--space-5);
+    justify-content: flex-end;
+    padding: var(--space-3);
+    background: color-mix(in srgb, var(--surface-primary) 92%, transparent);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(18px);
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__tabs {
+    margin-inline-end: auto;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__stage {
+    inset: 0;
+    padding: calc(var(--space-20) + var(--space-2)) var(--space-6) var(--space-6);
+    background:
+      radial-gradient(circle at 70% 0%, rgba(0, 82, 255, 0.12), transparent 34%),
+      color-mix(in srgb, var(--surface-secondary) 98%, transparent);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .markdown-editor--fullscreen [data-panel="edit"] {
+    display: none;
+  }
+
+  .markdown-editor--fullscreen [data-panel="preview"] {
+    display: flex;
+    height: 100%;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__preview-head {
+    position: absolute;
+    top: var(--space-6);
+    right: var(--space-6);
+    z-index: 1;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__minimize {
+    display: inline-flex;
+  }
+
+  .markdown-editor--fullscreen .markdown-editor__preview {
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+    padding: var(--space-8);
+    padding-top: calc(var(--space-12) + var(--space-2));
+    background: var(--surface-primary);
+    box-shadow: var(--shadow-lg);
+  }
+
+  [data-theme="dark"] .markdown-editor__stage {
+    background:
+      radial-gradient(circle at top right, rgba(61, 139, 255, 0.12), transparent 34%),
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-secondary));
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .markdown-editor__textarea {
+    background:
+      linear-gradient(90deg, rgba(61, 139, 255, 0.055) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    border-color: rgba(61, 139, 255, 0.22);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="dark"] .markdown-editor__preview {
+    background:
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    border-color: rgba(61, 139, 255, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+  }
+
+  [data-theme="dark"] .markdown-editor--fullscreen .markdown-editor__toolbar {
+    background: color-mix(in srgb, var(--surface-elevated) 88%, transparent);
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .markdown-editor--fullscreen .markdown-editor__stage {
+    background:
+      radial-gradient(circle at 70% 0%, rgba(61, 139, 255, 0.16), transparent 34%),
+      var(--surface-secondary);
+  }
+
+  .markdown-editor__preview--empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+    text-align: center;
+    background:
+      radial-gradient(circle at center, rgba(0, 82, 255, 0.08), transparent 42%),
+      var(--surface-primary);
+  }
+
+  .markdown-editor__preview > :first-child {
+    margin-top: 0;
+  }
+
+  .markdown-editor__preview > :last-child {
+    margin-bottom: 0;
+  }
+
+  .markdown-editor__preview h1,
+  .markdown-editor__preview h2,
+  .markdown-editor__preview h3,
+  .markdown-editor__preview h4,
+  .markdown-editor__preview h5,
+  .markdown-editor__preview h6 {
+    margin: var(--space-5) 0 var(--space-3);
+    color: var(--text-primary);
+    font-weight: var(--weight-bold);
+    line-height: 1.25;
+  }
+
+  .markdown-editor__preview h1 {
+    font-size: var(--text-3xl);
+  }
+
+  .markdown-editor__preview h2 {
+    font-size: var(--text-2xl);
+  }
+
+  .markdown-editor__preview h3 {
+    font-size: var(--text-xl);
+  }
+
+  .markdown-editor__preview p,
+  .markdown-editor__preview ul,
+  .markdown-editor__preview ol,
+  .markdown-editor__preview blockquote,
+  .markdown-editor__preview pre,
+  .markdown-editor__preview table {
+    margin: 0 0 var(--space-4);
+  }
+
+  .markdown-editor__preview ul,
+  .markdown-editor__preview ol {
+    padding-inline-start: var(--space-6);
+  }
+
+  .markdown-editor__preview li + li {
+    margin-top: var(--space-1);
+  }
+
+  .markdown-editor__preview a {
+    color: var(--color-tech-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .markdown-editor__preview blockquote {
+    padding: var(--space-3) var(--space-4);
+    color: var(--text-secondary);
+    background: var(--surface-primary);
+    border-inline-start: 3px solid var(--color-tech-blue);
+    border-radius: var(--radius-md);
+  }
+
+  .markdown-editor__preview code {
+    padding: 0.15em 0.35em;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .markdown-editor__preview pre {
+    padding: var(--space-4);
+    overflow: auto;
+    background: #0f172a;
+    border-radius: var(--radius-md);
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: normal;
+  }
+
+  .markdown-editor__preview pre code {
+    display: block;
+    padding: 0;
+    color: #e5e7eb;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .markdown-editor__preview table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+  }
+
+  .markdown-editor__preview th,
+  .markdown-editor__preview td {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-subtle);
+    text-align: start;
+  }
+
+  .markdown-editor__preview th {
+    background: var(--surface-tertiary);
+    font-weight: var(--weight-semibold);
+  }
+
+  .markdown-editor__preview hr {
+    margin: var(--space-5) 0;
+    border: 0;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  @media (max-width: 768px) {
+    .markdown-editor__toolbar {
+      align-items: stretch;
+    }
+
+    .markdown-editor__tabs {
+      width: 100%;
+      margin-inline-end: 0;
+    }
+
+    .markdown-editor__tabs .ui-tabs__tab {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .markdown-editor__action {
+      width: 42px;
+      justify-content: center;
+    }
+
+    .markdown-editor__textarea,
+    .markdown-editor__preview {
+      min-height: 360px;
+      max-height: 520px;
+    }
+
+    .markdown-editor__stage {
+      padding: var(--space-2);
+    }
+
+    .markdown-editor__textarea,
+    .markdown-editor__preview {
+      padding: var(--space-4);
+    }
+  }
+</style>

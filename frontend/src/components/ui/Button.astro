@@ -1,0 +1,123 @@
+---
+interface Props {
+  id?: string;
+  type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+  className?: string;
+  disabled?: boolean;
+}
+
+const {
+  id,
+  type = 'button',
+  variant = 'secondary',
+  className = '',
+  disabled = false,
+  ...rest
+} = Astro.props;
+---
+
+<button
+  id={id}
+  type={type}
+  class:list={['ui-button', `ui-button--${variant}`, className]}
+  disabled={disabled}
+  {...rest}
+>
+  <slot />
+</button>
+
+<style>
+  .ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 42px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-default);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+    cursor: pointer;
+  }
+
+  .ui-button:hover {
+    transform: translateY(-1px);
+  }
+
+  .ui-button:active {
+    transform: translateY(0);
+  }
+
+  .ui-button:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 2px;
+  }
+
+  .ui-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    transform: none;
+  }
+
+  .ui-button--primary {
+    color: white;
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-electric-cyan));
+    border-color: transparent;
+    box-shadow: 0 8px 20px rgba(0, 82, 255, 0.2);
+  }
+
+  .ui-button--primary:hover {
+    color: white;
+    box-shadow: 0 12px 24px rgba(0, 82, 255, 0.28);
+  }
+
+  .ui-button--secondary {
+    color: var(--text-secondary);
+    background: var(--surface-primary);
+  }
+
+  .ui-button--secondary:hover {
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+    border-color: var(--border-strong);
+  }
+
+  .ui-button--outline {
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+    border-color: color-mix(in srgb, var(--color-tech-blue) 25%, var(--border-default));
+  }
+
+  .ui-button--ghost {
+    color: var(--text-tertiary);
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .ui-button--ghost:hover {
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+  }
+
+  .ui-button--danger {
+    color: var(--color-error);
+    background: var(--color-error-subtle);
+    border-color: var(--color-error-border);
+  }
+
+  .ui-button--danger:hover {
+    color: white;
+    background: var(--color-error);
+    border-color: var(--color-error);
+  }
+</style>

@@ -314,6 +314,7 @@ const dir = lang === 'fa' ? 'rtl' : 'ltr';
 
   /* ── Mobile Menu ── */
   .mobile-menu {
+    display: none;
     position: fixed;
     inset: 0;
     z-index: var(--z-overlay);
@@ -390,6 +391,10 @@ const dir = lang === 'fa' ? 'rtl' : 'ltr';
   }
 
   @media (max-width: 768px) {
+    .mobile-menu {
+      display: block;
+    }
+
     .header__nav {
       display: none;
     }

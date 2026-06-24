@@ -11,12 +11,16 @@ import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
 import PasswordGenerator from '../../../components/tools/PasswordGenerator.astro';
 import CaseConverter from '../../../components/tools/CaseConverter.astro';
 import WordCounter from '../../../components/tools/WordCounter.astro';
+import QrGenerator from '../../../components/tools/QrGenerator.astro';
 import LoremIpsum from '../../../components/tools/LoremIpsum.astro';
 import LineSorter from '../../../components/tools/LineSorter.astro';
 import ColorConverter from '../../../components/tools/ColorConverter.astro';
 import HashGenerator from '../../../components/tools/HashGenerator.astro';
 import TimestampConverter from '../../../components/tools/TimestampConverter.astro';
 import UnitConverter from '../../../components/tools/UnitConverter.astro';
+import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
+import ImageToBase64 from '../../../components/tools/ImageToBase64.astro';
+import TextDiff from '../../../components/tools/TextDiff.astro';
 
 export function getStaticPaths() {
   return [
@@ -58,12 +62,16 @@ const toolComponentMap: Record<string, any> = {
   'password-generator': PasswordGenerator,
   'case-converter': CaseConverter,
   'word-counter': WordCounter,
+  'qr-code-generator': QrGenerator,
   'lorem-ipsum': LoremIpsum,
   'line-sorter': LineSorter,
   'color-converter': ColorConverter,
   'hash-generator': HashGenerator,
   'time-converter': TimestampConverter,
   'unit-converter': UnitConverter,
+  'markdown-preview': MarkdownEditor,
+  'image-to-base64': ImageToBase64,
+  'text-diff': TextDiff,
 };
 
 const ToolComponent = toolComponentMap[slug];
@@ -71,6 +79,7 @@ const recentMeta = JSON.stringify({
   slug: tool.slug,
   name: name,
   icon: tool.icon,
+  iconPath: tool.iconPath || '',
   type: tool.type,
   url: tool.url || '',
 });
@@ -117,7 +126,17 @@ const recentMeta = JSON.stringify({
       <article class="tool-detail">
         <header class="tool-detail__header">
           <div class="tool-detail__icon-wrap">
-            <span class="tool-detail__icon">{tool.icon}</span>
+            {tool.iconPath ? (
+              <img
+                src={tool.iconPath}
+                alt=""
+                class="tool-detail__icon-img"
+                loading="eager"
+                decoding="async"
+              />
+            ) : (
+              <span class="tool-detail__icon">{tool.icon}</span>
+            )}
           </div>
           <div class="tool-detail__header-text">
             <div class="tool-detail__meta">
@@ -136,7 +155,7 @@ const recentMeta = JSON.stringify({
             {/* ═══ LIVE TOOL WORKSPACE ═══ */}
             {ToolComponent && tool.type === 'builtin' ? (
               <section class="tool-detail__section" id="tool-workspace">
-                <ToolComponent />
+                <ToolComponent lang={lang} />
               </section>
             ) : tool.type === 'builtin' ? (
               <div class="tool-detail__coming-soon">
@@ -147,15 +166,17 @@ const recentMeta = JSON.stringify({
               </div>
             ) : null}
 
-            <section class="tool-detail__section">
+            <section class="tool-detail__section tool-detail__section--after-tool">
               <h2 class="tool-detail__section-title">{t['tools.about']}</h2>
-              <p class="tool-detail__text">{longDesc}</p>
+              <div class="tool-detail__info-box">
+                <p class="tool-detail__text">{longDesc}</p>
+              </div>
             </section>
 
             {howToUse && (
               <section class="tool-detail__section">
                 <h2 class="tool-detail__section-title">{t['tools.howToUse']}</h2>
-                <div class="tool-detail__howto">
+                <div class="tool-detail__howWork-box">
                   <p class="tool-detail__text">{howToUse}</p>
                 </div>
               </section>
@@ -165,7 +186,7 @@ const recentMeta = JSON.stringify({
               <h3 class="tool-detail__tags-title">{t['tools.tags']}</h3>
               <div class="tool-detail__tags">
                 {tags.map(tag => (
-                  <span class="tool-detail__tag">{tag}</span>
+                  <span class="tool-detail__tag"><span aria-hidden="true">#</span>{tag}</span>
                 ))}
               </div>
             </section>
@@ -179,23 +200,23 @@ const recentMeta = JSON.stringify({
                   class="btn btn-primary btn-lg"
                   target="_blank"
                   rel="noopener noreferrer"
-                  style="width: 100%;"
                 >
                   {t['tools.visit']}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-                  </svg>
+                  <img class="tool-detail__click-icon" src="/general-icons/click/click-white.svg" alt="" aria-hidden="true" />
                 </a>
               ) : tool.type === 'builtin' && ToolComponent ? (
-                <a href="#tool-workspace" class="btn btn-primary btn-lg" style="width: 100%;">
+                <a href="#tool-workspace" class="btn btn-primary btn-lg">
                   {t['tools.useNow']}
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                  </svg>
+                  <img class="tool-detail__click-icon" src="/general-icons/click/click-white.svg" alt="" aria-hidden="true" />
                 </a>
+              ) : tool.type === 'builtin' ? (
+                <button type="button" class="btn btn-primary btn-lg tool-detail__use-disabled" disabled aria-disabled="true">
+                  {t['tools.useNow']}
+                  <img class="tool-detail__click-icon" src="/general-icons/click/click-white.svg" alt="" aria-hidden="true" />
+                </button>
               ) : null}
-              <a href={`/${lang}/tools`} class="btn btn-ghost" style="width: 100%;">
-                {t['tools.backToTools']}
+              <a href={`/${lang}/tools`} class="btn btn-ghost tool-detail__back-action" aria-label={t['tools.backToTools']}>
+                <img src="/general-icons/arrow/arrow-blue.svg" alt="" aria-hidden="true" />
               </a>
             </div>
           </aside>
@@ -288,6 +309,12 @@ const recentMeta = JSON.stringify({
     line-height: 1;
   }
 
+  .tool-detail__icon-img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+  }
+
   .tool-detail__header-text {
     flex: 1;
   }
@@ -347,6 +374,11 @@ const recentMeta = JSON.stringify({
     margin-bottom: var(--space-8);
   }
 
+  .tool-detail__section--after-tool {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border-subtle);
+  }
+
   .tool-detail__section-title {
     font-size: var(--text-xl);
     font-weight: var(--weight-bold);
@@ -359,17 +391,19 @@ const recentMeta = JSON.stringify({
     line-height: var(--leading-relaxed);
   }
 
-  .tool-detail__howto {
+  .tool-detail__info-box {
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
+    border-inline-start: 3px solid var(--color-tech-blue);
+    border-radius: var(--radius-sm);
     padding: var(--space-6);
-    border-left: 3px solid var(--color-tech-blue);
   }
-
-  [dir="rtl"] .tool-detail__howto {
-    border-left: 1px solid var(--border-subtle);
-    border-right: 3px solid var(--color-tech-blue);
+  .tool-detail__howWork-box {
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-inline-start: 3px solid #8b5cf6;
+    border-radius: var(--radius-sm);
+    padding: var(--space-6);
   }
 
   .tool-detail__coming-soon {
@@ -393,7 +427,7 @@ const recentMeta = JSON.stringify({
   .tool-detail__tags-title {
     font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-5);
   }
 
   .tool-detail__tags {
@@ -403,11 +437,14 @@ const recentMeta = JSON.stringify({
   }
 
   .tool-detail__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
     padding: var(--space-1) var(--space-3);
     font-size: var(--text-xs);
-    font-weight: var(--weight-medium);
-    color: var(--text-tertiary);
-    background: var(--surface-tertiary);
+    font-weight: var(--weight-semibold);
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
     border-radius: var(--radius-full);
   }
 
@@ -418,13 +455,59 @@ const recentMeta = JSON.stringify({
 
   .tool-detail__actions {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     gap: var(--space-3);
     padding: var(--space-6);
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+  }
+
+  .tool-detail__actions .btn {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  .tool-detail__click-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .tool-detail__use-disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+    box-shadow: none;
+    filter: grayscale(0.2);
+  }
+
+  .tool-detail__use-disabled:hover {
+    background: var(--color-tech-blue);
+    box-shadow: none;
+    transform: none;
+  }
+
+  .tool-detail__actions .tool-detail__back-action {
+    flex: 0 0 auto;
+    width: 48px;
+    padding-inline: var(--space-3);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(190, 220, 240, 0.68)),
+      var(--color-tech-blue-subtle);
+    border-color: rgba(0, 82, 255, 0.1);
+  }
+
+  .tool-detail__back-action img {
+    width: 16px;
+    height: 16px;
+    transform: rotate(180deg);
+  }
+
+  [dir="ltr"] .tool-detail__back-action img {
+    transform: rotate(0deg);
   }
 
   .tools-grid {

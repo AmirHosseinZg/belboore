@@ -1,6 +1,7 @@
 ---
 import type { Tool } from '../data/tools';
 import type { Lang } from '../i18n/utils';
+import { languages } from '../i18n/utils';
 import { ui } from '../i18n/ui';
 
 interface Props {
@@ -16,45 +17,62 @@ const toolUrl = tool.type === 'builtin'
   ? `/${lang}/tools/${tool.slug}`
   : tool.url || '#';
 const isExternal = tool.type === 'external';
+const hasImageIcon = Boolean(tool.iconPath);
+const dir = languages[lang].dir;
+const ctaText = tool.type === 'builtin' ? t['tools.useNow'] : t['tools.visit'];
 ---
 
 <a
   href={toolUrl}
+  dir={dir}
   class={`tool-card surface-card surface-card--interactive ${isExternal ? 'tool-card--external' : ''}`}
+  aria-label={`${name} - ${ctaText}`}
   {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
 >
   <div class="tool-card__header">
-    <span class="tool-card__icon">{tool.icon}</span>
+    <span class={`tool-card__icon ${hasImageIcon ? 'tool-card__icon--image' : ''}`}>
+      {hasImageIcon ? (
+        <img
+          src={tool.iconPath}
+          alt=""
+          class="tool-card__icon-img"
+          loading="lazy"
+          decoding="async"
+        />
+      ) : (
+        tool.icon
+      )}
+    </span>
+    <h3 class="tool-card__title">{name}</h3>
     <span class="tool-card__badge">
       {tool.type === 'builtin' ? t['tools.type.builtin'] : t['tools.type.external']}
     </span>
   </div>
   <div class="tool-card__body">
-    <h3 class="tool-card__title">{name}</h3>
     <p class="tool-card__desc">{description}</p>
   </div>
   <div class="tool-card__footer">
     <span class="tool-card__action">
-      {tool.type === 'builtin' ? t['tools.useNow'] : t['tools.visit']}
-      {isExternal ? (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
-        </svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
-        </svg>
-      )}
+      {ctaText}
+      <img
+        src="/general-icons/arrow/arrow-blue.svg"
+        alt=""
+        class="tool-card__arrow"
+        loading="lazy"
+        decoding="async"
+        aria-hidden="true"
+      />
     </span>
   </div>
 </a>
 
 <style>
   .tool-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-    padding: var(--space-6);
+    padding: calc(var(--space-6) + var(--space-2)) var(--space-6) var(--space-6);
     text-decoration: none;
     color: inherit;
     cursor: pointer;
@@ -64,39 +82,68 @@ const isExternal = tool.type === 'external';
   .tool-card__header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
+    gap: var(--space-5);
   }
 
   .tool-card__icon {
-    font-size: 1.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 58px;
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(180, 207, 255, 0.48)),
+      var(--color-tech-blue-subtle);
+    border: 1px solid rgba(0, 82, 255, 0.08);
+    flex-shrink: 0;
+    font-size: 2rem;
     line-height: 1;
   }
 
+  .tool-card__icon--image {
+    font-size: 0;
+  }
+
+  .tool-card__icon-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
   .tool-card__badge {
+    position: absolute;
+    top: 0;
+    left: var(--space-5);
+    transform: translateY(-50%);
     font-size: 0.65rem;
     font-weight: var(--weight-semibold);
-    padding: var(--space-1) var(--space-2);
+    padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-full);
-    background: var(--surface-tertiary);
-    color: var(--text-tertiary);
+    background: linear-gradient(135deg, rgba(220, 252, 231, 0.96), rgba(209, 250, 229, 0.96));
+    color: #047857;
     text-transform: uppercase;
     letter-spacing: 0.04em;
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.12);
   }
 
   .tool-card--external .tool-card__badge {
-    background: var(--color-electric-cyan-subtle);
-    color: var(--color-electric-cyan);
+    background: linear-gradient(135deg, rgba(255, 237, 213, 0.96), rgba(254, 215, 170, 0.96));
+    color: #c2410c;
+    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.12);
   }
 
   .tool-card__body {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-3);
     flex: 1;
+    margin-block-end: var(--space-3);
   }
 
   .tool-card__title {
-    font-size: var(--text-base);
+    font-size: var(--text-lg);
     font-weight: var(--weight-semibold);
     line-height: var(--leading-snug);
   }
@@ -105,11 +152,21 @@ const isExternal = tool.type === 'external';
     font-size: var(--text-sm);
     color: var(--text-tertiary);
     line-height: var(--leading-relaxed);
-    margin: 0;
+    margin: 2px;
+    margin-inline-start: var(--space-0);
+    padding-block: var(--space-3);
+    padding-inline-end: var(--space-2);
+    padding-inline-start: var(--space-2);
+    border-inline-start: 2px solid #8a5cf61f;
+    border-radius: 3px ;
+    background: rgba(157, 190, 252, 0.08);
   }
 
   .tool-card__footer {
-    padding-top: var(--space-3);
+    display: flex;
+    justify-content: flex-end;
+    padding-block-start: var(--space-2);
+    padding-inline: var(--space-1);
     border-top: 1px solid var(--border-subtle);
   }
 
@@ -118,9 +175,23 @@ const isExternal = tool.type === 'external';
     align-items: center;
     gap: var(--space-2);
     font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+    font-weight: var(--weight-semibold);
     color: var(--text-link);
+    padding-block: var(--space-1);
+    padding-inline: var(--space-1);
     transition: gap var(--duration-fast) var(--ease-out);
+  }
+
+  .tool-card__arrow {
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
+    flex-shrink: 0;
+    transform: rotate(180deg);
+  }
+
+  .tool-card:dir(ltr) .tool-card__arrow {
+    transform: rotate(0deg);
   }
 
   .tool-card:hover .tool-card__action {

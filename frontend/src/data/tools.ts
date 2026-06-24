@@ -11,11 +11,14 @@ export interface Tool {
   category: string;
   featured: boolean;
   icon: string;
+  iconPath?: string;
   url?: string;
   name: { en: string; fa: string };
   description: { en: string; fa: string };
   longDescription: { en: string; fa: string };
   howToUse?: { en: string; fa: string };
+  seoKeywords?: { en: string[]; fa: string[] };
+  faqItems?: { en: { q: string; a: string }[]; fa: { q: string; a: string }[] };
   tags: { en: string[]; fa: string[] };
   order?: number;
 }
@@ -28,6 +31,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: true,
     icon: '🖼️',
+    iconPath: '/tool-icons/images.svg',
     name: { en: 'Image to Base64', fa: 'تبدیل تصویر به Base64' },
     description: { en: 'Convert images to Base64 strings instantly in your browser.', fa: 'تبدیل تصاویر به رشته Base64 مستقیماً در مرورگر.' },
     longDescription: { en: 'Convert any image to a Base64 data URI string right in your browser. No upload to any server — your images stay private on your device. Supports PNG, JPEG, WebP, and SVG formats.', fa: 'هر تصویری را به رشته Base64 data URI در مرورگر خود تبدیل کنید. بدون آپلود به هیچ سروری — تصاویر شما روی دستگاه خودتان می‌مانند. پشتیبانی از فرمت‌های PNG، JPEG، WebP و SVG.' },
@@ -40,6 +44,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: true,
     icon: '📱',
+    iconPath: '/tool-icons/QR.svg',
     name: { en: 'QR Code Generator', fa: 'سازنده QR Code' },
     description: { en: 'Generate QR codes from text, URLs, or any data. Download as PNG or SVG.', fa: 'تولید QR Code از متن، لینک یا هر داده‌ای. دانلود با فرمت PNG یا SVG.' },
     longDescription: { en: 'Create QR codes instantly for URLs, text, contact information, WiFi credentials, and more. Customize colors and download in high-quality PNG or SVG format. All processing happens in your browser.', fa: 'QR Code برای لینک‌ها، متن، اطلاعات تماس، اطلاعات WiFi و بیشتر بسازید. رنگ‌ها را سفارشی کنید و با کیفیت بالا در فرمت PNG یا SVG دانلود کنید. تمام پردازش در مرورگر شما انجام می‌شود.' },
@@ -52,6 +57,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: true,
     icon: '🗜️',
+    iconPath: '/tool-icons/compress.svg',
     url: 'https://squoosh.app',
     name: { en: 'Squoosh', fa: 'Squoosh' },
     description: { en: 'Compress and optimize images with live preview. By Google Chrome Labs.', fa: 'فشرده‌سازی و بهینه‌سازی تصاویر با پیش‌نمایش زنده. از Google Chrome Labs.' },
@@ -64,6 +70,7 @@ export const tools: Tool[] = [
     category: 'image',
     featured: false,
     icon: '✏️',
+    iconPath: '/tool-icons/pencil.svg',
     url: 'https://excalidraw.com',
     name: { en: 'Excalidraw', fa: 'Excalidraw' },
     description: { en: 'Hand-drawn style diagrams and sketches. Collaborative whiteboard tool.', fa: 'نمودارها و طرح‌های دست‌نویس. ابزار تخته‌سفید مشارکتی.' },
@@ -78,10 +85,25 @@ export const tools: Tool[] = [
     category: 'text',
     featured: true,
     icon: '📝',
+    iconPath: '/tool-icons/text-comparison.svg',
     name: { en: 'Text Diff Checker', fa: 'مقایسه متن' },
     description: { en: 'Compare two texts and see the differences highlighted line by line.', fa: 'دو متن را مقایسه کنید و تفاوت‌ها را خط به خط برجسته ببینید.' },
     longDescription: { en: 'A fast, client-side text comparison tool. Paste two texts and see additions, deletions, and changes highlighted instantly. No data leaves your browser.', fa: 'یک ابزار سریع مقایسه متن در سمت کاربر. دو متن را وارد کنید و اضافات، حذفیات و تغییرات را فوراً برجسته ببینید. هیچ داده‌ای از مرورگر خارج نمی‌شود.' },
     howToUse: { en: 'Paste or type your original text on the left and the modified text on the right. Differences are highlighted automatically.', fa: 'متن اصلی را در سمت چپ و متن تغییر یافته را در سمت راست وارد کنید. تفاوت‌ها به صورت خودکار برجسته می‌شوند.' },
+    seoKeywords: {
+      en: ['text diff checker', 'compare text', 'text differences', 'word diff', 'client-side diff'],
+      fa: ['مقایسه متن', 'تفاوت متن', 'ابزار diff', 'مقایسه کلمات', 'مقایسه سمت کاربر'],
+    },
+    faqItems: {
+      en: [
+        { q: 'Is my text sent to a server?', a: 'No. All text comparison happens locally in your browser.' },
+        { q: 'Can I compare long documents?', a: 'Yes, but very large texts may be slower on low-power devices.' },
+      ],
+      fa: [
+        { q: 'آیا متن من به سرور ارسال می‌شود؟', a: 'خیر. تمام مقایسه‌ها به‌صورت محلی در مرورگر شما انجام می‌شود.' },
+        { q: 'آیا می‌توانم متن‌های طولانی را مقایسه کنم؟', a: 'بله، اما متن‌های بسیار بزرگ ممکن است روی دستگاه‌های ضعیف کندتر باشند.' },
+      ],
+    },
     tags: { en: ['diff', 'compare', 'text', 'difference', 'merge'], fa: ['مقایسه', 'تفاوت', 'متن', 'ادغام'] },
   },
   {
@@ -90,6 +112,7 @@ export const tools: Tool[] = [
     category: 'text',
     featured: false,
     icon: '🔢',
+    iconPath: '/tool-icons/text-word-count.svg',
     name: { en: 'Word & Character Counter', fa: 'شمارنده کلمات و کاراکترها' },
     description: { en: 'Count words, characters, sentences, and paragraphs in real time.', fa: 'شمارش کلمات، کاراکترها، جملات و پاراگراف‌ها به صورت زنده.' },
     longDescription: { en: 'Real-time text statistics: words, characters (with and without spaces), sentences, paragraphs, and estimated reading time. Supports Persian, English, and mixed text.', fa: 'آمار زنده متن: کلمات، کاراکترها (با و بدون فاصله)، جملات، پاراگراف‌ها و زمان تخمینی مطالعه. پشتیبانی از متن فارسی، انگلیسی و ترکیبی.' },
@@ -102,6 +125,7 @@ export const tools: Tool[] = [
     category: 'text',
     featured: false,
     icon: '🔤',
+    iconPath: '/tool-icons/case-convertor.svg',
     name: { en: 'Case Converter', fa: 'تغییر حالت حروف' },
     description: { en: 'Convert text between uppercase, lowercase, title case, camelCase, and more.', fa: 'تبدیل متن بین حروف بزرگ، کوچک، عنوان، camelCase و حالت‌های دیگر.' },
     longDescription: { en: 'Convert text to any case: UPPERCASE, lowercase, Title Case, Sentence case, camelCase, PascalCase, snake_case, kebab-case, and more. Works instantly in your browser.', fa: 'تبدیل متن به حالت‌های مختلف: حروف بزرگ، حروف کوچک، حالت عنوان، حالت جمله، camelCase، PascalCase، snake_case، kebab-case و بیشتر. فوراً در مرورگر انجام می‌شود.' },
@@ -113,6 +137,7 @@ export const tools: Tool[] = [
     type: 'builtin',
     category: 'text',
     featured: false,
+    iconPath: '/tool-icons/paragraph.svg',
     icon: '📄',
     name: { en: 'Lorem Ipsum Generator', fa: 'تولید متن ساختگی' },
     description: { en: 'Generate placeholder text for designs and mockups. Customize paragraphs, words, or bytes.', fa: 'تولید متن ساختگی برای طراحی‌ها و ماکت‌ها. قابل تنظیم بر اساس پاراگراف، کلمه یا بایت.' },
@@ -126,6 +151,7 @@ export const tools: Tool[] = [
     category: 'text',
     featured: false,
     icon: '📋',
+    iconPath: '/tool-icons/markdown.svg',
     name: { en: 'Markdown Previewer', fa: 'پیش‌نمایش Markdown' },
     description: { en: 'Write Markdown and see the rendered HTML preview in real time.', fa: 'Markdown بنویسید و پیش‌نمایش HTML آن را به صورت زنده ببینید.' },
     longDescription: { en: 'A live Markdown editor with side-by-side preview. Write in the left panel, see the rendered output on the right. Supports GitHub Flavored Markdown including tables, task lists, and code highlighting.', fa: 'ویرایشگر زنده Markdown با پیش‌نمایش کنار هم. در پنل سمت چپ بنویسید و خروجی را در سمت راست ببینید. پشتیبانی از GitHub Flavored Markdown شامل جداول، لیست وظایف و برجسته‌سازی کد.' },
@@ -139,6 +165,7 @@ export const tools: Tool[] = [
     type: 'builtin',
     category: 'code',
     featured: true,
+    iconPath: '/tool-icons/json.svg',
     icon: '{ }',
     name: { en: 'JSON Formatter', fa: 'مرتب‌کننده JSON' },
     description: { en: 'Format, validate, and beautify JSON data. Tree view and error highlighting.', fa: 'مرتب‌سازی، اعتبارسنجی و زیباسازی داده‌های JSON. نمایش درختی و برجسته‌سازی خطا.' },
@@ -152,6 +179,7 @@ export const tools: Tool[] = [
     category: 'code',
     featured: false,
     icon: '🔗',
+    iconPath: '/tool-icons/url.svg',
     name: { en: 'URL Encoder / Decoder', fa: 'کدگذاری / رمزگشایی URL' },
     description: { en: 'Encode or decode URL strings. Handle query parameters with ease.', fa: 'کدگذاری یا رمزگشایی رشته‌های URL. مدیریت آسان پارامترهای query.' },
     longDescription: { en: 'Quickly encode or decode URLs and query strings. Perfect for working with API endpoints, sharing links with special characters, or debugging URL-encoded data.', fa: 'سریع URL ها و رشته‌های query را کدگذاری یا رمزگشایی کنید. عالی برای کار با endpoint های API، اشتراک لینک‌های حاوی کاراکترهای خاص یا اشکال‌زدایی داده‌های URL-encoded.' },
@@ -164,6 +192,7 @@ export const tools: Tool[] = [
     category: 'code',
     featured: false,
     icon: '🔐',
+    iconPath: '/tool-icons/key.svg',
     name: { en: 'Base64 Encoder / Decoder', fa: 'کدگذاری / رمزگشایی Base64' },
     description: { en: 'Encode and decode Base64 strings. Works with text and binary data.', fa: 'کدگذاری و رمزگشایی رشته‌های Base64. کار با متن و داده‌های باینری.' },
     longDescription: { en: 'A fast Base64 encoder and decoder that runs entirely in your browser. Encode any text to Base64 or decode Base64 strings back to readable text. Supports UTF-8 for multilingual content.', fa: 'یک رمزگذار و رمزگشای سریع Base64 که کاملاً در مرورگر شما اجرا می‌شود. هر متنی را به Base64 تبدیل کنید یا رشته‌های Base64 را به متن قابل خواندن برگردانید. پشتیبانی از UTF-8 برای محتوای چند زبانه.' },
@@ -187,6 +216,7 @@ export const tools: Tool[] = [
     category: 'code',
     featured: false,
     icon: '🎨',
+    iconPath: '/tool-icons/color-pallet.svg',
     url: 'https://carbon.now.sh',
     name: { en: 'Carbon', fa: 'Carbon' },
     description: { en: 'Create beautiful images of your source code. Great for sharing on social media.', fa: 'تصاویر زیبا از کد منبع خود بسازید. عالی برای اشتراک‌گذاری در شبکه‌های اجتماعی.' },
@@ -225,6 +255,7 @@ export const tools: Tool[] = [
     category: 'color',
     featured: false,
     icon: '🎨',
+    iconPath: '/tool-icons/color-pallet.svg',
     name: { en: 'Color Converter', fa: 'مبدل رنگ' },
     description: { en: 'Convert colors between HEX, RGB, HSL, and more. Color picker included.', fa: 'تبدیل رنگ‌ها بین HEX، RGB، HSL و بیشتر. شامل انتخاب‌گر رنگ.' },
     longDescription: { en: 'Convert colors between all major formats: HEX, RGB, RGBA, HSL, HSLA, HSV, and CMYK. Includes an interactive color picker and a preview of the selected color. All processing is client-side.', fa: 'تبدیل رنگ‌ها بین تمام فرمت‌های اصلی: HEX، RGB، RGBA، HSL، HSLA، HSV و CMYK. شامل انتخاب‌گر رنگ تعاملی و پیش‌نمایش رنگ انتخاب شده. تمام پردازش در سمت کاربر.' },
@@ -237,6 +268,7 @@ export const tools: Tool[] = [
     category: 'color',
     featured: false,
     icon: '🌈',
+    iconPath: '/tool-icons/color-convertor.svg',
     url: 'https://coolors.co',
     name: { en: 'Coolors', fa: 'Coolors' },
     description: { en: 'Generate beautiful color palettes. Fast palette generator for designers.', fa: 'تولید پالت‌های رنگی زیبا. مولد سریع پالت برای طراحان.' },
@@ -251,6 +283,7 @@ export const tools: Tool[] = [
     category: 'security',
     featured: true,
     icon: '🔑',
+    iconPath: '/tool-icons/password.svg',
     name: { en: 'Password Generator', fa: 'تولید رمز عبور' },
     description: { en: 'Generate strong, random passwords with custom length and character sets.', fa: 'تولید رمزهای عبور قوی و تصادفی با طول و مجموعه کاراکترهای قابل تنظیم.' },
     longDescription: { en: 'Create cryptographically strong passwords in your browser. Customize length, character types (uppercase, lowercase, numbers, symbols), and exclude ambiguous characters. Passwords are generated locally and never transmitted.', fa: 'رمزهای عبور قوی رمزنگاری شده در مرورگر خود بسازید. طول، انواع کاراکتر (حروف بزرگ، کوچک، اعداد، نمادها) را تنظیم کنید و کاراکترهای مبهم را حذف کنید. رمزها به صورت محلی تولید می‌شوند و هرگز ارسال نمی‌شوند.' },
@@ -263,6 +296,7 @@ export const tools: Tool[] = [
     category: 'security',
     featured: false,
     icon: '🔒',
+    iconPath: '/tool-icons/hash.svg',
     name: { en: 'Hash Generator', fa: 'تولید Hash' },
     description: { en: 'Generate MD5, SHA-1, SHA-256, and SHA-512 hashes from any text.', fa: 'تولید Hash های MD5، SHA-1، SHA-256 و SHA-512 از هر متنی.' },
     longDescription: { en: 'Compute cryptographic hashes (MD5, SHA-1, SHA-256, SHA-384, SHA-512) from any input text. All hashing is performed client-side using the Web Crypto API. Useful for integrity checks and quick fingerprinting.', fa: 'محاسبه hash های رمزنگاری (MD5، SHA-1، SHA-256، SHA-384، SHA-512) از هر متن ورودی. تمام عملیات hash با استفاده از Web Crypto API در سمت کاربر انجام می‌شود. مفید برای بررسی صحت و fingerprinting سریع.' },
@@ -277,6 +311,7 @@ export const tools: Tool[] = [
     category: 'math',
     featured: false,
     icon: '📐',
+    iconPath: '/tool-icons/rule.svg',
     name: { en: 'Unit Converter', fa: 'مبدل واحدها' },
     description: { en: 'Convert between common units: length, weight, temperature, area, speed, and more.', fa: 'تبدیل بین واحدهای رایج: طول، وزن، دما، مساحت، سرعت و بیشتر.' },
     longDescription: { en: 'A comprehensive unit converter supporting 15+ categories: length, mass, temperature, area, volume, speed, time, pressure, energy, and more. Real-time conversion with high precision.', fa: 'یک مبدل جامع واحدها با پشتیبانی از بیش از ۱۵ دسته: طول، جرم، دما، مساحت، حجم، سرعت، زمان، فشار، انرژی و بیشتر. تبدیل زنده با دقت بالا.' },

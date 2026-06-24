@@ -1,0 +1,488 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Progress from '../ui/Progress.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.imageToBase64.title']}>
+  <ToolPrimitives />
+
+  <section
+    class="image-b64"
+    dir={dir}
+    data-max-bytes="5242880"
+    data-copy-default={t['tools.imageToBase64.copy']}
+    data-copy-success={t['tools.imageToBase64.copied']}
+    data-file-too-large={t['tools.imageToBase64.fileTooLarge']}
+    data-invalid-file={t['tools.imageToBase64.invalidFile']}
+    data-copy-failed={t['tools.imageToBase64.copyFailed']}
+  >
+    <input id="image-b64-input" class="image-b64__input" type="file" accept="image/*" />
+
+    <button id="image-b64-dropzone" type="button" class="image-b64__dropzone" aria-describedby="image-b64-hint image-b64-warning">
+      <span class="image-b64__drop-title">{t['tools.imageToBase64.dropTitle']}</span>
+      <span id="image-b64-hint" class="image-b64__drop-hint">{t['tools.imageToBase64.dropHint']}</span>
+      <span class="image-b64__drop-action">{t['tools.imageToBase64.browse']}</span>
+    </button>
+
+    <p id="image-b64-warning" class="image-b64__warning" role="alert" hidden></p>
+
+    <div id="image-b64-progress-wrap" class="image-b64__progress-wrap" hidden>
+      <Progress id="image-b64-progress" label={t['tools.imageToBase64.uploadProgress']} value={0} max={100} />
+    </div>
+
+    <div class="image-b64__preview-wrap">
+      <p class="image-b64__label">{t['tools.imageToBase64.previewLabel']}</p>
+      <img id="image-b64-preview" class="image-b64__preview" alt={t['tools.imageToBase64.previewAlt']} hidden />
+      <p id="image-b64-preview-empty" class="image-b64__empty">{t['tools.imageToBase64.previewEmpty']}</p>
+    </div>
+
+    <div class="image-b64__output-wrap">
+      <label for="image-b64-output" class="image-b64__label">{t['tools.imageToBase64.outputLabel']}</label>
+      <div class="image-b64__output-shell">
+        <TextArea
+          id="image-b64-output"
+          className="tool-textarea--mono image-b64__output"
+          readonly={true}
+          placeholder={t['tools.imageToBase64.outputPlaceholder']}
+        />
+      </div>
+    </div>
+
+    <div class="image-b64__actions">
+      <Button id="image-b64-copy" variant="primary" className="image-b64__action image-b64__action--copy" disabled={true}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <span>{t['tools.imageToBase64.copy']}</span>
+      </Button>
+      <Button id="image-b64-clear" variant="secondary" className="image-b64__action image-b64__action--clear">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M3 6h18"></path>
+          <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"></path>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+        </svg>
+        <span>{t['tools.imageToBase64.clear']}</span>
+      </Button>
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const root = document.querySelector('.image-b64');
+  const input = document.getElementById('image-b64-input');
+  const dropzone = document.getElementById('image-b64-dropzone');
+  const warning = document.getElementById('image-b64-warning');
+  const preview = document.getElementById('image-b64-preview');
+  const previewEmpty = document.getElementById('image-b64-preview-empty');
+  const progressWrap = document.getElementById('image-b64-progress-wrap');
+  const progress = document.getElementById('image-b64-progress');
+  const output = document.getElementById('image-b64-output');
+  const copyBtn = document.getElementById('image-b64-copy');
+  const clearBtn = document.getElementById('image-b64-clear');
+
+  if (!root || !input || !dropzone || !warning || !preview || !previewEmpty || !progressWrap || !progress || !output || !copyBtn || !clearBtn) {
+    throw new Error('Image to Base64 tool initialization failed');
+  }
+
+  const maxBytes = Number(root.getAttribute('data-max-bytes') || '5242880');
+  const copyDefault = root.getAttribute('data-copy-default') || 'Copy';
+  const copySuccess = root.getAttribute('data-copy-success') || 'Copied!';
+  const fileTooLargeText = root.getAttribute('data-file-too-large') || 'File is too large';
+  const invalidFileText = root.getAttribute('data-invalid-file') || 'Please select an image file';
+  const copyFailedText = root.getAttribute('data-copy-failed') || 'Copy failed';
+
+  let copyTimer = null;
+  let progressInterval = null;
+
+  function setProgress(value) {
+    window.__belbooreUiProgress?.setValue(progress, value, 100);
+  }
+
+  function showProgress() {
+    progressWrap.hidden = false;
+    setProgress(10);
+  }
+
+  function completeProgress() {
+    setProgress(100);
+    setTimeout(() => {
+      progressWrap.hidden = true;
+      setProgress(0);
+    }, 420);
+  }
+
+  function stopProgressSimulation() {
+    if (progressInterval) {
+      clearInterval(progressInterval);
+      progressInterval = null;
+    }
+  }
+
+  function startProgressSimulation() {
+    stopProgressSimulation();
+    let current = 10;
+    showProgress();
+    progressInterval = setInterval(() => {
+      current = Math.min(current + 10, 90);
+      setProgress(current);
+      if (current >= 90) stopProgressSimulation();
+    }, 120);
+  }
+
+  function clearWarning() {
+    warning.textContent = '';
+    warning.hidden = true;
+  }
+
+  function showWarning(message) {
+    warning.textContent = message;
+    warning.hidden = false;
+  }
+
+  function setPreview(src) {
+    preview.setAttribute('src', src);
+    preview.classList.add('is-visible');
+    preview.hidden = false;
+    previewEmpty.hidden = true;
+  }
+
+  function resetState() {
+    input.value = '';
+    output.value = '';
+    preview.removeAttribute('src');
+    preview.classList.remove('is-visible');
+    preview.hidden = true;
+    previewEmpty.hidden = false;
+    copyBtn.disabled = true;
+    progressWrap.hidden = true;
+    setProgress(0);
+    stopProgressSimulation();
+    clearWarning();
+    dropzone.classList.remove('is-dragover');
+    if (copyTimer) {
+      clearTimeout(copyTimer);
+      copyTimer = null;
+    }
+    copyBtn.textContent = copyDefault;
+    copyBtn.classList.remove('tool-btn--copied');
+  }
+
+  function processFile(file) {
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showWarning(invalidFileText);
+      return;
+    }
+
+    if (file.size > maxBytes) {
+      showWarning(fileTooLargeText);
+      return;
+    }
+
+    clearWarning();
+    startProgressSimulation();
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) return;
+      output.value = result;
+      setPreview(result);
+      copyBtn.disabled = false;
+      completeProgress();
+    };
+
+    reader.onerror = () => {
+      stopProgressSimulation();
+      setProgress(0);
+      progressWrap.hidden = true;
+      showWarning(invalidFileText);
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function onFiles(fileList) {
+    const file = fileList && fileList[0];
+    if (!file) return;
+    processFile(file);
+  }
+
+  dropzone.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', () => {
+    onFiles(input.files);
+  });
+
+  ['dragenter', 'dragover'].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.add('is-dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach((eventName) => {
+    dropzone.addEventListener(eventName, (event) => {
+      event.preventDefault();
+      dropzone.classList.remove('is-dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', (event) => {
+    const dt = event.dataTransfer;
+    onFiles(dt?.files || null);
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const value = output.value.trim();
+    if (!value) return;
+    try {
+      await navigator.clipboard.writeText(value);
+      copyBtn.classList.add('tool-btn--copied');
+      copyBtn.textContent = copySuccess;
+      if (copyTimer) clearTimeout(copyTimer);
+      copyTimer = setTimeout(() => {
+        copyBtn.textContent = copyDefault;
+        copyBtn.classList.remove('tool-btn--copied');
+      }, 1400);
+    } catch {
+      showWarning(copyFailedText);
+    }
+  });
+
+  clearBtn.addEventListener('click', resetState);
+
+  resetState();
+</script>
+
+<style>
+  .image-b64 {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .image-b64__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .image-b64__dropzone {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: center;
+    justify-content: center;
+    min-height: 168px;
+    width: 100%;
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border-default);
+    background: var(--surface-secondary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+    text-align: center;
+  }
+
+  .image-b64__dropzone:hover,
+  .image-b64__dropzone.is-dragover {
+    border-color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+    transform: translateY(-1px);
+  }
+
+  .image-b64__dropzone:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 3px;
+  }
+
+  .image-b64__drop-title {
+    font-weight: var(--weight-semibold);
+    color: var(--text-primary);
+  }
+
+  .image-b64__drop-hint {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+
+  .image-b64__drop-action {
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-default);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+  }
+
+  .image-b64__warning {
+    margin: 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-error-border);
+    background: var(--color-error-subtle);
+    color: var(--color-error);
+    font-size: var(--text-sm);
+  }
+
+  .image-b64__progress-wrap {
+    margin-top: calc(var(--space-1) * -1);
+    margin-bottom: var(--space-1);
+  }
+
+  .image-b64__preview-wrap,
+  .image-b64__output-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .image-b64__label {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--weight-semibold);
+  }
+
+  .image-b64__preview {
+    display: none;
+    width: min(100%, 320px);
+    max-height: 220px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+    padding: var(--space-2);
+  }
+
+  .image-b64__preview.is-visible {
+    display: block;
+  }
+
+  .image-b64__empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .image-b64__output {
+    min-height: 220px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: var(--space-4);
+  }
+
+  .image-b64__output:focus {
+    box-shadow: none;
+  }
+
+  .image-b64__output-shell {
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(180deg, var(--surface-secondary), var(--surface-primary));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transition: border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .image-b64__output-shell:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .image-b64__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .image-b64__action {
+    min-height: 42px;
+    padding-inline: var(--space-4);
+    border-radius: var(--radius-lg);
+    font-weight: var(--weight-semibold);
+    transition: transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out);
+  }
+
+  .image-b64__action:hover {
+    transform: translateY(-1px);
+  }
+
+  .image-b64__action:active {
+    transform: translateY(0);
+  }
+
+  .image-b64__action--copy {
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-tech-blue-hover));
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(0, 82, 255, 0.2);
+  }
+
+  .image-b64__action--copy:hover {
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(0, 82, 255, 0.28);
+  }
+
+  .image-b64__action--copy:disabled {
+    background: var(--surface-tertiary);
+    color: var(--text-muted);
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+
+  .image-b64__action--clear {
+    background: var(--surface-primary);
+    border-color: var(--border-default);
+    color: var(--text-secondary);
+  }
+
+  .image-b64__action--clear:hover {
+    border-color: var(--color-error-border);
+    color: var(--color-error);
+    background: var(--color-error-subtle);
+  }
+
+  @media (max-width: 640px) {
+    .image-b64__dropzone {
+      min-height: 148px;
+      padding: var(--space-5) var(--space-4);
+    }
+
+    .image-b64__actions .image-b64__action {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

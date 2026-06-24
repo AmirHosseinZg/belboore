@@ -1,0 +1,27 @@
+---
+---
+
+<div class="tool-control-composer">
+  <slot />
+</div>
+
+<style>
+  .tool-control-composer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-3);
+    align-items: stretch;
+    padding: var(--space-2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(236, 244, 255, 0.66)),
+      var(--surface-primary);
+  }
+
+  @media (max-width: 640px) {
+    .tool-control-composer {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

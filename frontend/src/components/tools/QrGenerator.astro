@@ -1,0 +1,250 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolControlComposer from './ToolControlComposer.astro';
+import ToolInputShell from './ToolInputShell.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'QR Code Generator',
+    label: 'URL or text',
+    placeholder: 'Paste a link or type any text...',
+    hint: 'Use a complete URL for links, for example https://example.com',
+    generate: 'Generate QR',
+    empty: 'Your QR code will appear here.',
+    downloadPng: 'Download PNG',
+    downloadSvg: 'Download SVG',
+    note: 'QR generation happens in your browser. Your input is never uploaded.',
+    emptyAlert: 'Please enter a URL or text first.',
+    errorAlert: 'Could not generate the QR code. Please try again.',
+    canvasLabel: 'Generated QR code',
+  },
+  fa: {
+    title: 'سازنده QR Code',
+    label: 'لینک یا متن',
+    placeholder: 'یک لینک یا متن وارد کنید...',
+    hint: 'برای لینک‌ها بهتر است آدرس کامل وارد کنید، مثلا https://example.com',
+    generate: 'تولید QR',
+    empty: 'QR Code شما اینجا نمایش داده می‌شود.',
+    downloadPng: 'دانلود PNG',
+    downloadSvg: 'دانلود SVG',
+    note: 'تولید QR در مرورگر شما انجام می‌شود و اطلاعات شما آپلود نمی‌شود.',
+    emptyAlert: 'لطفاً ابتدا یک لینک یا متن وارد کنید.',
+    errorAlert: 'ساخت QR Code انجام نشد. دوباره تلاش کنید.',
+    canvasLabel: 'QR Code تولید شده',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="qr-generator" dir={dir} data-empty-alert={copy.emptyAlert} data-error-alert={copy.errorAlert}>
+    <ToolControlComposer>
+      <ToolInputShell
+        id="qr-input"
+        label={copy.label}
+        placeholder={copy.placeholder}
+        hint={copy.hint}
+      />
+
+      <ToolActionButton id="qr-generate">
+        <span>{copy.generate}</span>
+      </ToolActionButton>
+    </ToolControlComposer>
+
+    <div class="qr-generator__output" aria-live="polite">
+      <div class="qr-generator__canvas-wrap">
+        <canvas id="qr-canvas" class="qr-generator__canvas" width="280" height="280" aria-label={copy.canvasLabel}></canvas>
+        <p id="qr-empty" class="qr-generator__empty">{copy.empty}</p>
+      </div>
+
+      <div id="qr-downloads" class="qr-generator__downloads" hidden>
+        <button id="qr-download-png" class="tool-btn qr-generator__download" type="button">
+          {copy.downloadPng}
+        </button>
+        <button id="qr-download-svg" class="tool-btn qr-generator__download" type="button">
+          {copy.downloadSvg}
+        </button>
+      </div>
+    </div>
+
+    <div class="tool-note">
+      {copy.note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import QRCode from 'qrcode';
+
+  const root = document.querySelector('.qr-generator') as HTMLElement | null;
+  const input = document.getElementById('qr-input') as HTMLInputElement | null;
+  const generateButton = document.getElementById('qr-generate') as HTMLButtonElement | null;
+  const downloadPngButton = document.getElementById('qr-download-png') as HTMLButtonElement | null;
+  const downloadSvgButton = document.getElementById('qr-download-svg') as HTMLButtonElement | null;
+  const downloads = document.getElementById('qr-downloads') as HTMLDivElement | null;
+  const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement | null;
+  const emptyState = document.getElementById('qr-empty') as HTMLParagraphElement | null;
+
+  let currentValue = '';
+  let currentSvg = '';
+
+  async function generateQrCode() {
+    if (!root || !input || !canvas || !downloads || !emptyState) return;
+
+    const value = input.value.trim();
+    if (!value) {
+      alert(root.dataset.emptyAlert || 'Please enter a URL or text first.');
+      input.focus();
+      return;
+    }
+
+    try {
+      await QRCode.toCanvas(canvas, value, {
+        width: 280,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: {
+          dark: '#111827',
+          light: '#ffffff',
+        },
+      });
+
+      currentSvg = await QRCode.toString(value, {
+        type: 'svg',
+        width: 280,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: {
+          dark: '#111827',
+          light: '#ffffff',
+        },
+      });
+
+      currentValue = value;
+      canvas.style.display = 'block';
+      emptyState.hidden = true;
+      downloads.hidden = false;
+    } catch (error) {
+      console.error(error);
+      alert(root.dataset.errorAlert || 'Could not generate the QR code. Please try again.');
+    }
+  }
+
+  function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function downloadPng() {
+    if (!canvas || !currentValue) return;
+
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      downloadBlob(blob, 'qr-code.png');
+    }, 'image/png');
+  }
+
+  function downloadSvg() {
+    if (!currentSvg) return;
+
+    downloadBlob(new Blob([currentSvg], { type: 'image/svg+xml;charset=utf-8' }), 'qr-code.svg');
+  }
+
+  generateButton?.addEventListener('click', generateQrCode);
+  downloadPngButton?.addEventListener('click', downloadPng);
+  downloadSvgButton?.addEventListener('click', downloadSvg);
+  input?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      generateQrCode();
+    }
+  });
+</script>
+
+<style>
+  .qr-generator {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .qr-generator__output {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top, var(--color-tech-blue-subtle), transparent 60%),
+      var(--surface-tertiary);
+  }
+
+  .qr-generator__canvas-wrap {
+    display: grid;
+    place-items: center;
+    width: min(100%, 340px);
+    min-height: 304px;
+    padding: var(--space-4);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-lg);
+    background: var(--surface-primary);
+  }
+
+  .qr-generator__canvas {
+    display: none;
+    width: min(100%, 280px);
+    height: auto;
+    border-radius: var(--radius-md);
+  }
+
+  .qr-generator__empty {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: center;
+  }
+
+  .qr-generator__downloads {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  .qr-generator__download {
+    justify-content: center;
+  }
+
+  @media (max-width: 640px) {
+    .qr-generator__downloads,
+    .qr-generator__download {
+      width: 100%;
+    }
+
+    .qr-generator__output {
+      padding: var(--space-4);
+    }
+  }
+</style>

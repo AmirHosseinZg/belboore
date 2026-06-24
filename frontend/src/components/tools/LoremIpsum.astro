@@ -1,80 +1,258 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import Select from '../ui/Select.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolWorkspace from './ToolWorkspace.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Lorem Ipsum Generator',
+    eyebrow: 'Placeholder text',
+    intro: 'Generate clean dummy copy for layouts, mockups, product cards, and content tests.',
+    language: 'Text language',
+    latin: 'Latin',
+    persian: 'Persian',
+    type: 'Output type',
+    amount: 'Amount',
+    generate: 'Generate',
+    copy: 'Copy',
+    clear: 'Clear',
+    output: 'Generated text',
+    empty: 'Choose a type and click Generate to create placeholder text.',
+    paragraphs: 'Paragraphs',
+    sentences: 'Sentences',
+    words: 'Words',
+    short: 'Short',
+    medium: 'Medium',
+    long: 'Long',
+    statsWords: 'Words',
+    statsChars: 'Characters',
+    statsParagraphs: 'Paragraphs',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+  },
+  fa: {
+    title: 'تولید متن ساختگی',
+    eyebrow: 'متن جایگزین',
+    intro: 'برای لایه‌بندی، ماکاپ، کارت‌های محصول و تست محتوا متن نمونه تمیز تولید کنید.',
+    language: 'زبان متن',
+    latin: 'لاتین',
+    persian: 'فارسی',
+    type: 'نوع خروجی',
+    amount: 'تعداد',
+    generate: 'تولید',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    output: 'متن تولید شده',
+    empty: 'نوع و تعداد را انتخاب کنید و Generate را بزنید تا متن نمونه ساخته شود.',
+    paragraphs: 'پاراگراف',
+    sentences: 'جمله',
+    words: 'کلمه',
+    short: 'کوتاه',
+    medium: 'متوسط',
+    long: 'بلند',
+    statsWords: 'کلمات',
+    statsChars: 'کاراکترها',
+    statsParagraphs: 'پاراگراف‌ها',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود و داده‌های شما آپلود نمی‌شود.',
+  },
+}[lang];
 ---
 
-<ToolPrimitives />
-<ToolUtils />
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
 
-<ToolWorkspace title="Lorem Ipsum Generator">
-  <div class="tool-toolbar">
-    <div class="tool-field" style="flex: 0 0 auto;">
-      <label class="tool-field__label" for="li-type">Type</label>
-      <select id="li-type" class="tool-select">
-        <option value="paragraphs">Paragraphs</option>
-        <option value="sentences">Sentences</option>
-        <option value="words">Words</option>
-      </select>
+  <div class="lorem-generator" dir={dir}>
+    <section class="lorem-generator__control">
+      <div class="lorem-generator__header">
+        <div>
+          <p class="lorem-generator__eyebrow">{copy.eyebrow}</p>
+          <p class="lorem-generator__intro">{copy.intro}</p>
+        </div>
+        <button type="button" id="li-generate" class="lorem-generator__generate">
+          <span>{copy.generate}</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5v14" />
+            <path d="M5 12h14" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="lorem-generator__settings">
+        <label class="lorem-generator__field" for="li-language">
+          <span>{copy.language}</span>
+          <Select
+            id="li-language"
+            selectedValue="latin"
+            options={[
+              { value: 'latin', label: copy.latin },
+              { value: 'persian', label: copy.persian },
+            ]}
+          />
+        </label>
+
+        <label class="lorem-generator__field" for="li-type">
+          <span>{copy.type}</span>
+          <Select
+            id="li-type"
+            selectedValue="paragraphs"
+            options={[
+              { value: 'paragraphs', label: copy.paragraphs },
+              { value: 'sentences', label: copy.sentences },
+              { value: 'words', label: copy.words },
+            ]}
+          />
+        </label>
+
+        <label class="lorem-generator__field" for="li-amount">
+          <span>{copy.amount}</span>
+          <input id="li-amount" class="lorem-generator__input" type="number" min="1" max="20" value="3" />
+        </label>
+
+        <div class="lorem-generator__presets" aria-label={copy.amount}>
+          <button type="button" class="lorem-generator__preset" data-preset="2">{copy.short}</button>
+          <button type="button" class="lorem-generator__preset lorem-generator__preset--active" data-preset="3">{copy.medium}</button>
+          <button type="button" class="lorem-generator__preset" data-preset="6">{copy.long}</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="lorem-generator__output-card">
+      <div class="lorem-generator__output-head">
+        <div>
+          <p class="lorem-generator__output-label">{copy.output}</p>
+          <div class="lorem-generator__stats" aria-live="polite">
+            <span><strong id="li-stat-words">0</strong> {copy.statsWords}</span>
+            <span><strong id="li-stat-chars">0</strong> {copy.statsChars}</span>
+            <span><strong id="li-stat-paragraphs">0</strong> {copy.statsParagraphs}</span>
+          </div>
+        </div>
+
+        <div class="lorem-generator__actions">
+          <button type="button" id="li-copy" class="lorem-generator__icon-btn lorem-generator__icon-btn--copy" aria-label={copy.copy} title={copy.copy}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
+          <button type="button" id="li-clear" class="lorem-generator__icon-btn lorem-generator__icon-btn--clear" aria-label={copy.clear} title={copy.clear}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18" />
+              <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="li-output" class="lorem-generator__output lorem-generator__output--empty" role="status" aria-live="polite">
+        {copy.empty}
+      </div>
+    </section>
+
+    <div class="tool-note lorem-generator__note">
+      {copy.note}
     </div>
-    <div class="tool-field" style="flex: 0 0 auto;">
-      <label class="tool-field__label" for="li-amount">Amount</label>
-      <input id="li-amount" class="tool-input" type="number" min="1" max="20" value="3" style="width: 80px;" />
-    </div>
-    <button type="button" id="li-generate" class="tool-btn tool-btn--primary" style="align-self: flex-end;">Generate</button>
-  </div>
-  <div class="tool-toolbar">
-    <button type="button" id="li-copy" class="tool-btn">Copy</button>
-    <button type="button" id="li-clear" class="tool-btn">Clear</button>
-  </div>
-  <div class="tool-field">
-    <label class="tool-field__label" for="li-output">Output</label>
-    <div id="li-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Click Generate to create placeholder text</div>
-  </div>
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    All processing happens in your browser. Your data is never uploaded.
   </div>
 </ToolWorkspace>
 
 <script>
   const liOutput = document.getElementById('li-output')!;
+  const liLanguage = document.getElementById('li-language') as HTMLSelectElement;
   const liType = document.getElementById('li-type') as HTMLSelectElement;
   const liAmount = document.getElementById('li-amount') as HTMLInputElement;
+  const liStatWords = document.getElementById('li-stat-words')!;
+  const liStatChars = document.getElementById('li-stat-chars')!;
+  const liStatParagraphs = document.getElementById('li-stat-paragraphs')!;
+  const liPresetButtons = Array.from(document.querySelectorAll('.lorem-generator__preset')) as HTMLButtonElement[];
+
+  const lang = document.documentElement.lang || 'en';
+  const numberFormatter = new Intl.NumberFormat(lang);
+
+  const latinSentences = [
+    'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    'Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.',
+    'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.',
+    'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.',
+    'Deserunt mollit anim id est laborum sed ut perspiciatis unde omnis iste natus.',
+    'Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.',
+    'Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet consectetur.',
+    'Ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.',
+    'Totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi.',
+    'Architecto beatae vitae dicta sunt explicabo nemo enim ipsam voluptatem.',
+    'Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse.',
+    'At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.',
+    'Et harum quidem rerum facilis est et expedita distinctio nam libero tempore.',
+    'Cum soluta nobis est eligendi optio cumque nihil impedit quo minus id.',
+    'Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus.',
+    'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis.',
+    'Voluptatibus maiores alias consequatur aut perferendis doloribus asperiores.',
+    'Nam libero tempore cum soluta nobis est eligendi optio cumque nihil.',
+    'Facilis est et expedita distinctio nam libero tempore cum soluta nobis.',
+    'Omnis voluptas assumenda est omnis dolor repellendus temporibus autem.',
+    'Quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.',
+    'Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis.',
+    'Voluptatibus maiores alias consequatur aut perferendis doloribus asperiores.',
+  ];
+
+  const persianSentences = [
+    'لورم ایپسوم متن ساختگی با تولید سادگی نامفهوم از صنعت چاپ است.',
+    'طراحان گرافیک از این متن برای پر کردن بخش‌های خالی طرح استفاده می‌کنند.',
+    'هدف از این متن نمایش چیدمان، اندازه فونت و فاصله بین خطوط است.',
+    'این متن بدون وابستگی به معنی واقعی، ظاهر یک محتوای کامل را شبیه‌سازی می‌کند.',
+    'در پروژه‌های وب، متن نمونه به بررسی خوانایی و ترکیب‌بندی کمک می‌کند.',
+    'استفاده از متن جایگزین باعث می‌شود تمرکز روی طراحی و ساختار صفحه باقی بماند.',
+    'بسیاری از قالب‌ها پیش از آماده شدن محتوای واقعی با متن ساختگی تکمیل می‌شوند.',
+    'این ابزار می‌تواند برای ساخت پاراگراف، جمله یا تعداد مشخصی کلمه استفاده شود.',
+    'متن فارسی نمونه برای تست راست‌چین بودن و فاصله‌گذاری بسیار کاربردی است.',
+    'طراحان محصول می‌توانند با این متن حالت‌های مختلف کارت و صفحه را بررسی کنند.',
+    'در زمان طراحی رابط کاربری، وجود متن واقعی همیشه ضروری نیست.',
+    'متن ساختگی کمک می‌کند اجزای صفحه بدون حواس‌پرتی محتوایی ارزیابی شوند.',
+    'برای نمونه‌سازی سریع، تولید خودکار متن می‌تواند زمان زیادی ذخیره کند.',
+    'خوانایی تیترها، بدنه متن و بخش‌های توضیحی با متن نمونه بهتر سنجیده می‌شود.',
+    'این خروجی کاملاً در مرورگر تولید می‌شود و نیازی به ارسال داده ندارد.',
+    'می‌توانید تعداد پاراگراف‌ها، جمله‌ها یا کلمات مورد نیاز را انتخاب کنید.',
+    'در طرح‌های فارسی، جهت متن و هماهنگی با رابط راست‌چین اهمیت زیادی دارد.',
+    'متن جایگزین به تیم‌ها کمک می‌کند قبل از تولید محتوا، ساختار نهایی را ببینند.',
+    'این جملات برای تست ظاهر وب‌سایت، اپلیکیشن و قالب‌های محتوایی مناسب هستند.',
+    'نمونه متن فارسی باید از نظر طول و ریتم، به محتوای واقعی نزدیک باشد.',
+  ];
+
+  function formatNumber(value: number) {
+    return numberFormatter.format(value);
+  }
+
+  function updateStats(text: string) {
+    const trimmed = text.trim();
+    const words = trimmed ? trimmed.split(/\s+/).filter(Boolean).length : 0;
+    const paragraphs = trimmed ? trimmed.split(/\n\s*\n/).filter((p) => p.trim()).length || 1 : 0;
+
+    liStatWords.textContent = formatNumber(words);
+    liStatChars.textContent = formatNumber(text.length);
+    liStatParagraphs.textContent = formatNumber(paragraphs);
+  }
 
   function showOutput(text: string) {
-    window.__belbooreTools.showOutput(liOutput, text);
-  }
-  function showEmpty(text: string) {
-    window.__belbooreTools.showEmpty(liOutput, text);
+    liOutput.textContent = text;
+    liOutput.classList.remove('lorem-generator__output--empty');
+    updateStats(text);
   }
 
-  const loremSentences = [
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.",
-    "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.",
-    "Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.",
-    "Deserunt mollit anim id est laborum sed ut perspiciatis unde omnis iste natus.",
-    "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.",
-    "Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet consectetur.",
-    "Ut perspiciatis unde omnis iste natus error sit voluptatem accusantium.",
-    "Totam rem aperiam eaque ipsa quae ab illo inventore veritatis et quasi.",
-    "Architecto beatae vitae dicta sunt explicabo nemo enim ipsam voluptatem.",
-    "Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse.",
-    "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.",
-    "Et harum quidem rerum facilis est et expedita distinctio nam libero tempore.",
-    "Cum soluta nobis est eligendi optio cumque nihil impedit quo minus id.",
-    "Temporibus autem quibusdam et aut officiis debitis aut rerum necessitatibus.",
-    "Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis.",
-    "Voluptatibus maiores alias consequatur aut perferendis doloribus asperiores.",
-    "Nam libero tempore cum soluta nobis est eligendi optio cumque nihil.",
-    "Facilis est et expedita distinctio nam libero tempore cum soluta nobis.",
-    "Omnis voluptas assumenda est omnis dolor repellendus temporibus autem.",
-    "Quibusdam et aut officiis debitis aut rerum necessitatibus saepe eveniet.",
-    "Itaque earum rerum hic tenetur a sapiente delectus ut aut reiciendis.",
-    "Voluptatibus maiores alias consequatur aut perferendis doloribus asperiores.",
-  ];
+  function showEmpty(text: string) {
+    liOutput.textContent = text;
+    liOutput.classList.add('lorem-generator__output--empty');
+    updateStats('');
+  }
 
   function shuffle(arr: string[]): string[] {
     const a = [...arr];
@@ -85,49 +263,443 @@ import ToolWorkspace from './ToolWorkspace.astro';
     return a;
   }
 
+  function getSentenceSource() {
+    return liLanguage.value === 'persian' ? persianSentences : latinSentences;
+  }
+
+  function syncOutputDirection() {
+    liOutput.setAttribute('dir', liLanguage.value === 'persian' ? 'rtl' : 'ltr');
+  }
+
   function pickSentences(count: number): string[] {
-    const pool = [...loremSentences];
+    const source = getSentenceSource();
+    const pool = [...source];
     const result: string[] = [];
     while (result.length < count) {
-      if (pool.length === 0) pool.push(...shuffle(loremSentences));
+      if (pool.length === 0) pool.push(...shuffle(source));
       result.push(pool.pop()!);
     }
     return result;
   }
 
+  function sanitizeAmount() {
+    let amount = parseInt(liAmount.value, 10);
+    if (Number.isNaN(amount) || amount < 1) amount = 1;
+    if (amount > 20) amount = 20;
+    liAmount.value = String(amount);
+    return amount;
+  }
+
+  function syncPresets() {
+    liPresetButtons.forEach((button) => {
+      button.classList.toggle('lorem-generator__preset--active', button.dataset.preset === liAmount.value);
+    });
+  }
+
   function generate() {
     const type = liType.value;
-    let amount = parseInt(liAmount.value, 10);
-    if (isNaN(amount) || amount < 1) amount = 1;
-    if (amount > 20) amount = 20;
+    const amount = sanitizeAmount();
+    syncPresets();
+    syncOutputDirection();
 
     if (type === 'words') {
       const words = pickSentences(Math.ceil(amount / 8)).join(' ').split(/\s+/).slice(0, amount);
       let text = words.join(' ');
-      if (!/[.!?]$/.test(text)) text += '.';
+      if (!/[.!?؟。]$/.test(text)) text += liLanguage.value === 'persian' ? '.' : '.';
       showOutput(text);
-    } else if (type === 'sentences') {
-      showOutput(pickSentences(amount).join(' '));
-    } else {
-      const paragraphs: string[] = [];
-      for (let i = 0; i < amount; i++) {
-        paragraphs.push(pickSentences(3 + Math.floor(Math.random() * 5)).join(' '));
-      }
-      showOutput(paragraphs.join('\n\n'));
+      return;
     }
+
+    if (type === 'sentences') {
+      showOutput(pickSentences(amount).join(' '));
+      return;
+    }
+
+    const paragraphs: string[] = [];
+    for (let i = 0; i < amount; i++) {
+      paragraphs.push(pickSentences(3 + Math.floor(Math.random() * 5)).join(' '));
+    }
+    showOutput(paragraphs.join('\n\n'));
   }
 
   document.getElementById('li-generate')!.addEventListener('click', generate);
 
+  liPresetButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      liAmount.value = button.dataset.preset || '3';
+      syncPresets();
+      generate();
+    });
+  });
+
+  liAmount.addEventListener('input', syncPresets);
+  liLanguage.addEventListener('change', () => {
+    syncOutputDirection();
+    if (!liOutput.classList.contains('lorem-generator__output--empty')) {
+      generate();
+    }
+  });
+
   document.getElementById('li-copy')!.addEventListener('click', () => {
     const text = liOutput.textContent || '';
-    if (!text || liOutput.classList.contains('tool-output--empty')) return;
+    if (!text || liOutput.classList.contains('lorem-generator__output--empty')) return;
     window.__belbooreTools.copyToClipboard(text, document.getElementById('li-copy')!, 1500);
   });
 
   document.getElementById('li-clear')!.addEventListener('click', () => {
     liAmount.value = '3';
     liType.value = 'paragraphs';
-    showEmpty('Click Generate to create placeholder text');
+    liLanguage.value = 'latin';
+    syncPresets();
+    syncOutputDirection();
+    showEmpty(liOutput.dataset.empty || 'Click Generate to create placeholder text');
   });
+
+  liOutput.dataset.empty = liOutput.textContent || '';
+  syncOutputDirection();
+  updateStats('');
 </script>
+
+<style>
+  .lorem-generator {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .lorem-generator__control,
+  .lorem-generator__output-card {
+    border: 1px solid var(--border-subtle);
+    border-radius: calc(var(--radius-lg) + 4px);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .lorem-generator__control {
+    padding: var(--space-5);
+    background:
+      radial-gradient(circle at top right, rgba(0, 82, 255, 0.1), transparent 35%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+  }
+
+  .lorem-generator__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+
+  .lorem-generator__eyebrow {
+    margin: 0 0 var(--space-2);
+    color: var(--color-tech-blue);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .lorem-generator__intro {
+    max-width: 580px;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--text-base);
+    line-height: 1.7;
+  }
+
+  .lorem-generator__generate {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 46px;
+    padding: 0 var(--space-5);
+    color: white;
+    font-weight: var(--weight-bold);
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-electric-cyan));
+    border: 0;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 24px rgba(0, 82, 255, 0.22);
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .lorem-generator__generate:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(0, 82, 255, 0.28);
+  }
+
+  .lorem-generator__settings {
+    display: grid;
+    grid-template-columns: minmax(150px, 0.8fr) minmax(180px, 1fr) minmax(120px, 0.5fr) minmax(220px, 1fr);
+    gap: var(--space-3);
+    align-items: end;
+    padding: var(--space-3);
+    background: color-mix(in srgb, var(--surface-primary) 72%, transparent);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+  }
+
+  .lorem-generator__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .lorem-generator__input {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 74%, transparent));
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-lg);
+    outline: none;
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .lorem-generator__input {
+    font-family: var(--font-mono);
+  }
+
+  .lorem-generator__input::-webkit-outer-spin-button,
+  .lorem-generator__input::-webkit-inner-spin-button {
+    margin: 0;
+  }
+
+  .lorem-generator__input:focus {
+    border-color: var(--color-tech-blue);
+    box-shadow:
+      0 0 0 4px var(--color-tech-blue-subtle),
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+  }
+
+  .lorem-generator__input:hover {
+    border-color: color-mix(in srgb, var(--color-tech-blue) 34%, var(--border-default));
+    transform: translateY(-1px);
+  }
+
+  .lorem-generator__presets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background:
+      linear-gradient(180deg, var(--surface-tertiary), color-mix(in srgb, var(--surface-tertiary) 74%, var(--surface-primary)));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 50%, transparent);
+  }
+
+  .lorem-generator__preset {
+    min-height: 42px;
+    padding: 0 var(--space-3);
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-md);
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .lorem-generator__preset:hover,
+  .lorem-generator__preset--active {
+    color: var(--color-tech-blue);
+    background: var(--surface-primary);
+    box-shadow:
+      var(--shadow-sm),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-tech-blue) 12%, transparent);
+  }
+
+  .lorem-generator__output-card {
+    overflow: hidden;
+    background: var(--surface-primary);
+  }
+
+  .lorem-generator__output-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .lorem-generator__output-label {
+    margin: 0 0 var(--space-2);
+    color: var(--text-primary);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+  }
+
+  .lorem-generator__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+  }
+
+  .lorem-generator__stats span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    background: var(--surface-tertiary);
+    border-radius: var(--radius-full);
+  }
+
+  .lorem-generator__stats strong {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
+
+  .lorem-generator__actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .lorem-generator__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .lorem-generator__icon-btn--copy {
+    color: white;
+    background: linear-gradient(135deg, var(--color-tech-blue), var(--color-electric-cyan));
+  }
+
+  .lorem-generator__icon-btn--clear {
+    color: var(--color-error);
+    background: var(--color-error-subtle);
+    border: 1px solid var(--color-error-border);
+  }
+
+  .lorem-generator__icon-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .lorem-generator__icon-btn--clear:hover {
+    color: white;
+    background: var(--color-error);
+  }
+
+  .lorem-generator__output {
+    min-height: 360px;
+    max-height: 620px;
+    overflow: auto;
+    padding: var(--space-6);
+    color: var(--text-primary);
+    font-size: var(--text-base);
+    line-height: 1.85;
+    white-space: pre-wrap;
+    background:
+      linear-gradient(90deg, rgba(0, 82, 255, 0.035) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 92%, transparent));
+  }
+
+  .lorem-generator__output--empty {
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .lorem-generator__note {
+    margin-top: 0;
+  }
+
+  [data-theme="dark"] .lorem-generator__control {
+    background:
+      radial-gradient(circle at top right, rgba(61, 139, 255, 0.12), transparent 35%),
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-secondary));
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .lorem-generator__output-card,
+  [data-theme="dark"] .lorem-generator__input {
+    background: var(--surface-elevated);
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .lorem-generator__settings {
+    background: color-mix(in srgb, var(--surface-elevated) 76%, transparent);
+    border-color: var(--border-default);
+  }
+
+  [data-theme="dark"] .lorem-generator__input {
+    background:
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      var(--shadow-sm);
+  }
+
+  [data-theme="dark"] .lorem-generator__output {
+    background:
+      linear-gradient(90deg, rgba(61, 139, 255, 0.055) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
+  }
+
+  @media (max-width: 820px) {
+    .lorem-generator__header,
+    .lorem-generator__output-head {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .lorem-generator__generate {
+      width: 100%;
+    }
+
+    .lorem-generator__settings {
+      grid-template-columns: 1fr;
+    }
+
+    .lorem-generator__actions {
+      justify-content: flex-end;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .lorem-generator__control {
+      padding: var(--space-4);
+    }
+
+    .lorem-generator__output {
+      min-height: 300px;
+      padding: var(--space-4);
+    }
+  }
+</style>

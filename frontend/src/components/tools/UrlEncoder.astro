@@ -1,108 +1,479 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ArrowRightLeft, Check, Copy, Trash2 } from '@lucide/astro';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Tabs from '../ui/Tabs.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'URL Encoder / Decoder',
+    mode: 'Mode',
+    scope: 'Scope',
+    encode: 'Encode',
+    decode: 'Decode',
+    url: 'URL',
+    component: 'Component',
+    runEncodeUrl: 'Encode URL',
+    runEncodeComponent: 'Encode Component',
+    runDecodeUrl: 'Decode URL',
+    runDecodeComponent: 'Decode Component',
+    inputLabel: 'Input',
+    inputHint: 'Paste a URL or any text, then choose a mode and scope.',
+    placeholder: 'Enter URL or text to encode/decode...',
+    outputLabel: 'Output',
+    outputHint: 'Result updates when you run the selected action.',
+    empty: 'Encoded / decoded result will appear here',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copy: 'Copy result',
+    copied: 'Copied!',
+    clear: 'Clear input',
+    encodingFailed: 'Encoding failed',
+    decodingFailed: 'Decoding failed',
+  },
+  fa: {
+    title: 'رمزگذار / رمزگشای URL',
+    mode: 'حالت',
+    scope: 'نوع',
+    encode: 'رمزگذاری',
+    decode: 'رمزگشایی',
+    url: 'URL',
+    component: 'بخش',
+    runEncodeUrl: 'رمزگذاری URL',
+    runEncodeComponent: 'رمزگذاری بخش',
+    runDecodeUrl: 'رمزگشایی URL',
+    runDecodeComponent: 'رمزگشایی بخش',
+    inputLabel: 'ورودی',
+    inputHint: 'یک URL یا هر متن دیگری را وارد کنید، سپس حالت و نوع را انتخاب کنید.',
+    placeholder: 'URL یا متن را برای رمزگذاری / رمزگشایی وارد کنید...',
+    outputLabel: 'خروجی',
+    outputHint: 'نتیجه بعد از اجرای عملیات نمایش داده می‌شود.',
+    empty: 'نتیجه رمزگذاری / رمزگشایی اینجا نمایش داده می‌شود',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copy: 'کپی نتیجه',
+    copied: 'کپی شد!',
+    clear: 'پاک کردن ورودی',
+    encodingFailed: 'رمزگذاری انجام نشد',
+    decodingFailed: 'رمزگشایی انجام نشد',
+  },
+}[lang];
 ---
 
-<ToolWorkspace title="URL Encoder / Decoder">
+<ToolWorkspace title={copy.title}>
   <ToolPrimitives />
   <ToolUtils />
 
-  <div class="tool-toolbar">
-    <button id="url-encode-full" class="tool-btn tool-btn--primary" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 8 16 13"/><line x1="21" y1="8" x2="9" y2="8"/><polyline points="5 8 5 3 20 3"/></svg>
-      Encode URL
-    </button>
-    <button id="url-decode-full" class="tool-btn" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><line x1="3" y1="8" x2="15" y2="8"/><polyline points="19 8 19 3 4 3"/></svg>
-      Decode URL
-    </button>
-    <button id="url-encode-comp" class="tool-btn" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Encode Component
-    </button>
-    <button id="url-decode-comp" class="tool-btn" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Decode Component
-    </button>
-    <button id="url-copy" class="tool-btn" type="button">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copy
-    </button>
-    <button id="url-clear" class="tool-btn tool-btn--ghost" type="button" aria-label="Clear">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      Clear
-    </button>
-  </div>
-  <div class="tool-grid-2">
-    <div class="tool-field">
-      <label class="tool-field__label" for="url-input">Input</label>
-      <textarea id="url-input" class="tool-textarea" placeholder="Enter URL or text to encode/decode..."></textarea>
+  <section
+    class="url-tool"
+    dir={dir}
+    data-empty-output={copy.empty}
+    data-encoding-failed={copy.encodingFailed}
+    data-decoding-failed={copy.decodingFailed}
+    data-copied={copy.copied}
+  >
+    <div class="url-tool__toolbar">
+      <Tabs
+        id="url-mode-tabs"
+        className="url-tool__modes"
+        ariaLabel={copy.mode}
+        activeId="encode"
+        tabs={[
+          { id: 'encode', label: copy.encode },
+          { id: 'decode', label: copy.decode },
+        ]}
+      />
+
+      <Tabs
+        id="url-scope-tabs"
+        className="url-tool__scopes"
+        ariaLabel={copy.scope}
+        activeId="uri"
+        tabs={[
+          { id: 'uri', label: copy.url },
+          { id: 'component', label: copy.component },
+        ]}
+      />
+
+      <div class="url-tool__actions">
+        <Button id="url-run" variant="primary" className="url-tool__run-btn">
+          <ArrowRightLeft />
+          <span id="url-run-label">{copy.runEncodeUrl}</span>
+        </Button>
+        <Button id="url-copy" variant="outline" className="url-tool__icon-btn url-tool__icon-btn--copy" aria-label={copy.copy} title={copy.copy}>
+          <span class="url-tool__icon url-tool__icon--copy" aria-hidden="true">
+            <Copy />
+          </span>
+          <span class="url-tool__icon url-tool__icon--check" aria-hidden="true">
+            <Check />
+          </span>
+        </Button>
+        <Button id="url-clear" variant="danger" className="url-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
+          <Trash2 />
+        </Button>
+      </div>
     </div>
-    <div class="tool-field">
-      <label class="tool-field__label" for="url-output">Output</label>
-      <div id="url-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Encoded / decoded result will appear here</div>
+
+    <div class="url-tool__grid">
+      <section class="url-tool__panel">
+        <div class="url-tool__panel-head">
+          <div>
+            <p class="url-tool__eyebrow">{copy.mode}</p>
+            <label class="url-tool__label" for="url-input">{copy.inputLabel}</label>
+          </div>
+          <span class="url-tool__hint">{copy.inputHint}</span>
+        </div>
+
+        <TextArea
+          id="url-input"
+          className="url-tool__textarea"
+          placeholder={copy.placeholder}
+          rows={9}
+        />
+      </section>
+
+      <section class="url-tool__panel">
+        <div class="url-tool__panel-head">
+          <div>
+            <p class="url-tool__eyebrow">{copy.scope}</p>
+            <label class="url-tool__label" for="url-output">{copy.outputLabel}</label>
+          </div>
+          <span class="url-tool__hint">{copy.outputHint}</span>
+        </div>
+
+        <div id="url-output" class="url-tool__output url-tool__output--empty" role="status" aria-live="polite">
+          {copy.empty}
+        </div>
+      </section>
     </div>
-  </div>
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    All processing happens in your browser. Your data is never uploaded.
-  </div>
+
+    <div class="tool-note url-tool__note">
+      <ArrowRightLeft />
+      {copy.note}
+    </div>
+  </section>
 </ToolWorkspace>
 
 <script>
-  const input = document.getElementById('url-input') as HTMLTextAreaElement;
-  const output = document.getElementById('url-output')!;
+  const root = document.querySelector('.url-tool') as HTMLElement | null;
+  const input = document.getElementById('url-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('url-output') as HTMLDivElement | null;
+  const runButton = document.getElementById('url-run') as HTMLButtonElement | null;
+  const runLabel = document.getElementById('url-run-label') as HTMLSpanElement | null;
+  const copyButton = document.getElementById('url-copy') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('url-clear') as HTMLButtonElement | null;
+  const modeTabs = document.getElementById('url-mode-tabs');
+  const scopeTabs = document.getElementById('url-scope-tabs');
 
-  document.getElementById('url-encode-full')!.addEventListener('click', () => {
-    const val = input.value;
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
-    try {
-      window.__belbooreTools.showOutput(output, encodeURI(val));
-    } catch (e: any) {
-      window.__belbooreTools.showError(output, 'Encoding failed: ' + e.message);
+  let activeMode: 'encode' | 'decode' = 'encode';
+  let activeScope: 'uri' | 'component' = 'uri';
+
+  function getEmptyText() {
+    return root?.dataset.emptyOutput || 'Encoded / decoded result will appear here';
+  }
+
+  function getEncodingError() {
+    return root?.dataset.encodingFailed || 'Encoding failed';
+  }
+
+  function getDecodingError() {
+    return root?.dataset.decodingFailed || 'Decoding failed';
+  }
+
+  function getCopiedText() {
+    return root?.dataset.copied || 'Copied!';
+  }
+
+  function updateRunLabel() {
+    if (!runLabel) return;
+
+    const label = activeMode === 'encode'
+      ? activeScope === 'uri'
+        ? copy.runEncodeUrl
+        : copy.runEncodeComponent
+      : activeScope === 'uri'
+        ? copy.runDecodeUrl
+        : copy.runDecodeComponent;
+
+    runLabel.textContent = label;
+  }
+
+  function transformValue(value: string) {
+    if (activeMode === 'encode') {
+      return activeScope === 'uri' ? encodeURI(value) : encodeURIComponent(value);
     }
+
+    return activeScope === 'uri' ? decodeURI(value) : decodeURIComponent(value);
+  }
+
+  function run() {
+    if (!input || !output) return;
+
+    const value = activeMode === 'decode' ? input.value.trim() : input.value;
+    if (!value) {
+      window.__belbooreTools.showEmpty(output, getEmptyText());
+      return;
+    }
+
+    try {
+      window.__belbooreTools.showOutput(output, transformValue(value));
+    } catch (error: any) {
+      const message = error?.message || (activeMode === 'encode' ? getEncodingError() : getDecodingError());
+      window.__belbooreTools.showError(output, message);
+    }
+  }
+
+  modeTabs?.addEventListener('ui-tabs:change', (event: Event) => {
+    const customEvent = event as CustomEvent<{ tabId?: string }>;
+    activeMode = customEvent.detail?.tabId === 'decode' ? 'decode' : 'encode';
+    updateRunLabel();
   });
 
-  document.getElementById('url-decode-full')!.addEventListener('click', () => {
-    const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
-    try {
-      window.__belbooreTools.showOutput(output, decodeURI(val));
-    } catch (e: any) {
-      window.__belbooreTools.showError(output, 'Decoding failed: ' + e.message);
-    }
+  scopeTabs?.addEventListener('ui-tabs:change', (event: Event) => {
+    const customEvent = event as CustomEvent<{ tabId?: string }>;
+    activeScope = customEvent.detail?.tabId === 'component' ? 'component' : 'uri';
+    updateRunLabel();
   });
 
-  document.getElementById('url-encode-comp')!.addEventListener('click', () => {
-    const val = input.value;
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
-    try {
-      window.__belbooreTools.showOutput(output, encodeURIComponent(val));
-    } catch (e: any) {
-      window.__belbooreTools.showError(output, 'Encoding failed: ' + e.message);
-    }
-  });
+  runButton?.addEventListener('click', run);
 
-  document.getElementById('url-decode-comp')!.addEventListener('click', () => {
-    const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); return; }
-    try {
-      window.__belbooreTools.showOutput(output, decodeURIComponent(val));
-    } catch (e: any) {
-      window.__belbooreTools.showError(output, 'Decoding failed: ' + e.message);
-    }
-  });
-
-  document.getElementById('url-copy')!.addEventListener('click', () => {
+  copyButton?.addEventListener('click', () => {
+    if (!output) return;
     const text = output.textContent || '';
     if (!text || output.classList.contains('tool-output--empty')) return;
-    const btn = document.getElementById('url-copy')!;
-    window.__belbooreTools.copyToClipboard(text, btn, 1500);
+    navigator.clipboard.writeText(text).then(() => {
+      copyButton.classList.add('is-copied');
+      copyButton.title = getCopiedText();
+      copyButton.setAttribute('aria-label', getCopiedText());
+      window.setTimeout(() => {
+        copyButton.classList.remove('is-copied');
+        copyButton.title = copy.copy;
+        copyButton.setAttribute('aria-label', copy.copy);
+      }, 1200);
+    }).catch(() => {});
   });
 
-  document.getElementById('url-clear')!.addEventListener('click', () => {
+  clearButton?.addEventListener('click', () => {
+    if (!input || !output) return;
     input.value = '';
-    window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here');
+    window.__belbooreTools.showEmpty(output, getEmptyText());
+    input.focus();
   });
+
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      run();
+    }
+  });
+
+  updateRunLabel();
 </script>
+
+<style>
+  .url-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .url-tool__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .url-tool__modes,
+  .url-tool__scopes {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .url-tool__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-inline-start: auto;
+  }
+
+  .url-tool__run-btn.ui-button {
+    min-width: 150px;
+  }
+
+  .url-tool__icon-btn.ui-button {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    gap: 0;
+    border-radius: var(--radius-lg);
+  }
+
+  .url-tool__icon-btn :global(svg),
+  .url-tool__run-btn :global(svg) {
+    display: block;
+    width: 16px;
+    height: 16px;
+    flex: 0 0 16px;
+  }
+
+  .url-tool__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .url-tool__icon--check {
+    display: none;
+  }
+
+  .url-tool__icon-btn--copy.is-copied .url-tool__icon--copy {
+    display: none;
+  }
+
+  .url-tool__icon-btn--copy.is-copied .url-tool__icon--check {
+    display: inline-flex;
+  }
+
+  .url-tool__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .url-tool__panel-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .url-tool__eyebrow {
+    margin: 0 0 var(--space-1);
+    color: var(--color-tech-blue);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .url-tool__label {
+    color: var(--text-primary);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+  }
+
+  .url-tool__hint {
+    color: var(--text-tertiary);
+    font-size: var(--text-xs);
+    line-height: 1.5;
+    text-align: end;
+  }
+
+  .url-tool__textarea {
+    min-height: 300px;
+    background:
+      linear-gradient(90deg, rgba(0, 82, 255, 0.035) 0 1px, transparent 1px) 0 0 / 28px 28px,
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 92%, transparent));
+    border-color: rgba(0, 82, 255, 0.14);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 42%, transparent);
+  }
+
+  .url-tool__textarea:focus {
+    box-shadow:
+      0 0 0 4px var(--color-tech-blue-subtle),
+      0 14px 34px rgba(0, 82, 255, 0.08),
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+  }
+
+  .url-tool__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .url-tool__output {
+    display: flex;
+    align-items: flex-start;
+    min-height: 300px;
+    padding: var(--space-4);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .url-tool__output--empty {
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .url-tool__note {
+    margin-top: 0;
+  }
+
+  @media (max-width: 900px) {
+    .url-tool__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .url-tool__actions {
+      width: 100%;
+      justify-content: flex-start;
+      margin-inline-start: 0;
+    }
+
+    .url-tool__run-btn {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .url-tool__icon-btn {
+      flex: 0 0 auto;
+    }
+
+    .url-tool__panel-head {
+      flex-direction: column;
+    }
+
+    .url-tool__hint {
+      text-align: start;
+    }
+  }
+</style>
