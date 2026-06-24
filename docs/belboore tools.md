@@ -1,256 +1,255 @@
-# Cloud-Based Office Desk - Tool Explanations
-
-## External Services
-
-**Messenger (cach.ir)** - Secure instant messaging platform for team communication and collaboration.
-*Note: Includes a real-time typing indicator and read receipt status view.*
-
-**Meetings (haamcall.ir)** - Video conferencing solution for virtual meetings and remote collaboration.
-*Note: Features a toggle between "Speaker View" and "Grid View" for active calls.*
-
-**Content Collaboration (beldele.ir)** - Platform for team content creation and collaboration.
-*Note: Secure environment for managing and co-editing documents.*
-
-**URL Shortener (r2u.ir)** - Create compact URLs for easier sharing and tracking.
-*Note: Shows a dashboard with click analytics and geographic data for the shortened link.*
-
-## Internal Services
-
-### Network and Security and Privacy
-
-**IP Lookup** - Identify geographic location and ISP information for any IP address.
-*Note: Shows an interactive map with a pin dropped on the estimated physical location.*
-
-**DNS Lookup** - Query domain name system records to resolve hostnames and troubleshoot DNS issues.
-*Note: Outputs a structured table categorized by record types (A, AAAA, MX, CNAME).*
-
-**Whois** - Retrieve domain registration details including owner, registrar, and expiration dates.
-*Note: Highlights the domain expiration date with a color-coded warning (e.g., red if expiring soon).*
-
-**Ping** - Test network connectivity and measure response time to any server.
-*Note: Displays a live scrolling line graph showing latency over time.*
-
-**Port Check** - Verify if specific network ports are open or closed on remote servers.
-*Note: Shows a green "Open" or red "Closed" badge next to the queried port number.*
-
-**HTTP Headers** - Inspect server response headers for debugging and security analysis.
-*Note: Presents a raw code view alongside a parsed, easy-to-read table of key-value pairs.*
-
-**Subnet Calculator** - Calculate network ranges, broadcast addresses, and available hosts for IP subnets.
-*Note: Visually breaks down the IP address into binary to show the network vs. host portions.*
-
-**Site Status** - Monitor website availability and uptime in real-time.
-*Note: Displays an uptime percentage and a timeline of recent status checks (green/red dots).*
-
-**Blacklist Check** - Verify if your IP or domain is listed on spam or security blacklists.
-*Note: Shows a checklist of major blacklist databases with a pass/fail icon next to each.*
-
-**What is My IP** - Display your current public IP address and location information.
-*Note: Features a one-click "Copy to Clipboard" button next to the IP address.*
-
-**Speed Test** - Measure your internet connection's download and upload speeds.
-*Note: Features a real-time digital speedometer gauge during the test.*
-
-**VPN Leak Check** - Test if your VPN is properly hiding your real IP and DNS requests.
-*Note: Displays a split view comparing your "Claimed Location" vs "Detected Location."*
-
-**SSL Check & SSL Certificate** - Validate SSL/TLS certificates, view the full chain of trust, and identify security vulnerabilities.
-*Note: Shows a graded badge (A, B, C, F) based on the certificate's security strength.*
-
-**IP Live API** - Real-time IP geolocation and enterprise-grade threat intelligence data access.
-*Note: Provides a sandbox area to test API calls and view raw JSON responses, with usage latency metrics.*
-
-**Traceroute** - Map the network path packets take to reach a destination server.
-*Note: Displays a sequential list of hops with latency for each, highlighting bottlenecks in yellow/red.*
-
-**Port Scan** - Scan multiple ports on a target to identify open services and potential vulnerabilities.
-*Note: Outputs a categorized list of standard ports (e.g., Web, Email, Database) and their statuses.*
-
-**Email Headers** - Parse and analyze email headers for security and routing information.
-*Note: Highlights SPF, DKIM, and DMARC results with distinct PASS/FAIL badges.*
-
-**APK Virus Identifier** - Scan Android APK files for malware and security vulnerabilities.
-
-*Note: Displays a detailed threat analysis report with color-coded risk indicators (safe, suspicious, malicious).*
-
-### Image Tools
-
-**Extract Info from Images** - AI-powered tool to extract text, objects, and metadata from images.
-*Note: Overlays bounding boxes on the image to highlight where text or objects were detected.*
-
-**QR Code Scanner** - Scan and decode QR codes from images or camera.
-*Note: Displays a live camera feed with an alignment grid for scanning.*
-
-**Branded QR** - Create custom QR codes with logos and brand colors.
-*Note: Features a real-time preview of the QR code updating as colors and logos are applied.*
-
-### Video Tools
-
-**Media Optimizer** - Optimize videos and images for web, mobile, or specific platforms while reducing file size.
-*Note: Provides preset buttons (e.g., "Optimize for Instagram", "Optimize for Web") that automatically adjust settings.*
-
-**Media Converter** - Convert video and audio files between different formats (MP4, AVI, MKV, MP3, WAV, etc.).
-*Note: Displays a progress ring and estimates completion time during heavy conversions.*
-
-### PDF Tools
-
-**Images to PDF** - Combine multiple images into a single PDF document.
-*Note: Allows drag-and-drop reordering of image thumbnails before generating the PDF.*
-
-**Merge PDF** - Combine multiple PDF files into one document.
-*Note: Shows page-level previews so users can delete specific pages before merging.*
-
-### Audio Tools
-
-**YouTube MP3** - Extract audio from YouTube videos in MP3 format.
-*Note: Shows an audio waveform preview before finalizing the download.*
-
-**SoundCloud MP4** - Download SoundCloud tracks as audio files.
-*Note: Fetches and displays the track's album artwork and artist name alongside the download button.*
-
-**Spotify** - Access Spotify track information and metadata.
-*Note: Embeds a mini web player to listen to a $30$-second preview of the track.*
-
-**Music Database** - Browse and download songs with artist info, albums, and lyrics.
-*Note: Features a synchronized scrolling lyrics view if available.*
-
-### Downloader Tools
-
-**YouTube Search & Video** - Search, preview, and download YouTube videos in various quality options.
-*Note: Presents a table of download options categorized by resolution (e.g., 4K, 1080p, 720p) and file size.*
-
-**Playlist Download** - Batch download entire playlists from supported platforms.
-*Note: Displays a checklist of all songs in the playlist, allowing users to uncheck specific tracks before downloading.*
-
-**TikTok** - Download TikTok videos without watermarks.
-*Note: Previews the video loop natively on the page before downloading.*
-
-**X/Twitter** - Download videos and GIFs from Twitter/X posts.
-*Note: Automatically isolates the media file from the pasted tweet URL for direct download.*
-
-**GitHub** - Quick access to GitHub repositories and file downloads.
-*Note: Shows a folder-tree structure to allow downloading specific files instead of the whole repo.*
-
-**Movie Database** - Search and download movies with detailed information, ratings, and multiple quality options.
-*Note: Displays a poster view with IMDB/Rotten Tomatoes rating badges.*
-
-**YouTube & Instagram Downloader** - Download videos, reels, and stories directly from YouTube and Instagram.
-
-*Note: Provides a quick format selection dropdown (e.g., MP4, MP3) and resolution choices before downloading.*
-
-### Dev Tools
-
-**Base64** - Encode and decode data in Base64 format for data transmission.
-*Note: Offers a dual-pane view where typing in one side instantly converts text on the other.*
-
-**Hash (MD5/SHA)** - Generate cryptographic hashes for data integrity verification.
-*Note: Generates multiple hash formats (MD5, SHA-1, SHA-256) simultaneously in a list.*
-
-**URL Encode/Decode** - Convert special characters for safe URL transmission.
-*Note: Highlights the specific characters in the string that were altered during conversion.*
-
-**UUID Generator** - Generate universally unique identifiers for databases and applications.
-*Note: Allows generating UUIDs in bulk (e.g., $10$ or $50$ at a time) in a copyable list.*
-
-**JSON Formatter** - Validate, format, and beautify JSON data for readability.
-*Note: Features syntax highlighting and collapsible/expandable nodes for nested data.*
-
-**MD Viewer** - Render and preview Markdown files in real-time.
-
-*Note: Features a split-screen view with the raw markdown text on one side and the live formatted HTML preview on the other.*
-
-**Cron Translator** - Decode cron expressions into plain language schedules.
-*Note: Shows a calendar preview highlighting the upcoming dates the cron job will run.*
-
-**GeoJSON** - Validate, format, and visualize GeoJSON geographic data.
-*Note: Renders the raw GeoJSON code instantly onto an interactive map preview beside it.*
-
-**Weather Data API** - Programmatic access to weather APIs for developers.
-*Note: Includes a code snippet generator (Python, cURL, JS) for quick API integration.*
-
-### Datetime Tools
-
-**Timestamp Converter** - Convert between Unix timestamps and human-readable dates.
-*Note: Displays the converted time in both UTC and the user's local timezone simultaneously.*
-
-**Calendar** - Date calculator with Gregorian, Jalali, and other calendar systems.
-*Note: Shows a side-by-side view where clicking a date on the Gregorian calendar highlights the equivalent Jalali date.*
-
-**Timezone** - Convert times between different time zones globally.
-*Note: Displays a horizontal timeline slider to easily compare working hours across $3+$ cities.*
-
-**Sunrise/Sunset** - Calculate sunrise, sunset, and twilight times for any location.
-*Note: Features an interactive arc graphic showing the sun's current position in the sky.*
-
-### Financial Tools
-
-**Market Overview** - Real-time stock market indices and financial summaries.
-*Note: Displays red/green ticker tapes scrolling across the top of the module.*
-
-**Crypto Prices** - Live cryptocurrency prices and market capitalization data.
-*Note: Features a $24$-hour percentage change indicator with a mini trend line (sparkline).*
-
-**Gold Price** - Current gold spot prices in various currencies.
-*Note: Shows a real-time updating price chart with toggleable timeframes (1D, 1W, 1M).*
-
-**Oil Price** - Live crude oil prices (Brent, WTI) and market trends.
-*Note: Displays a comparison chart mapping Brent vs WTI prices historically.*
-
-**Precious Metals** - Real-time prices for silver, platinum, palladium, and other metals.
-*Note: Presents data in a unified table with current price, day high, and day low.*
-
-**Iran Rial Rates** - Current exchange rates for Iranian Rial against major currencies.
-*Note: Highlights the spread (difference between buying and selling rates) visually.*
-
-**Currency Converter** - Convert between world currencies with live exchange rates.
-*Note: Features a quick-swap button to instantly reverse the "From" and "To" currencies.*
-
-### General Tools
-
-**Lan File Sharing (mizban)** - Local network file transfer tool for fast, secure sharing within your organization.
-*Note: Displays a live progress bar with current transfer speed ($MB/s$) and estimated time remaining.*
-
-**Password Generator** - Create strong, random passwords with customizable complexity.
-*Note: Includes a visual "Password Strength" meter that updates as settings are changed.*
-
-**Unit Converter** - Convert between different units of measurement (length, weight, temperature, etc.).
-*Note: Uses dynamic dropdowns where selecting a category auto-populates relevant sub-units.*
-
-**WiFi QR** - Generate QR codes for easy WiFi network sharing.
-*Note: Displays a printable card view with the QR code and the network name.*
-
-**Random (Dice)** - Generate random numbers, dice rolls, and lottery picks.
-*Note: Features a 3D animated dice roll or spinning wheel for visual feedback.*
-
-**Compressor** - Reduce file sizes for PDFs, images, and videos while maintaining quality.
-*Note: Displays a split-screen slider offering a visual "before and after" view alongside file size comparison ($original size$ vs $compressed size$).*
-
-**Format Converter** - Convert between image formats (JPG, PNG, WebP) and document types (PDF to DOC, etc.).
-*Note: Shows a visual flow diagram indicating `[Original Format Icon] -> [New Format Icon]`.*
-
-**File Uploader (Storage)** - Cloud storage solution for uploading and managing files.
-*Note: Provides a drag-and-drop zone with thumbnails for image/video previews.*
-
-**Telegram News** - Aggregated news and updates from popular Telegram channels.
-*Note: Presents a feed-style UI resembling Telegram's native message bubbles.*
-
-### Geo Tools
-
-**Weather & Daily Weather** - Current weather conditions and detailed hourly/multi-day forecasts for any location.
-*Note: Displays an animated background based on current local conditions and uses a sparkline chart to show temperature highs and lows over the next $7$ days.*
-
-**Air Quality** - Real-time air pollution levels and health recommendations.
-*Note: Uses a color-coded gauge (Green to Deep Purple) to indicate the AQI risk level.*
-
-**Earthquakes** - Recent seismic activity and earthquake alerts worldwide.
-*Note: Maps recent quakes with circles whose sizes correspond to the Richter scale magnitude.*
+# Belboore — Tool Directory
+
+*149 free tools for your daily work. No account required for most tools.*
+
+---
+
+## 📁 Files & Documents
+*Create, compress, convert, share, and transfer files.*
+
+*   **Images to PDF:** Upload photos from your phone or computer and combine them into a single, neat PDF document. *(You can drag and drop to reorder them)*.
+*   **Merge PDFs:** Combine several different PDF files into one large document. *(Lets you preview and delete specific pages before merging)*.
+*   **PDF Compressor:** Make heavy PDF files smaller so they can be uploaded or emailed easily.
+*   **PDF to Markdown:** Convert PDF documents into structured, AI-readable Markdown files. Useful for feeding documents into LLMs or importing into knowledge bases.
+*   **Cloud Storage Uploader:** A simple drag-and-drop space to store your files in the cloud. Access them from any device.
+*   **Local File Share (Mizban):** Quickly and securely send files to other computers in your office network at speeds up to $100$ $MB/s$.
+*   **Instant URL:** Enter any text (like a WiFi password or a private message) and get a temporary short URL that displays it for a limited time before expiring.
+*   **Link Shortener:** Turn long, ugly web links into short, easy-to-share URLs. Includes a dashboard to see how many people clicked your link.
+
+---
+
+## 🖼️ Media Tools
+*Edit, convert, and optimize images, video, and audio.*
+
+### Images & Design
+*   **Image Compressor:** Shrink the file size of your photos without making them look blurry. *(Shows a split-screen slider comparing $original size$ vs $compressed size$)*.
+*   **Image Converter:** Change your pictures from one format to another (like JPG to PNG or WebP).
+*   **Extract Text from Images:** Upload a picture, and our AI will read and copy the text inside it for you. *(Draws boxes around the detected text)*.
+*   **SVG Placeholder Generator:** Generate customizable SVG placeholder images with custom width, height, background color, and text label. Perfect for mockups and layout drafts.
+*   **Camera Recorder:** Record video or audio directly from your webcam and download the clip. No installation needed.
+
+### Video
+*   **Video Compressor:** Make large video files smaller so they are easier to send on WhatsApp or email.
+*   **Video Converter:** Change video formats (like MP4 to AVI) so they play smoothly on any device.
+*   **Video Optimizer:** Automatically adjust your video settings to look perfect for specific apps (e.g., clicking "Optimize for Instagram").
+
+### Audio & Music
+*   **Audio Converter:** Change your music or voice recordings into different formats (like WAV to MP3).
+*   **Spotify Preview:** Search for a Spotify song and listen to a $30$-second preview right on the page.
+*   **Music & Lyrics Database:** Look up songs to find the artist details, album covers, and scroll through the lyrics.
+
+---
+
+## 📥 Downloaders
+*Save videos, music, and files from your favorite platforms.*
+
+*   **YouTube Video Downloader:** Search for YouTube videos and download them in your preferred quality (like 1080p or 4K).
+*   **YouTube to MP3:** Extract just the audio from a YouTube video and save it as an MP3 music file.
+*   **Instagram Downloader:** Save Reels, Stories, and videos directly from Instagram.
+*   **TikTok Downloader:** Save TikTok videos directly to your phone *without* the moving watermark.
+*   **X/Twitter Downloader:** Paste a tweet link to easily save the video or GIF attached to it.
+*   **SoundCloud Downloader:** Download music tracks directly from SoundCloud.
+*   **Playlist Downloader:** Paste a playlist link to download all the songs or videos at once. *(Lets you uncheck songs you don't want)*.
+*   **Movie Database:** Search for movies, read reviews, check ratings, and download them.
+*   **GitHub Downloader:** Download specific files or folders from a GitHub repository without having to download the entire project.
+
+---
+
+## 🔐 Security & Passwords
+*Generate passwords, encrypt data, and verify security.*
+
+*   **Password Generator:** Create super-strong, random passwords so hackers can't guess them.
+*   **Password Strength Analyser:** Test how strong your password is. Estimates crack time, entropy score, and gives actionable feedback to improve weak passwords.
+*   **Encrypt/Decrypt Text:** Encrypt or decrypt text messages using symmetric AES encryption. Just enter your text and a secret passphrase.
+*   **Hash Generator:** Create secure cryptographic hashes (MD5, SHA-256) for data verification.
+*   **Bcrypt:** Hash and verify passwords using the bcrypt hashing algorithm. Securely salt and compare passwords without ever storing plain text.
+*   **HMAC Generator:** Compute a Hash-based Message Authentication Code (HMAC) from a text input and a secret key.
+*   **RSA Key Pair Generator:** Generate a public/private RSA key pair in PEM format. Choose key size (1024, 2048, or 4096 bits) and download your keys.
+*   **OTP Code Generator (2FA):** Generate time-based (TOTP) one-time passwords from a secret key. Also validates OTP codes for your two-factor authentication setup.
+*   **Token Generator:** Generate random string tokens using your choice of letters, numbers, and symbols. *(Set length and character set, then copy)*.
+
+---
+
+## 🌐 Network & Diagnostics
+*Test networks, check security, and inspect IPs and domains.*
+
+### IP & Address Tools
+*   **What is My IP:** Instantly see your public internet address and location with a quick "Copy" button.
+*   **IP Locator:** Find out the city and country of any IP address on a map.
+*   **IPv4 Subnet Calculator:** Calculate IP subnets, masks, and CIDR ranges for IPv4 networks.
+*   **IPv4 Address Converter:** Convert IPv4 addresses between decimal integer, dotted-decimal, hexadecimal, and binary formats.
+*   **IPv4 Range Expander:** Expand an IPv4 CIDR notation or start-end range into a full list of every individual IP address.
+*   **IPv6 ULA Generator:** Generate a random IPv6 Unique Local Address (ULA) prefix for private internal networks.
+*   **MAC Address Lookup:** Look up the manufacturer (vendor/OUI) of any MAC address. Just paste the address to see who made the device.
+*   **MAC Address Generator:** Generate random MAC addresses or ones tied to a specific manufacturer OUI prefix.
+
+### Network Tests
+*   **Speed Test:** Check how fast your internet download and upload speeds are. *(Shows a digital speedometer)*.
+*   **Ping Test:** Check if a website or server is responding and how fast it replies.
+*   **Traceroute:** Trace the network path your data takes to reach a destination, hop by hop.
+*   **Site Status:** Check if a website is currently down for everyone or just for you.
+*   **DNS Lookup:** Resolve DNS records for any domain — A, AAAA, MX, NS, TXT, and more.
+*   **Whois Lookup:** Look up domain registration and ownership details via Whois.
+*   **Port Check:** Test if a specific port is open and reachable on a target server.
+*   **Port Scan:** Scan a range of common ports on a server to discover running services.
+*   **HTTP Headers Inspector:** Fetch and display all HTTP response headers from any URL.
+
+### Security Checks
+*   **SSL Security Check:** Check if a website's security certificate is safe, valid, and up to date.
+*   **VPN Leak Check:** Make sure your VPN is actually hiding your real location and not leaking DNS requests.
+*   **Blacklist Check:** Check if your website or IP address has been marked as spam by security companies.
+*   **App Virus Scanner (APK):** Upload an Android app file (.apk) to check it for hidden viruses before installing it.
+*   **Email Security Check:** Paste email headers to see if an email is genuinely from who it claims to be, or if it's a scam. Checks SPF, DKIM, and DMARC.
+*   **PDF Signature Checker:** Upload a PDF to verify its digital signatures and check if the document has been tampered with. *(Shows a validity report)*.
+
+---
+
+## 💰 Finance & World Data
+*Live exchange rates, market data, and global information.*
+
+### Markets & Money
+*   **Currency Converter:** Convert money between world currencies using live exchange rates.
+*   **Iran Rial Rates:** See the current buying and selling exchange rates for the Iranian Rial.
+*   **Crypto Prices:** Track live prices and $24$-hour trends for Bitcoin, Ethereum, and other cryptocurrencies.
+*   **Gold & Precious Metals:** View live global prices for Gold, Silver, Platinum, and Palladium.
+*   **Oil Prices:** Track the current prices for global crude oil.
+*   **Stock Market Overview:** See how major global stock markets are performing today.
+*   **IBAN Validator:** Validate and parse international bank account numbers (IBAN). Check if an IBAN is correct and see the country, bank code, and account details.
+
+### World & Weather
+*   **Local Weather:** See today's weather and a $7$-day forecast for any city.
+*   **Air Quality Check:** See how polluted the air is right now using a simple color scale (Green is good, Purple is bad).
+*   **Earthquake Map:** View an interactive map showing recent earthquakes around the world and how strong they were.
+
+---
+
+## 💻 Developer Tools
+*Utilities for programmers — formatting, converting, testing, and reference.*
+
+### JSON Toolkit
+*   **JSON Formatter:** Clean up messy JSON code so it is color-coded and easy to read.
+*   **JSON Tree Viewer:** Explore JSON data in an interactive collapsible tree (like Vercel's viewer). Includes search, filter, and one-click path copying.
+*   **JSON Minify:** Compress JSON by stripping all unnecessary whitespace. Minimize file sizes for production deployment.
+*   **JSON Diff:** Compare two JSON documents side by side and see a visual diff of exactly what fields changed, were added, or removed.
+*   **JSON to CSV:** Convert an array of JSON objects into a flat CSV file. One click and your data is ready for Excel or Google Sheets.
+
+### Format Converters
+*   **YAML ↔ JSON:** Convert YAML to JSON and JSON to YAML — both directions in one tool.
+*   **YAML ↔ TOML:** Convert between YAML and TOML config formats.
+*   **JSON ↔ TOML:** Convert between JSON and TOML config formats.
+*   **XML ↔ JSON:** Convert XML data to JSON format and back again.
+
+### Code Tools
+*   **SQL Prettify:** Format messy SQL queries with proper indentation, line breaks, and keyword capitalization. Works with PostgreSQL, MySQL, SQLite, and more.
+*   **XML Formatter:** Pretty-print (format and indent) XML data so it's human-readable and easy to debug.
+*   **YAML Viewer:** Format and view YAML data with clean indentation and syntax highlighting.
+*   **Markdown Viewer & Exporter:** Live split-pane Markdown editor with preview. Supports LaTeX math formulas, chemical equations, and full RTL text for Persian and Arabic documents. Customize fonts, background colors, and page styling, then export to HTML or PDF with your own custom CSS.
+*   **Regex Tester:** Test regular expressions against sample text and see all matches highlighted in real time. Understand exactly what your regex captures.
+*   **Regex Memo:** Save and organize your frequently used regex patterns. A personal library of regular expressions you can copy with one click.
+
+### Text & Encoding
+*   **Base64 Encoder/Decoder:** Quickly encode or decode text and files into Base64 format. Switch between text and file modes.
+*   **Case Converter:** Transform your text case instantly — choose from uppercase, lowercase, title case, sentence case, camelCase, PascalCase, snake_case, kebab-case, and more.
+*   **HTML Entities:** Encode or decode HTML entities — turn `<` into `&lt;` and special characters into their named or numeric HTML codes.
+*   **Text to Binary:** Convert any text into its binary (1s and 0s) representation, and decode binary back to text.
+*   **Text to Unicode:** See the Unicode code points for every character in your text as hexadecimal values. Useful for debugging character encoding issues.
+*   **Text to NATO Alphabet:** Spell out any text using the NATO phonetic alphabet (Alpha, Bravo, Charlie...). Great for reading passwords or codes over the phone.
+*   **List Converter:** Transform column-based lists: transpose rows/columns, add prefixes or suffixes, sort alphabetically, reverse order, change case, and truncate lines.
+
+### Web & HTTP
+*   **URL Encode/Decode:** Make text safe to put into a web URL, or decode percent-encoded URLs back to plain text.
+*   **URL Parser:** Break down any URL into its components: protocol, hostname, port, path, query parameters, and hash fragment.
+*   **Slugify String:** Convert any text into a URL-friendly "slug" (lowercase letters, numbers, and hyphens only). Great for blog post URLs.
+*   **JWT Parser:** Decode a JSON Web Token (JWT) to view its header, payload, and signature fields. See all claims and metadata at a glance.
+*   **Basic Auth Generator:** Generate an HTTP Basic Authentication header string from a username and password. Ready to paste into `Authorization:` headers.
+*   **Meta Tag Generator:** Create HTML `<meta>` tags for your website — charset, viewport, Open Graph, Twitter Cards, and SEO descriptions.
+*   **Safelink Decoder:** Decode obfuscated "safe" redirect URLs back to their original destination. Useful for checking where shortened or wrapped links really lead.
+
+### Generators & IDs
+*   **UUID Generator:** Generate unique ID numbers in bulk (e.g., $10$ or $50$ at once).
+*   **ULID Generator:** Generate a ULID (Universally Unique Lexicographically Sortable ID). Similar to UUID but time-sortable and more compact.
+*   **BIP39 Passphrase Generator:** Generate a BIP39 mnemonic seed phrase (like the 12-word backup phrases used in crypto wallets) from random entropy, or convert a phrase back to its seed.
+*   **Random Port Generator:** Generate a random, high-numbered port that's likely free on your system. Useful when configuring new services.
+*   **Email Normalizer:** Normalize email addresses by removing dots from Gmail addresses, lowercasing, trimming, and standardizing formatting.
+
+### DevOps
+*   **Docker Run → Compose:** Paste a `docker run` command and instantly get the equivalent `docker-compose.yml` service definition. Save hours of manual translation.
+*   **Chmod Calculator:** Calculate UNIX file permission octal codes by checking read/write/execute boxes for owner, group, and others. No more mental math.
+*   **Crontab Generator:** Build cron schedule expressions using a visual UI helper. Pick the desired schedule and get the exact cron syntax.
+*   **Cron Job Translator:** Turn complex cron codes into plain English (e.g., "Runs every Tuesday at 5 PM").
+*   **Git Memo:** Quickly copy ready-made Git commit message templates. Choose from common patterns like feature, fix, refactor, or chore.
+*   **Benchmark Builder:** Create custom benchmark command lines for tools like `ab` (Apache Bench), `siege`, and `wrk`. Just choose your tool and configure the options.
+*   **GeoJSON Viewer:** Paste geographic code and instantly see the shapes drawn on an interactive map.
+
+### References
+*   **MIME Types:** Look up the MIME type for any file extension (e.g., `.pdf` → `application/pdf`). A handy reference for web developers.
+*   **HTTP Status Codes:** A searchable reference of all HTTP status codes from 1xx to 5xx. Click any code to see its category, description, and meaning.
+*   **Keycode Info:** Find the JavaScript key code for any key on your keyboard. Press a key inside the tool and see the `key`, `code`, and `keyCode` values.
+*   **User Agent Parser:** Parse a browser User-Agent string to identify the browser name, version, operating system, and device type.
+*   **Device Information:** View your current browser and device specs — screen resolution, OS, browser engine, WebGL support, and more.
+*   **Weather Data API:** Connect your own apps to our weather data easily.
+
+---
+
+## 📝 Text & Number Tools
+*Manipulate text, convert numbers, and play with content.*
+
+### Text Utilities
+*   **Lorem Ipsum Generator:** Generate placeholder "Lorem ipsum" dummy text. Choose how many paragraphs, sentences, or words you need for your mockup.
+*   **Text Statistics:** Count words, characters, lines, sentences, and paragraphs in your text. Also calculates reading time, average word length, and readability scores.
+*   **Text Diff:** Compare two blocks of text side by side and see exactly what changed — additions, deletions, and modifications highlighted.
+*   **String Obfuscator:** Transform text through various encodings to obscure it — choose from ROT13, Base64, Unicode escape, reverse, and more.
+*   **Emoji Picker:** Browse, search, and copy emojis with their names and Unicode codes. Search by name (e.g., "rocket") to find the perfect emoji fast.
+*   **ASCII Art Text Generator:** Turn your text into ASCII art using a wide selection of fonts and styles. Get retro-looking text blocks ready to paste anywhere.
+*   **Numeronym Generator:** Generate "numeronyms" from words — like "i18n" from "internationalization" or "a11y" from "accessibility".
+
+### Numbers & Color
+*   **Integer Base Converter:** Convert integers between binary, octal, decimal, and hexadecimal bases. Type a number in any base and see all others instantly.
+*   **Roman Numeral Converter:** Convert numbers to and from Roman numerals. Enter an Arabic number like $2024$ or a Roman numeral like "MMXXIV".
+*   **Color Converter:** Convert color values between HEX, RGB, HSL, HSV, and CMYK formats. Pick a color visually or paste a value to see all representations.
+*   **Math Evaluator:** Evaluate arithmetic and algebraic expressions. Supports functions like sqrt, sin, cos, log, and constants like pi. *(Shows result in real-time)*.
+*   **Percentage Calculator:** Quickly compute percentages, percentage increases, percentage decreases, and proportional values. Perfect for discounts, tips, and margin calculations.
+*   **ETA Calculator:** Calculate Estimated Time of Arrival given a start point, end point, speed, and departure time. Useful for trip planning and delivery estimates.
+
+---
+
+## 🛠️ Everyday Tools
+*QR codes, unit conversion, dates, and daily utilities.*
+
+### QR Code Hub
+*   **QR Code Scanner:** Use your camera or upload a picture to instantly read any QR code.
+*   **Make a Branded QR Code:** Create your own QR codes and customize them with your personal colors and business logo.
+*   **File/Audio to QR Code:** Upload any file or audio clip and get a QR code linking to a permanent hosted URL. For small data (like WiFi passwords or short text), also generates a self-contained offline QR code with no server dependency.
+*   **WiFi QR Code Maker:** Type in your home WiFi password and generate a QR code. Guests can just scan it to connect!
+
+### Date & Time
+*   **Calendar Converter:** Instantly convert dates between Gregorian, Jalali, and other calendars.
+*   **Global Timezones:** Compare the current time across $3+$ different cities to easily plan international meetings.
+*   **Sunrise & Sunset:** Find out exactly when the sun will rise and set for any city in the world today.
+*   **Timestamp Converter:** Change computer Unix timestamps into normal, readable dates.
+*   **Date-Time Converter:** Convert dates and times between different formats — ISO 8601, Unix timestamps, UTC, local time, and custom formats like `YYYY/MM/DD`.
+
+### Utilities
+*   **Unit Converter:** Convert things like Miles to Kilometers, Pounds to Kilograms, or Celsius to Fahrenheit.
+*   **Chronometer:** A simple stopwatch and count-up timer. Start, stop, lap, and reset with precision. No sign-up needed.
+*   **Phone Parser/Formatter:** Parse international phone numbers and format them in a standard way. Shows country, area code, and subscriber number for any valid number.
+*   **HTML WYSIWYG Editor:** A lightweight rich-text HTML editor. Type and format text visually, then copy the clean HTML source code.
+*   **Random Generator:** Roll virtual 3D dice or spin a wheel to pick random numbers or names.
+*   **Telegram News:** Read the latest updates from popular Telegram channels in a clean, web-based feed.
+
+---
+
+## 👥 Communication
+*Chat, meet, and collaborate with your team.*
+
+*   **Secure Messenger:** Chat securely with your team. Includes a real-time typing indicator and read receipts.
+*   **Video Meetings:** Host virtual video calls easily. You can switch between "Speaker View" and a grid of all participants.
+*   **Document Collaboration:** Create and edit text documents together with your team at the same time securely.
 
 ---
 
 ## Post-MVP Ideas
+*Future upgrades planned for the platform.*
 
-**Office Desk Expansion** - Expanding the Office Desk platform with advanced features like AI for tool suggestions, a personalized dashboard, integration with external services, and user setting storage.
-*Note: Will feature a drag-and-drop widget interface allowing users to customize their home screen layout.*
-
-**Programmer Tools API Key** - Allowing users to input and securely manage their own API keys to access, integrate, and customize advanced developer tools.
-*Note: Will include a secure, masked input field (`••••••••`) with environment-variable style injection for external tools.*
+*   **Customizable Office Desk:** Allow users to drag and drop their favorite tools to create a personalized home screen.
+*   **Bring Your Own API Keys:** Let developers plug in their own paid API keys to unlock advanced, unlimited features for specific developer tools safely.
