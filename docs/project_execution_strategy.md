@@ -2,77 +2,89 @@
 
 ## 1. Scope Overview
 
-**Total tools: 149** across **17 internal categories + 4 external services**.
+**Total tools: ~150** across **10 categories** (restructured per UX audit, down from 18).
 
 ### Tool Classification by Backend Complexity
 
 | Tier | Description | Count | Backend Required |
 |------|------------|:---:|:---:|
-| **Tier 0 — Pure Client-Side** | Runs entirely in browser (JS/WASM). Zero backend. | **88** | No |
-| **Tier 1 — API Proxy** | Thin backend that proxies external APIs (weather, finance, lyrics). | **18** | Yes (light) |
-| **Tier 2 — Server Processing** | Heavy backend processing (media, PDF, downloaders). | **32** | Yes (heavy) |
-| **Tier 3 — Real Infrastructure** | Network scanning, file storage, security checks. | **11** | Yes (dedicated) |
+| **Tier 0 — Pure Client-Side** | Runs entirely in browser (JS/WASM). Zero backend. | **~88** | No |
+| **Tier 1 — API Proxy** | Thin backend that proxies external APIs (weather, finance, lyrics). | **~18** | Yes (light) |
+| **Tier 2 — Server Processing** | Heavy backend processing (media, PDF, downloaders). | **~32** | Yes (heavy) |
+| **Tier 3 — Real Infrastructure** | Network scanning, file storage, security checks. | **~16** | Yes (dedicated) |
 
-### Tier 0 — Pure Client-Side (88 tools)
+### Tier 0 — Pure Client-Side (~88 tools)
 > These can be built in parallel by the frontend developer with zero backend dependency, starting Sprint 0.
 
 ```
-Crypto:       Token Generator, ULID Generator, RSA Key Pair, BIP39 Passphrase
-Converter:    ALL 17 tools (Base converters, Color, Case, YAML/JSON/TOML/XML, List, NATO, Binary, Unicode, Roman)
-Text:         ALL 7 tools (Lorem Ipsum, Text Stats, Emoji, Obfuscator, Text Diff, Numeronym, ASCII Art)
-Math:         ALL 3 tools (Math Evaluator, ETA, Percentage)
-Measurement:  Chronometer
-Developer:    JSON Formatter, JSON Tree Viewer, JSON Minify, JSON Diff, JSON to CSV, Markdown Viewer,
-              UUID Generator, Hash Generator, Base64 Converter, Cron Job Translator,
-              Crontab Generator, GeoJSON Viewer, Regex Tester, Regex Memo,
-              SQL Prettify, Chmod Calculator, XML Formatter, YAML Viewer,
-              Email Normalizer, Git Memo, Random Port Generator, JWT Parser,
-              HTML Entities, URL Parser, Slugify String, Basic Auth Generator,
-              Meta Tag Generator, HTML WYSIWYG Editor, MIME Types,
-              HTTP Status Codes, Keycode Info, User Agent Parser, Device Info, Safelink Decoder
-Date/Time:    Calendar Converter, Timestamp Converter, Date-Time Converter
-General:      Password Generator, Password Strength Analyser, Unit Converter,
-              Random Generator, WiFi QR Code Maker
-Image:        Image Converter, QR Code Scanner, SVG Placeholder Generator,
-              Make a Branded QR Code, File/Audio to QR Code (self-contained mode)
+Security:      Password Generator, Password Strength Analyser, Hash Generator,
+               Bcrypt, HMAC Generator, RSA Key Pair, Encrypt/Decrypt Text,
+               OTP Code Generator (2FA)
+Developer:     JSON Formatter, JSON Tree Viewer, JSON Minify, JSON Diff,
+               JSON to CSV, Case Converter, HTML Entities, Text to Binary,
+               Text to Unicode, Text to NATO, List Converter,
+               YAML ↔ JSON, YAML ↔ TOML, JSON ↔ TOML, XML ↔ JSON,
+               SQL Prettify, XML Formatter, YAML Viewer, Markdown Viewer,
+               Regex Tester, Regex Memo, Base64 Encoder/Decoder,
+               URL Encode/Decode, URL Parser, Slugify, JWT Parser,
+               Basic Auth Generator, Meta Tag Generator, Safelink Decoder,
+               UUID Generator, ULID Generator, BIP39 Passphrase Generator,
+               Random Port Generator, Email Normalizer,
+               Chmod Calculator, Cron Job Translator, Crontab Generator,
+               Git Memo, GeoJSON Viewer, Keycode Info, User Agent Parser,
+               Device Information, MIME Types, HTTP Status Codes
+Text & Number: Lorem Ipsum, Text Stats, Text Diff, String Obfuscator,
+               Emoji Picker, ASCII Art, Numeronym Generator,
+               Integer Base Converter, Roman Numeral, Color Converter,
+               Math Evaluator, Percentage Calculator, ETA Calculator
+Everyday:      QR Code Scanner, WiFi QR Maker, Branded QR Maker,
+               Unit Converter, Calendar Converter, Timestamp Converter,
+               Date-Time Converter, Chronometer, Phone Formatter,
+               HTML WYSIWYG Editor, Random Generator
+Media:         Image Converter, SVG Placeholder Generator
+Network:       IPv4 Subnet Calc, IPv4 Address Converter, IPv4 Range Expander,
+               IPv6 ULA Generator, MAC Address Generator, HTTP Status Codes
 ```
 
-### Tier 1 — API Proxy (18 tools)
+### Tier 1 — API Proxy (~18 tools)
 > Backend acts as thin proxy to external APIs with caching. Light development.
 
 ```
-Audio:        Spotify Preview, Music & Lyrics Database
-Financial:    ALL 6 (Currency, Rial, Crypto, Gold, Oil, Stocks)
-Date/Time:    Global Timezones, Sunrise & Sunset
-Geo/Weather:  ALL 3 (Weather, Air Quality, Earthquake Map)
-Developer:    OTP Code Generator (TOTP validation), Weather Data API
-General:      Telegram News, Cloud Storage Uploader (metadata + link)
+Media:         Spotify Preview, Music & Lyrics Database
+Finance:       ALL 7 (Currency, Rial, Crypto, Gold, Oil, Stocks, IBAN) +
+               ALL 3 weather/geo (Weather, Air Quality, Earthquakes)
+Everyday:      Global Timezones, Sunrise & Sunset, Telegram News
+Developer:     Weather Data API
+Files:         Link Shortener
 ```
 
-### Tier 2 — Server Processing (32 tools)
+### Tier 2 — Server Processing (~32 tools)
 > Heavy backend: FFmpeg, OCR, PDF libraries, download engines. Most complex.
 
 ```
-Image:        Image Compressor, Extract Text from Images (OCR), File/Audio to QR Code (hosted URL)
-Video:        ALL 3 (Compressor, Converter, Optimizer)
-Audio:        Audio Converter
-PDF:          ALL 5 (Images to PDF, Merge, Compressor, PDF to Markdown, Signature Checker)
-Downloader:   ALL 9 (YouTube, YouTube→MP3, Instagram, TikTok, X/Twitter, SoundCloud, Playlist, Movie DB, GitHub)
-Crypto:       Bcrypt, Encrypt/Decrypt, HMAC Generator
+Media:         Image Compressor, Extract Text (OCR), Video Compressor,
+               Video Converter, Video Optimizer, Audio Converter,
+               Camera Recorder
+Files:         Images to PDF, Merge PDFs, PDF Compressor, PDF to Markdown,
+               Cloud Storage Uploader, Local File Share (Mizban),
+               Instant URL
+Downloaders:   ALL 9 (YouTube, YouTube→MP3, Instagram, TikTok,
+               X/Twitter, SoundCloud, Playlist, Movie DB, GitHub)
+Everyday:      File/Audio to QR Code (hosted URL mode)
+Network:       PDF Signature Checker
+Developer:     Benchmark Builder, Docker Run → Compose (validation)
 ```
 
-### Tier 3 — Real Infrastructure (11 tools)
+### Tier 3 — Real Infrastructure (~16 tools)
 > Unique server-side capabilities. Needs real network access and security tooling.
 
 ```
-Network:      What is My IP, Speed Test, VPN Leak Check, Site Status, IP Locator,
-              Ping Test, Blacklist Check, SSL Security Check, App Virus Scanner,
-              Email Security Check, Advanced Net Tools (DNS, Whois, Port Check, Port Scan,
-              HTTP Headers, Subnet Calculator, Traceroute, IP Live API),
-              IPv4 Address Converter, IPv4 Range Expander, MAC Address Lookup,
-              MAC Address Generator, IPv6 ULA Generator
-General:      Instant URL, Local File Share (Mizban)
-Measurement:  Benchmark Builder
+Network:       What is My IP, Speed Test, Ping Test, Traceroute, Site Status,
+               DNS Lookup, Whois Lookup, Port Check, Port Scan,
+               HTTP Headers Inspector, SSL Security Check, VPN Leak Check,
+               Blacklist Check, App Virus Scanner (APK), Email Security Check,
+               MAC Address Lookup
+Files:         Link Shortener (DB + redirect service)
 ```
 
 ---
@@ -138,15 +150,15 @@ Measurement:  Benchmark Builder
 | Docker Compose dev environment (Postgres, Redis, MinIO) | BE2 | 2d |
 | CI/CD pipeline (GitHub Actions: lint, test, build, deploy) | BE2 | 2d |
 | API Gateway setup (FastAPI routing + OpenAPI spec) | BE2 | 2d |
-| Next.js project setup + shadcn/ui theme | FE | 3d |
-| Component library skeleton (Button, Input, ToolLayout, Tabs) | FE | 3d |
+| Next.js project setup + shadcn/ui theme + 10-category navigation shell | FE | 3d |
+| Component library skeleton (Button, Input, ToolLayout, ToolPage, SubGroupTabs) | FE | 3d |
 | Auth boilerplate (JWT + refresh tokens) | BE1 | 2d |
 | Database schema design + migrations (Alembic) | BE1 | 2d |
 | Shared API types package | BE2 | 1d |
 | Media processing Docker service (FFmpeg installed) | BE1 | 1d |
 | yt-dlp integration and sandbox testing | BE1 | 1d |
 
-**Deliverables:** Running dev environment, green CI, auth working, API docs at /docs.
+**Deliverables:** Running dev environment, green CI, auth working, API docs at /docs, 10-category sidebar navigation.
 
 ---
 
@@ -166,33 +178,32 @@ Measurement:  Benchmark Builder
 #### Backend Dev 2 — Data & Infrastructure Services
 | Task | Effort |
 |------|:---:|
-| Financial data service (exchange rates, crypto, gold/oil) | 4d |
+| Financial & World Data service (exchange rates, crypto, gold/oil, weather, AQI, earthquakes) | 4d |
 | Redis caching layer for all proxy APIs (TTL-based) | 2d |
-| Weather/Geo proxy service (weather, AQI, earthquakes) | 3d |
 | Spotify + Lyrics API proxy | 2d |
 | Rate limiter middleware | 1d |
-| **API endpoints:** finance, weather, audio proxy | 3d |
+| Link Shortener service (DB-driven, short ID → long URL) | 2d |
+| **API endpoints:** finance, weather, audio proxy, link shortener | 3d |
 
 #### Frontend
 | Task | Effort |
 |------|:---:|
-| Generic `<Tool />` layout component (input→process→output) | 2d |
-| **Crypto Tools** — 7 pages | 2d |
-| **Converter Tools** — 17 pages | 5d |
-| **Text Tools** — 7 pages | 2d |
-| **Math Tools** — 3 pages | 1d |
-| **Measurement Tools** — 1 page (Chronometer) | 1d |
-| **Developer Tools** — Batch 1 (JSON family, SQL, regex, diff tools) — 15 pages | 5d |
-| State management store (Zustand) | 2d |
+| Generic `<ToolPage />` layout component (reads registry, renders input→output) | 2d |
+| 10-category sidebar with sub-group accordion support | 2d |
+| **Security & Passwords** — 9 pages | 2d |
+| **Text & Number Tools** — 13 pages | 3d |
+| **Developer Tools** — Batch 1 (JSON family, SQL, regex, diff, text encoding) — 20 pages | 5d |
+| **Everyday Tools** — Batch 1 (QR Hub, Date & Time, Chronometer, Unit, Random) — 12 pages | 3d |
+| State management store (Zustand: auth, theme, tools, notifications) | 2d |
 | Dark/light theme toggle | 1d |
 | API integration layer (fetch wrapper with mock support) | 2d |
 
-**Deliverables:** 50+ client-side tools live. Backend APIs for finance, weather, Spotify ready. Storage service operational.
+**Deliverables:** 60+ client-side tools live across 6 categories. Finance/weather/Spotify APIs ready. Storage service operational. Link shortener working.
 
 ---
 
 ### Sprint 2: Major Features (4 weeks)
-**Objectives:** Media processing tools. Downloader ecosystem. Network tools. Auth & user dashboards.
+**Objectives:** All media processing tools. Downloader ecosystem. Network diagnostics. Auth UI.
 
 #### Backend Dev 1 — Downloaders + Heavy Processing
 | Task | Effort |
@@ -221,7 +232,7 @@ Measurement:  Benchmark Builder
 | APK virus scanner (VirusTotal API / ClamAV) | 3d |
 | Email security check (header parsing + SPF/DKIM/DMARC) | 2d |
 | Blacklist check (DNSBL lookup) | 1d |
-| IPv4/IPv6/MAC tools (subnet calc, converter, range, ULA) | 3d |
+| IPv4/IPv6/MAC tools (subnet calc, converter, range, ULA, lookup, generate) | 3d |
 | VPN Leak Check (IP comparison) | 1d |
 | User auth service (register, login, sessions, API keys) | 3d |
 | Admin dashboard backend (usage stats, rate limits) | 2d |
@@ -229,33 +240,30 @@ Measurement:  Benchmark Builder
 #### Frontend
 | Task | Effort |
 |------|:---:|
-| **Developer Tools** — Batch 2 (Docker, XML, YAML, Crontab, Git Memo, Chmod) — 10 pages | 3d |
-| **Date & Time Tools** — 5 pages | 2d |
-| **General Tools** — 9 pages | 3d |
 | Auth UI (login/register/profile pages) | 3d |
-| **Downloader UI** — 9 pages (YouTube, Insta, TikTok, etc.) | 4d |
-| **PDF Tools UI** — 4 pages | 2d |
-| **Image Tools UI** — 8 pages | 2d |
-| **Video Tools UI** — 3 pages | 2d |
+| **Media Tools UI** — 11 pages (3 sub-groups: Images, Video, Audio) | 5d |
+| **Downloaders UI** — 9 pages (YouTube, Insta, TikTok, etc.) | 4d |
+| **Developer Tools** — Batch 2 (Format Converters, Web & HTTP, Generators, DevOps, References) — 29 pages | 8d |
+| **Files & Documents UI** — 8 pages (PDF tools + storage + sharing) | 4d |
 | File upload component (drag-drop, progress, multi-file) | 3d |
 | Real-time progress WebSocket integration for downloads/processing | 2d |
 | Toast/notification system | 1d |
 
-**Deliverables:** All media processing tools live. Downloader ecosystem functional. Network diagnostics operational. User auth system complete.
+**Deliverables:** All media processing tools live. Downloader ecosystem functional. Network diagnostics operational. User auth system complete. All category pages populated.
 
 ---
 
 ### Sprint 3: Integrations & Stabilization (3 weeks)
 **Objectives:** Remaining tools. Real-time features. Admin panel. Performance optimization.
 
-#### Backend Dev 1 — Media & Remaining Tools
+#### Backend Dev 1 — File Services & Remaining Tools
 | Task | Effort |
 |------|:---:|
 | Video Optimizer (preset profiles for Instagram, TikTok, etc.) | 2d |
 | Cloud Storage Uploader (drag-drop + signed URLs + file management) | 3d |
 | Local File Share — Mizban (WebRTC signaling server) | 3d |
 | Instant URL service (temporary text hosting + expiry) | 2d |
-| Benchmark Builder (command generation + test execution) | 2d |
+| Benchmark Builder (command generation + test execution sandbox) | 2d |
 | Performance optimization: media processing queues | 2d |
 | Error handling + retry logic for all download/media services | 2d |
 
@@ -263,7 +271,6 @@ Measurement:  Benchmark Builder
 | Task | Effort |
 |------|:---:|
 | Telegram News feed integration (Telegram API → RSS) | 2d |
-| Internal link shortener service (for r2u.ir) | 3d |
 | Real-time WebSocket events for processing progress | 2d |
 | Admin dashboard (usage analytics, user management) | 3d |
 | API key management for developers (Weather Data API) | 2d |
@@ -274,19 +281,18 @@ Measurement:  Benchmark Builder
 #### Frontend
 | Task | Effort |
 |------|:---:|
-| **Network & Security UI** — 16 pages | 5d |
-| **Financial Tools UI** — 6 pages | 2d |
-| **Geo & Weather UI** — 3 pages | 1d |
-| **Audio Tools UI** — 3 pages | 1d |
-| **Data Tools UI** — 2 pages | 1d |
+| **Network & Diagnostics UI** — 22 pages (3 sub-groups: IP & Address, Network Tests, Security Checks) | 5d |
+| **Finance & World Data UI** — 10 pages (2 sub-groups: Markets, World & Weather) | 3d |
+| **Communication UI** — 3 pages | 1d |
 | Real-time dashboards (financial tickers, weather, etc.) | 3d |
 | Admin panel UI | 3d |
 | Progressive Web App (PWA) setup + offline support | 2d |
 | RTL/LTR bidirectional support (for Persian/Arabic) | 2d |
-| PWA installation + service worker for offline tools | 2d |
 | i18n infrastructure (react-intl / next-intl) | 2d |
+| Category landing pages with sub-group navigation | 2d |
+| Sub-group accordion sidebar for Developer, Network, Media, Everyday categories | 2d |
 
-**Deliverables:** All 149 tools implemented. Admin panel live. Real-time updates working. PWA operational.
+**Deliverables:** All ~150 tools implemented. 10-category UI complete with sub-group navigation. Admin panel live. Real-time updates working. PWA operational.
 
 ---
 
@@ -324,12 +330,13 @@ Measurement:  Benchmark Builder
 | 1 | Docker dev environment setup | All development | BE2 (Sprint 0) |
 | 2 | Shared API types/contracts | Frontend API integration | BE2 (Sprint 0) |
 | 3 | Auth service | User-required features (storage, downloads, admin) | BE1 (Sprint 0) |
-| 4 | Generic `<Tool />` component | All 88 Tier-0 tool pages | FE (Sprint 1) |
-| 5 | MinIO storage service | PDF tools, media processing, file uploads | BE1 (Sprint 1) |
-| 6 | Celery task queue | All async processing (video, PDF, downloads) | BE1 (Sprint 1) |
-| 7 | Redis cache | Financial data, weather, all proxy APIs | BE2 (Sprint 1) |
-| 8 | yt-dlp integration | All 9 downloader tools | BE1 (Sprint 2) |
-| 9 | FFmpeg pipeline | Video/Audio processing tools | BE1 (Sprint 2) |
+| 4 | Generic `<ToolPage />` component | All ~88 Tier-0 tool pages | FE (Sprint 1) |
+| 5 | 10-category sidebar + sub-group navigation | All frontend category pages | FE (Sprint 1) |
+| 6 | MinIO storage service | PDF tools, media processing, file uploads | BE1 (Sprint 1) |
+| 7 | Celery task queue | All async processing (video, PDF, downloads) | BE1 (Sprint 1) |
+| 8 | Redis cache | Financial data, weather, all proxy APIs | BE2 (Sprint 1) |
+| 9 | yt-dlp integration | All 9 downloader tools | BE1 (Sprint 2) |
+| 10 | FFmpeg pipeline | Video/Audio processing tools | BE1 (Sprint 2) |
 
 ### Highest-Risk Technical Areas
 
@@ -341,17 +348,17 @@ Measurement:  Benchmark Builder
 | **PDF processing accuracy** — complex layouts break extraction | Medium | Use PyMuPDF for structured PDFs, Tesseract OCR as fallback |
 | **Network scan tool safety** — port scanning could be abused | High | Strict rate limiting, require auth for port scan, CAPTCHA |
 | **File storage costs** — unlimited uploads risk abuse | Medium | Quotas per user, auto-expiry for temp files, signed URLs |
-| **APK virus scanning** — false positives, file size limits | Medium | VirusTotal API (rate-limited), clamav as fallback, max 100MB |
+| **APK virus scanning** — false positives, file size limits | Medium | VirusTotal API (rate-limited), clamp as fallback, max 100MB |
 
 ### Opportunities for Parallel Development
 
 | Parallel group | Tools | Can start | Dependency |
 |---------------|-------|-----------|------------|
-| **All Tier 0 client-side tools (88)** | Formatters, converters, generators | Sprint 0 | Only `<Tool />` component |
-| **All Tier 1 API proxy tools (18)** | Finance, weather, Spotify, lyrics | Sprint 1 backend | External API keys |
+| **All Tier 0 client-side tools (~88)** | Formatters, converters, generators, text tools | Sprint 0 | `<ToolPage />` component + 10-category sidebar |
+| **All Tier 1 API proxy tools (~18)** | Finance, weather, Spotify, lyrics, link shortener | Sprint 1 backend | External API keys |
 | **Downloaders (9)** | YouTube, Instagram, TikTok, etc. | Sprint 2 | yt-dlp + Celery |
-| **Network tools (16)** | IP, ping, DNS, Whois, port scan | Sprint 2 | Server with raw network access |
-| **Media processing (10)** | Video, audio, image compress | Sprint 2 | FFmpeg + Celery + MinIO |
+| **Network tools (~16)** | IP, ping, DNS, Whois, port scan | Sprint 2 | Server with raw network access |
+| **Media processing (~12)** | Video, audio, image compress | Sprint 2 | FFmpeg + Celery + MinIO |
 
 ---
 
@@ -383,44 +390,14 @@ main ─────────────────────────
 - **Update process:**
   1. Backend dev updates OpenAPI spec
   2. CI generates new FE types
-  3. Frontend uses typed API client (no surprises)
+  3. Frontend uses typed API client
 
 ### CI/CD Pipeline
 
 ```
-Push to feature branch
-     │
-     ▼
-┌─────────────────┐
-│ Lint + Typecheck│ (ruff, mypy, eslint, tsc)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Unit Tests      │ (pytest, vitest)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Integration Tests│ (API + DB)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Build Docker    │
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Deploy Preview  │ (staging environment)
-└────────┬────────┘
-         ▼
-   PR review → merge to main
-         │
-         ▼
-┌─────────────────┐
-│ E2E Tests       │ (Playwright)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ Deploy to Prod  │ (manual approval gate)
-└─────────────────┘
+Push to feature branch → Lint + Typecheck → Unit Tests →
+Integration Tests → Build Docker → Deploy Preview (staging) →
+PR review → merge to main → E2E Tests → Deploy to Prod (manual gate)
 ```
 
 ### Testing Strategy
@@ -439,31 +416,26 @@ Push to feature branch
 
 1. **Author:** Self-review checklist before requesting review
 2. **Reviewer:** Check within 4 hours (same timezone overlap assumed)
-3. **Review criteria:**
-   - Architecture: Does it follow established patterns?
-   - Security: SQL injection, XSS, auth bypass, input validation?
-   - Tests: Adequate coverage for the change?
-   - Performance: N+1 queries, unnecessary API calls, bundle size?
-   - Documentation: OpenAPI spec updated? Tool description accurate?
+3. **Review criteria:** Architecture, Security, Tests, Performance, Documentation
 4. **Merge when:** 1 approval + CI green + all conversations resolved
 
 ### Daily Synchronization
 
 | Time | Activity | Duration | Participants |
 |------|----------|:---:|-------------|
-| 09:30 | **Standup** — What did you do? What today? Any blockers? | 15 min | All |
-| 10:00 | **Sync Session** — BE1 ↔ BE2 coordinate on shared services | 15 min | BE1 + BE2 |
-| 11:00 | **FE↔BE Alignment** — API contract changes, mock updates | 15 min | FE + relevant BE |
-| 16:00 | **Code Review Hour** — Review open PRs | 30-60 min | All |
-| 17:00 | **Async status update** — Post in Slack/Teams channel | 5 min | All |
+| 09:30 | **Standup** | 15 min | All |
+| 10:00 | **Sync Session** — BE1 ↔ BE2 | 15 min | BE1 + BE2 |
+| 11:00 | **FE↔BE Alignment** | 15 min | FE + relevant BE |
+| 16:00 | **Code Review Hour** | 30-60 min | All |
+| 17:00 | **Async status update** | 5 min | All |
 
 ### Deployment Milestones
 
 | Milestone | Date | What's Live |
 |-----------|------|------------|
-| **M0 — Dev Ready** | End of Sprint 0 | CI/CD green, auth working, 0 tools |
-| **M1 — Core Tools** | End of Sprint 1 | 50+ Tier 0 tools + 18 Tier 1 proxy APIs |
-| **M2 — Beta Launch** | End of Sprint 2 | All 149 tools implemented, internal beta |
+| **M0 — Dev Ready** | End of Sprint 0 | CI/CD green, 10-category navigation, auth working |
+| **M1 — Core Tools** | End of Sprint 1 | 60+ Tier 0 tools + 18 Tier 1 proxy APIs |
+| **M2 — Beta Launch** | End of Sprint 2 | All ~150 tools implemented, internal beta |
 | **M3 — RC** | Mid Sprint 4 | Bug fixes complete, all tests passing |
 | **M4 — Public Release** | End of Sprint 4 | Production deployment, public announcement |
 
@@ -473,20 +445,20 @@ Push to feature branch
 
 ### Velocity Tracking
 
-| Sprint | Planned Story Points | Actual | Tools Shipped |
-|--------|:---:|:---:|:---:|
-| Sprint 0 | 34 | — | 0 |
-| Sprint 1 | 55 | — | 68 |
-| Sprint 2 | 72 | — | 119 |
-| Sprint 3 | 48 | — | 149 |
-| Sprint 4 | 42 | — | 149 (polish) |
-| **Total** | **251** | — | **149** |
+| Sprint | Planned Story Points | Tools Shipped |
+|--------|:---:|:---:|
+| Sprint 0 | 34 | 0 |
+| Sprint 1 | 55 | ~65 |
+| Sprint 2 | 72 | ~120 |
+| Sprint 3 | 48 | ~150 |
+| Sprint 4 | 42 | ~150 (polish) |
+| **Total** | **251** | **~150** |
 
 ### Quality Gates Per Milestone
 
 | Gate | Criterion |
 |------|----------|
-| **M1 Gate** | All Tier 0 tools functional. API proxy endpoints respond. |
+| **M1 Gate** | All Tier 0 tools functional across 10 categories. API proxy endpoints respond. |
 | **M2 Gate** | Downloaders work (test: download 100MB YouTube video). Media processing completes without timeout. Auth system handles 100 concurrent users. |
 | **M3 Gate** | Lighthouse score > 90. PWA installable. All E2E tests pass. Zero critical/security bugs. |
 | **M4 Gate** | Load test: 500 concurrent users without errors. 99.9% API uptime in staging. |

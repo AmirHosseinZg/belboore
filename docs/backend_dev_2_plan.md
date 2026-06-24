@@ -1,69 +1,71 @@
 # Backend Developer 2 — Data & Infrastructure Services Plan
 
 ## Ownership Domain
-**Backend Dev 2** owns all financial data, network diagnostics, security scanning, external API proxies, cache/infrastructure, API gateway, WebSocket server, admin panel backend, monitoring, and CI/CD.
+**Backend Dev 2** owns all financial data, weather/geo APIs, network diagnostics, security scanning, external API proxies (Spotify, Music, Telegram), the WebSocket server, admin dashboard backend, cache infrastructure, API gateway, rate limiter, and CI/CD pipeline.
 
 ---
 
-## Service Map
+## Service Map (Aligned with 10-Category Structure)
 
 ```
 BE Dev 2 Services
-├── API Gateway & Routing
-│   ├── Main FastAPI App (port 8000)
-│   ├── OpenAPI Spec Management
-│   └── Request/Response Middleware
-├── Financial Data Service
+├── 💰 Finance & World Data Service
 │   ├── Currency Converter (live rates)
 │   ├── Iran Rial Rates
 │   ├── Crypto Prices (BTC, ETH, ...)
 │   ├── Gold & Precious Metals
 │   ├── Oil Prices
-│   └── Stock Market Overview
-├── Network Diagnostics Service
-│   ├── What is My IP
-│   ├── Speed Test (download/upload)
-│   ├── Ping Test
-│   ├── DNS Lookup
-│   ├── Whois Lookup
-│   ├── Traceroute
-│   ├── IP Locator (geo-IP)
-│   ├── IPv4 Subnet Calculator
-│   ├── IPv4 Address Converter
-│   ├── IPv4 Range Expander
-│   ├── IPv6 ULA Generator
-│   ├── MAC Address Lookup
-│   ├── MAC Address Generator
-│   ├── Site Status Checker
-│   └── Port Check + Port Scan
-├── Security Scanning Service
-│   ├── SSL Certificate Checker
-│   ├── VPN Leak Check
-│   ├── Blacklist Check (DNSBL)
-│   ├── APK Virus Scanner
-│   └── Email Security Check (SPF/DKIM/DMARC)
-├── Weather & Geo Service
+│   ├── Stock Market Overview
+│   ├── IBAN Validator
 │   ├── Local Weather (current + forecast)
 │   ├── Air Quality Check (AQI)
 │   └── Earthquake Map Data
-├── Audio Proxy Service
+├── 🌐 Network & Diagnostics Service
+│   ├── IP & Address Tools
+│   │   ├── What is My IP
+│   │   ├── IP Locator (geo-IP)
+│   │   ├── IPv4 Subnet Calculator
+│   │   ├── IPv4 Address Converter
+│   │   ├── IPv4 Range Expander
+│   │   ├── IPv6 ULA Generator
+│   │   ├── MAC Address Lookup
+│   │   └── MAC Address Generator
+│   ├── Network Tests
+│   │   ├── Speed Test (download/upload)
+│   │   ├── Ping Test
+│   │   ├── DNS Lookup
+│   │   ├── Whois Lookup
+│   │   ├── Traceroute
+│   │   ├── Site Status Checker
+│   │   ├── Port Check + Port Scan
+│   │   └── HTTP Headers Inspector
+│   └── Security Checks
+│       ├── SSL Certificate Checker
+│       ├── VPN Leak Check
+│       ├── Blacklist Check (DNSBL)
+│       ├── APK Virus Scanner
+│       └── Email Security Check (SPF/DKIM/DMARC)
+├── 🖼️ Media Proxy Service
 │   ├── Spotify Preview (search + 30s preview)
 │   └── Music & Lyrics Database
-├── Real-Time Infrastructure
+├── 🛠️ Everyday Data Service
+│   ├── Telegram News Feed (Telegram API → RSS)
+│   ├── Global Timezones
+│   └── Sunrise & Sunset
+├── 📡 Developer API Service
+│   └── Weather Data API (public endpoint for developers)
+├── 🔌 Real-Time Infrastructure
 │   ├── WebSocket Server (progress events)
-│   ├── Real-Time Data Polling
+│   ├── Real-Time Data Polling (finance, weather)
 │   └── Server-Sent Events (where appropriate)
-├── Admin & Management
+├── 👤 Admin & Management
 │   ├── Admin Dashboard API
 │   ├── User Management
 │   ├── Usage Analytics
 │   └── API Key Management
-├── Content Services
-│   ├── Link Shortener (r2u.ir)
-│   ├── Telegram News Feed
-│   ├── OTP Code Generator/Validator
-│   └── Benchmark Builder API helper
-└── Infrastructure
+└── 🏗️ Infrastructure
+    ├── API Gateway & Routing (Main FastAPI App)
+    ├── OpenAPI Spec Management
     ├── Redis Caching Layer
     ├── Rate Limiter (token bucket)
     ├── CI/CD Pipeline (GitHub Actions)
@@ -111,7 +113,7 @@ BE Dev 2 Services
 | GitHub Actions: lint workflow (ruff, mypy) | 1d | GitHub |
 | GitHub Actions: test workflow (pytest) | 0.5d | CI |
 | GitHub Actions: Docker build + push to registry | 0.5d | CI |
-| GitHub Actions: deploy to staging (SSH or webhook) | 0.5d | CI |
+| GitHub Actions: deploy to staging | 0.5d | CI |
 | Shared Pydantic schemas package (`/shared/`) | 1d | None |
 | TypeScript type generation from OpenAPI spec (openapi-typescript) | 1d | OpenAPI spec |
 | CI step: auto-generate FE types on spec change | 0.5d | CI |
@@ -149,11 +151,10 @@ BE Dev 2 Services
 ## Sprint 1: Core Foundation (3 weeks)
 
 ### Objectives
-- All financial data APIs operational
-- Weather/Geo APIs operational
+- Finance & World Data APIs operational (all 10)
 - Spotify/Music proxy APIs operational
-- OTP generator operational
-- Weather Data API for external developers
+- Telegram News operational
+- Developer Weather Data API operational
 
 ### Tasks & Assignments
 
@@ -161,14 +162,15 @@ BE Dev 2 Services
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | Financial data provider integration layer (abstract base + providers) | 1d | None |
-| Exchange rate provider 1: ExchangeRate-API (free tier) | 1d | API key |
+| Exchange rate provider: ExchangeRate-API (free tier) | 1d | API key |
 | Currency Converter: `/finance/convert?from=USD&to=EUR&amount=100` | 1d | Exchange rates |
 | Iran Rial Rates: scrape or API (bonbast.com / tetherland) | 2d | None |
 | Crypto prices: CoinGecko free API | 1d | API |
 | Gold & Precious Metals: Metals-API or GoldAPI | 1d | API key |
 | Oil Prices: EIA or commodity API | 1d | API key |
 | Stock Market Overview: Alpha Vantage or Yahoo Finance proxy | 1d | API key |
-| Redis caching layer: 30s for crypto, 5min for exchange rates, 1h for markets | 1d | Redis |
+| IBAN Validator: parse + validate IBAN numbers | 1d | None |
+| Redis caching: 30s for crypto, 5min for exchange rates, 1h for markets | 1d | Redis |
 | Fallback provider logic (if primary fails, try secondary) | 0.5d | All finance APIs |
 
 #### Week 2: Weather, Geo & Audio Proxy
@@ -181,37 +183,37 @@ BE Dev 2 Services
 | Spotify Preview: search tracks + get 30s preview URL | 2d | Spotify API (client credentials) |
 | Music & Lyrics Database: search artist/album (Spotify/MusicBrainz) + lyrics (Lyrics.ovh) | 2d | Multiple APIs |
 | Redis caching: weather 10min, earthquakes 5min, Spotify 1h | 0.5d | Redis |
-| GeoJSON helper: validate + serve earthquake/weather coordinates | 0.5d | Geo data |
 
-#### Week 3: Developer APIs & API Key Management
+#### Week 3: News, Developer API & Real-Time Setup
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
-| OTP Generator/Validator: TOTP + HOTP implementation (pyotp) | 1d | None |
-| OTP QR code URI generation (otpauth://) | 0.5d | pyotp |
+| Telegram News: bot integration to read channel posts | 2d | Telegram Bot API |
+| Telegram News: RSS-like feed transformation for web display | 1d | Telegram API |
+| Global Timezones API: timezone data with offset + DST | 1d | IANA timezone DB |
+| Sunrise & Sunset: compute from coordinates | 1d | suncalc library |
 | Weather Data API: public endpoint for developers to consume | 1d | Weather service |
 | API key generation + management dashboard API (create/list/revoke) | 1.5d | Auth (BE1) |
 | API usage tracking per key (request count, data volume) | 1d | Redis + DB |
 | Rate limit per API key (configurable tiers) | 0.5d | Rate limiter |
-| Developer documentation for Weather Data API | 0.5d | Weather API |
+| WebSocket server foundation (FastAPI WebSocket endpoint) | 1d | FastAPI |
 
 ### Deliverables
-- [x] 6 financial data endpoints with live data + caching
-- [x] 3 weather/geo endpoints operational
+- [x] 10 finance + world data endpoints with live data + caching
 - [x] Spotify + lyrics search operational
-- [x] OTP generator/validator operational
+- [x] Telegram News feed operational
 - [x] Weather Data API for external developers
+- [x] WebSocket foundation in place
 
 ---
 
 ## Sprint 2: Major Features (4 weeks)
 
 ### Objectives
-- Complete network diagnostics suite (16 tools)
+- Complete network diagnostics suite (~22 tools)
 - Complete security scanning suite (5 tools)
-- WebSocket server for real-time events
+- WebSocket server: real-time events
 - Admin dashboard API
-- Link shortener
-- Telegram News
+- User auth integration
 
 ### Tasks & Assignments
 
@@ -239,8 +241,9 @@ BE Dev 2 Services
 | MAC Address Lookup: OUI database lookup (maclookup.app API) | 1d | External API |
 | MAC Address Generator: random MAC + OUI-specific MAC | 0.5d | None |
 | Sandbox security: prevent command injection in all net tools | 1d | All net tools |
+| Speed Test: download/upload speed measurement endpoint | 3d | Network infrastructure |
 
-#### Week 3: Security Scanning + WebSocket + Speed Test
+#### Week 3: Security Scanning + WebSocket + Auth
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | SSL Certificate Checker: fetch + validate SSL cert chain | 2d | ssl/cryptography |
@@ -250,42 +253,39 @@ BE Dev 2 Services
 | APK Virus Scanner: VirusTotal API upload + scan | 2d | VirusTotal API |
 | APK Scanner: fallback — ClamAV in Docker container | 2d | Docker |
 | Email Security Check: parse headers, check SPF/DKIM/DMARC | 2d | dns.resolver + email lib |
-| WebSocket server: FastAPI WebSocket endpoint for real-time events | 2d | FastAPI |
 | WebSocket: authentication + channel subscriptions | 1d | Auth (BE1) |
-| Speed Test: download/upload speed measurement endpoint | 3d | Network infrastructure |
+| User auth service integration (connect BE1's auth) | 2d | Auth (BE1) |
 
-#### Week 4: Admin, Link Shortener, Telegram
+#### Week 4: Admin Dashboard
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | Admin dashboard API: user list, counts, management endpoints | 2d | Auth + DB |
 | Admin: usage statistics (downloads, processes, API calls per day) | 2d | DB queries |
-| Link Shortener service (r2u.ir): create short URL from long URL | 2d | DB |
-| Link Shortener: click tracking + analytics dashboard API | 2d | DB |
-| Link Shortener: custom slug support + expiry date | 0.5d | DB |
-| Telegram News: bot integration to read channel posts | 3d | Telegram Bot API |
-| Telegram News: RSS-like feed transformation for web display | 1d | Telegram API |
+| Admin: system health dashboard API | 1d | Health checks |
+| Admin: rate limit override per user | 1d | Rate limiter |
+| Admin: audit log (who did what, when) | 1d | DB |
+| Internal API documentation for admin endpoints | 0.5d | OpenAPI |
 
 ### Deliverables
-- [x] 16 network diagnostics tools operational
+- [x] ~22 network diagnostics tools operational
 - [x] 5 security scanning tools operational
 - [x] WebSocket server pushing real-time events
 - [x] Admin dashboard API operational
-- [x] Link shortener with analytics
-- [x] Telegram News feed operational
+- [x] Auth integration complete
 
 ---
 
 ## Sprint 3: Integrations & Stabilization (3 weeks)
 
 ### Objectives
-- Real-time data infrastructure
+- Real-time data infrastructure (WebSocket + SSE)
 - Admin dashboard polish
 - Performance optimization
 - Security hardening
 
 ### Tasks & Assignments
 
-#### Week 1: Realtime Infrastructure
+#### Week 1: Real-Time Infrastructure
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | Real-time financial ticker WebSocket (price updates every 30s) | 2d | Finance + WS |
@@ -295,16 +295,16 @@ BE Dev 2 Services
 | Server-Sent Events (SSE) for simpler real-time needs | 1d | FastAPI SSE |
 | WebSocket connection pool management + auto-reconnect | 1d | WS server |
 
-#### Week 2: Admin Dashboard & Misc
+#### Week 2: Admin Polish & Remaining
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | Admin: user CRUD endpoints | 1d | Auth |
 | Admin: tool usage heatmap (which tools are most used) | 2d | DB analytics |
 | Admin: rate limit override per user | 1d | Rate limiter |
-| Admin: system health dashboard API | 1d | Health checks |
-| Admin: audit log (who did what, when) | 1d | DB |
-| Internal API documentation for admin endpoints | 0.5d | OpenAPI |
-| Benchmark Builder: integration with BE1 sandbox execution | 1d | BE1 |
+| Admin: system health dashboard API finalization | 1d | Health checks |
+| Admin: audit log completion | 1d | DB |
+| Global Timezones finalization with city search | 1d | Timezone API |
+| Sunrise & Sunset finalization with historical data | 1d | Sun API |
 
 #### Week 3: Performance & Security
 | Task | Effort | Dependencies |
@@ -383,16 +383,22 @@ GET    /api/finance/crypto
 GET    /api/finance/gold
 GET    /api/finance/oil
 GET    /api/finance/stocks
+GET    /api/finance/iban
 
 GET    /api/weather/current
 GET    /api/weather/forecast
 GET    /api/weather/aqi
+GET    /api/weather/sunrise-sunset
 GET    /api/geo/earthquakes
+GET    /api/geo/timezone
 
 GET    /api/spotify/search
 GET    /api/spotify/preview
 GET    /api/music/search
 GET    /api/music/lyrics
+
+GET    /api/telegram/channels
+GET    /api/telegram/channel/{id}/posts
 
 GET    /api/network/my-ip
 GET    /api/network/speed-test
@@ -419,16 +425,6 @@ GET    /api/security/blacklist
 POST   /api/security/apk-scan
 POST   /api/security/email-check
 
-POST   /api/otp/generate
-POST   /api/otp/validate
-
-POST   /api/shorten
-GET    /api/shorten/{slug}
-GET    /api/shorten/{slug}/stats
-
-GET    /api/telegram/channels
-GET    /api/telegram/channel/{id}/posts
-
 GET    /api/admin/users
 GET    /api/admin/stats
 GET    /api/admin/health
@@ -444,8 +440,6 @@ GET    /api/health
 GET    /api/metrics
 ```
 
----
-
 ## Technology Dependencies (BE2)
 
 | Dependency | Purpose | Version |
@@ -456,9 +450,7 @@ GET    /api/metrics
 | dnspython | DNS lookups | 2.6+ |
 | python-whois | Whois queries | 0.9+ |
 | ipaddress (stdlib) | IPv4/IPv6 calculations | — |
-| pyotp | OTP TOTP/HOTP | 2.9+ |
-| PyJWT | JWT handling (shared) | 2.8+ |
-| passlib (shared) | Password hashing | 1.7+ |
+| suncalc | Sunrise/sunset calculation | 2.x+ |
 | structlog | Structured logging | 24.x+ |
 | sentry-sdk | Error tracking | 1.45+ |
 | prometheus-client | Metrics export | 0.19+ |

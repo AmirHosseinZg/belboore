@@ -1,51 +1,49 @@
 # Backend Developer 1 — Media & Content Services Plan
 
 ## Ownership Domain
-**Backend Dev 1** owns all media processing, content downloading, file storage, and heavy computation services.
+**Backend Dev 1** owns all media processing (image, video, audio), PDF manipulation, content downloading, file storage, file sharing, QR code hosting, and the auth service.
 
 ---
 
-## Service Map
+## Service Map (Aligned with 10-Category Structure)
 
 ```
 BE Dev 1 Services
-├── Media Processing Engine (FFmpeg)
-│   ├── Video Compressor
-│   ├── Video Converter
-│   ├── Video Optimizer
+├── 📁 Files & Documents Backend
+│   ├── PDF Processing Engine (PyMuPDF + Poppler)
+│   │   ├── Images to PDF
+│   │   ├── Merge PDFs
+│   │   ├── PDF Compressor
+│   │   ├── PDF to Markdown
+│   │   └── PDF Signature Checker (verification)
+│   ├── Storage Service (MinIO)
+│   │   ├── File Upload/Download
+│   │   ├── Signed URL Generation
+│   │   └── Cloud Storage Uploader
+│   ├── File Sharing
+│   │   ├── Local File Share — Mizban (WebRTC signaling)
+│   │   └── Instant URL (temporary text hosting)
+│   └── Link Shortener (DB-driven, short ID → redirect)
+├── 🖼️ Media Processing Engine (FFmpeg)
+│   ├── Image Compressor (Pillow)
+│   ├── Video Compressor, Converter, Optimizer
 │   ├── Audio Converter
-│   └── Image Compressor
-├── PDF Processing Engine (PyMuPDF + Poppler)
-│   ├── Images to PDF
-│   ├── Merge PDFs
-│   ├── PDF Compressor
-│   ├── PDF to Markdown
-│   └── PDF Signature Checker
-├── Downloader Engine (yt-dlp)
-│   ├── YouTube Video Downloader
-│   ├── YouTube to MP3
-│   ├── Instagram Downloader
-│   ├── TikTok Downloader
-│   ├── X/Twitter Downloader
-│   ├── SoundCloud Downloader
-│   ├── Playlist Downloader
+│   └── Camera Recorder (backend processing)
+├── 📥 Downloader Engine (yt-dlp)
+│   ├── YouTube Video + MP3
+│   ├── Instagram, TikTok, X/Twitter, SoundCloud
+│   ├── Playlist Downloader (batch)
 │   ├── Movie Database (TMDB proxy)
 │   └── GitHub Downloader
-├── OCR Service (Tesseract)
+├── 🔍 OCR Service (Tesseract)
 │   └── Extract Text from Images
-├── Storage Service (MinIO)
-│   ├── File Upload/Download
-│   ├── Signed URL Generation
-│   ├── Cloud Storage Uploader
-│   └── File/Audio to QR Code (hosted URL)
-├── Real-Time Services
-│   ├── Local File Share — Mizban (WebRTC signaling)
-│   └── Instant URL (temporary text hosting)
-├── Auth Service (shared, primary owner)
+├── 🛠️ QR Hosting Service
+│   └── File/Audio to QR Code (hosted URL mode)
+├── 🔐 Auth Service (Primary Owner)
 │   ├── User Registration/Login
 │   ├── JWT Token Management
 │   └── Session Management
-└── Infrastructure
+└── 🏗️ Infrastructure
     ├── Celery Task Queue
     ├── Database Models & Migrations
     └── Docker Media Worker Service
@@ -70,7 +68,7 @@ BE Dev 1 Services
 | Set up local dev environment (Python 3.12, venv, Docker) | 0.5d | None |
 | Create FastAPI project structure (`media_service/`) | 0.5d | Dev env |
 | Set up PostgreSQL + Alembic for migrations | 1d | Docker |
-| Define core database models (User, File, Task, Download) | 1d | PostgreSQL |
+| Define core database models (User, File, Task, Download, ShortURL) | 1d | PostgreSQL |
 | Create first Alembic migration | 0.5d | DB models |
 | Set up MinIO container + Python client (boto3) | 0.5d | Docker |
 
@@ -117,9 +115,10 @@ BE Dev 1 Services
 ### Objectives
 - Storage service fully operational
 - Image processing live
-- PDF processing live
+- PDF processing + signature checker live
 - Audio converter live
 - File QR code generation live
+- Link shortener service
 
 ### Tasks & Assignments
 
@@ -134,7 +133,7 @@ BE Dev 1 Services
 | Split-screen comparison image generator (original vs compressed) | 1d | Pillow |
 | Error handling: unsupported formats, oversized files, corrupt uploads | 0.5d | All |
 
-#### Week 2: PDF Processing
+#### Week 2: PDF Processing & Link Shortener
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | Images to PDF: accept multiple images, generate combined PDF | 2d | MinIO + Pillow |
@@ -143,6 +142,7 @@ BE Dev 1 Services
 | PDF to Markdown: extract text + structure (PyMuPDF + markdownify) | 2d | PyMuPDF |
 | PDF Signature Checker: verify digital signatures in PDF | 2d | PyMuPDF + cryptography |
 | Page preview generation (thumbnail images from PDF pages) | 1d | PyMuPDF |
+| Link Shortener: short ID generation, DB storage, redirect endpoint | 2d | PostgreSQL |
 
 #### Week 3: Audio + QR Code + OCR Foundation
 | Task | Effort | Dependencies |
@@ -157,11 +157,11 @@ BE Dev 1 Services
 | Background task monitoring endpoint: `GET /tasks/{task_id}/status` | 1d | Celery + Redis |
 
 ### Deliverables
-- [x] 4 PDF tools operational
-- [x] 2 image processing tools operational
+- [x] 5 PDF tools + signature checker operational
+- [x] Image compression + OCR operational
 - [x] Audio converter operational
-- [x] OCR text extraction operational
 - [x] QR code hosted service operational
+- [x] Link shortener service (short ID → redirect)
 - [x] Background task status API
 
 ---
@@ -171,7 +171,6 @@ BE Dev 1 Services
 ### Objectives
 - Complete downloader ecosystem (all 9)
 - Video processing suite operational
-- OCR polished
 
 ### Tasks & Assignments
 
@@ -205,7 +204,6 @@ BE Dev 1 Services
 | Video Optimizer: preset profiles (Instagram 1080x1080, TikTok 9:16, YouTube 16:9, WhatsApp) | 3d | FFmpeg |
 | Resolution scaling + aspect ratio handling | 1d | FFmpeg |
 | Video thumbnail generator (snapshot at N seconds) | 1d | FFmpeg |
-| Thumbnail/preview generation for video uploads | 1d | FFmpeg |
 
 ### Deliverables
 - [x] 9 downloaders operational
@@ -226,7 +224,7 @@ BE Dev 1 Services
 
 ### Tasks & Assignments
 
-#### Week 1: Real-Time Services
+#### Week 1: Real-Time & File Services
 | Task | Effort | Dependencies |
 |------|:---:|-------------|
 | WebRTC signaling server for Mizban (Socket.IO/WebSocket) | 3d | WebSocket infra (BE2) |
@@ -307,31 +305,6 @@ BE Dev 1 Services
 
 ---
 
-## Technology Dependencies (BE1)
-
-| Dependency | Purpose | Version |
-|-----------|---------|---------|
-| FastAPI | Web framework | 0.111+ |
-| Celery | Task queue | 5.3+ |
-| Redis | Broker + cache | 7.x |
-| SQLAlchemy + Alembic | ORM + migrations | 2.0+ |
-| PyMuPDF (fitz) | PDF processing | 1.24+ |
-| Pillow | Image processing | 10.x+ |
-| FFmpeg (system) | Video/Audio processing | 6.x+ |
-| yt-dlp | Download engine | latest |
-| Tesseract (system) | OCR | 5.x+ |
-| pytesseract | Tesseract Python binding | 0.3+ |
-| cryptography | Encryption + PDF signatures | 42.x+ |
-| boto3 | MinIO S3 client | 1.34+ |
-| python-jose | JWT tokens | 3.3+ |
-| passlib + bcrypt | Password hashing | 1.7+ |
-| GitPython | GitHub downloader | 3.1+ |
-| requests + httpx | HTTP clients | latest |
-| qrcode + Pillow | QR code generation | 7.4+ |
-| pytest + pytest-asyncio | Testing | 8.x+ |
-
----
-
 ## API Endpoints Owned by BE1
 
 ```
@@ -364,12 +337,15 @@ POST   /api/download/twitter
 POST   /api/download/soundcloud
 POST   /api/download/playlist
 GET    /api/download/playlist/{id}/status
-
 GET    /api/download/{task_id}/status
 GET    /api/download/{task_id}/result
 
 POST   /api/qrcode/file-to-qr
 POST   /api/qrcode/self-contained
+
+POST   /api/shorten
+GET    /api/shorten/{slug}
+GET    /api/shorten/{slug}/stats
 
 POST   /api/storage/upload
 GET    /api/storage/files
@@ -391,3 +367,26 @@ GET    /api/tasks/{task_id}/status
 GET    /api/health
 GET    /api/ready
 ```
+
+## Technology Dependencies (BE1)
+
+| Dependency | Purpose | Version |
+|-----------|---------|---------|
+| FastAPI | Web framework | 0.111+ |
+| Celery | Task queue | 5.3+ |
+| Redis | Broker + cache | 7.x |
+| SQLAlchemy + Alembic | ORM + migrations | 2.0+ |
+| PyMuPDF (fitz) | PDF processing | 1.24+ |
+| Pillow | Image processing | 10.x+ |
+| FFmpeg (system) | Video/Audio processing | 6.x+ |
+| yt-dlp | Download engine | latest |
+| Tesseract (system) | OCR | 5.x+ |
+| pytesseract | Tesseract Python binding | 0.3+ |
+| cryptography | Encryption + PDF signatures | 42.x+ |
+| boto3 | MinIO S3 client | 1.34+ |
+| python-jose | JWT tokens | 3.3+ |
+| passlib + bcrypt | Password hashing | 1.7+ |
+| GitPython | GitHub downloader | 3.1+ |
+| requests + httpx | HTTP clients | latest |
+| qrcode + Pillow | QR code generation | 7.4+ |
+| pytest + pytest-asyncio | Testing | 8.x+ |
