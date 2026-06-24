@@ -1,55 +1,105 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Tabs from '../ui/Tabs.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
 ---
 
-<ToolWorkspace title="Base64 Encoder / Decoder">
+<ToolWorkspace title={t['tools.base64.title']}>
   <ToolPrimitives />
   <ToolUtils />
-  <div class="tool-toolbar">
-    <button type="button" id="b64-encode" class="tool-btn tool-btn--primary">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 8 16 13"/><line x1="21" y1="8" x2="9" y2="8"/><polyline points="5 8 5 3 20 3"/><polyline points="9 13 9 21 5 21 5 16"/><line x1="18" y1="21" x2="21" y2="16"/></svg>
-      Encode
-    </button>
-    <button type="button" id="b64-decode" class="tool-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 3 3 8 8 13"/><line x1="3" y1="8" x2="15" y2="8"/><polyline points="19 8 19 3 4 3"/><polyline points="15 13 15 21 19 21 19 16"/><line x1="6" y1="21" x2="3" y2="16"/></svg>
-      Decode
-    </button>
-    <button type="button" id="b64-copy" class="tool-btn">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copy
-    </button>
-    <button type="button" id="b64-clear" class="tool-btn" aria-label="Clear">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      Clear
-    </button>
-    <button type="button" id="b64-swap" class="tool-btn" aria-label="Swap input and output">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-      Swap
-    </button>
-  </div>
-  <div id="b64-error" class="tool-error" style="display: none;" role="alert"></div>
-  <div class="tool-grid-2">
-    <div class="tool-field">
-      <label class="tool-field__label" for="b64-input">Input</label>
-      <textarea id="b64-input" class="tool-textarea" placeholder="Enter text to encode or Base64 to decode..."></textarea>
+
+  <section
+    class="b64-tool"
+    data-empty-output={t['tools.base64.emptyOutput']}
+    data-encoding-failed={t['tools.base64.encodingFailed']}
+    data-decode-error={t['tools.base64.decodeError']}
+    data-fix-error={t['tools.base64.fixError']}
+    data-nothing-to-swap={t['tools.base64.nothingToSwap']}
+  >
+    <div class="b64-tool__toolbar">
+      <Tabs
+        id="b64-mode-tabs"
+        className="b64-tool__modes"
+        ariaLabel="Base64 action mode"
+        activeId="encode"
+        tabs={[
+          { id: 'encode', label: t['tools.base64.encode'] },
+          { id: 'decode', label: t['tools.base64.decode'] },
+        ]}
+      />
+
+      <div class="b64-tool__quick-actions">
+        <Button id="b64-run" variant="primary" className="b64-tool__run-btn" aria-label={t['tools.base64.run']}>
+          {t['tools.base64.run']}
+        </Button>
+        <Button id="b64-copy" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.copy']}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          {t['tools.base64.copy']}
+        </Button>
+        <Button id="b64-swap" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.swap']}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          {t['tools.base64.swap']}
+        </Button>
+        <Button id="b64-clear" variant="danger" className="b64-tool__icon-btn" aria-label={t['tools.base64.clear']}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          {t['tools.base64.clear']}
+        </Button>
+      </div>
     </div>
-    <div class="tool-field">
-      <label class="tool-field__label" for="b64-output">Output</label>
-      <div id="b64-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Encoded / decoded result will appear here</div>
+
+    <div id="b64-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="b64-tool__grid">
+      <div class="b64-tool__panel">
+        <label class="b64-tool__label" for="b64-input">Input</label>
+        <TextArea
+          id="b64-input"
+          className="b64-tool__textarea"
+          placeholder={t['tools.base64.inputPlaceholder']}
+        />
+      </div>
+
+      <div class="b64-tool__panel">
+        <div class="b64-tool__label-row">
+          <label class="b64-tool__label" for="b64-output">{t['tools.base64.output']}</label>
+          <span class="b64-tool__hint">{t['tools.base64.liveResult']}</span>
+        </div>
+        <div id="b64-output" class="b64-tool__output b64-tool__output--empty" role="status" aria-live="polite">
+          {t['tools.base64.emptyOutput']}
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    All processing happens in your browser. Your data is never uploaded.
-  </div>
+
+    <div class="tool-note b64-tool__note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {t['tools.base64.note']}
+    </div>
+  </section>
 </ToolWorkspace>
 
 <script>
+  const root = document.querySelector('.b64-tool') as HTMLElement | null;
   const input = document.getElementById('b64-input') as HTMLTextAreaElement;
   const output = document.getElementById('b64-output')!;
   const errorDiv = document.getElementById('b64-error')!;
+  const modeTabs = document.getElementById('b64-mode-tabs');
+  let activeMode: 'encode' | 'decode' = 'encode';
+
+  if (!root) {
+    throw new Error('Base64 tool initialization failed');
+  }
 
   function utf8ToBase64(str: string): string {
     const bytes = new TextEncoder().encode(str);
@@ -69,49 +119,203 @@ import ToolUtils from './ToolUtils.astro';
     return new TextDecoder().decode(bytes);
   }
 
-  document.getElementById('b64-encode')!.addEventListener('click', () => {
+  function runEncode() {
     const val = input.value;
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here'); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
     try {
       window.__belbooreTools.showOutput(output, utf8ToBase64(val));
+      output.classList.remove('b64-tool__output--empty');
       window.__belbooreTools.clearErrorBox(errorDiv);
     } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Encoding failed');
+      window.__belbooreTools.setErrorBox(errorDiv, e.message || root.dataset.encodingFailed || 'Encoding failed');
+    }
+  }
+
+  function runDecode() {
+    const val = input.value.trim();
+    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here'); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    try {
+      window.__belbooreTools.showOutput(output, base64ToUtf8(val));
+      output.classList.remove('b64-tool__output--empty');
+      window.__belbooreTools.clearErrorBox(errorDiv);
+    } catch (e: any) {
+      window.__belbooreTools.setErrorBox(errorDiv, root.dataset.decodeError || 'Invalid Base64 string — could not decode');
+      window.__belbooreTools.showEmpty(output, root.dataset.fixError || 'Fix the error above and try again');
+      output.classList.add('b64-tool__output--empty');
+    }
+  }
+
+  modeTabs?.addEventListener('ui-tabs:change', (event: Event) => {
+    const customEvent = event as CustomEvent<{ tabId?: string }>;
+    const tabId = customEvent.detail?.tabId;
+    activeMode = tabId === 'decode' ? 'decode' : 'encode';
+  });
+
+  input.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      activeMode === 'encode' ? runEncode() : runDecode();
     }
   });
 
-  document.getElementById('b64-decode')!.addEventListener('click', () => {
-    const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
-    try {
-      window.__belbooreTools.showOutput(output, base64ToUtf8(val));
-      window.__belbooreTools.clearErrorBox(errorDiv);
-    } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, 'Invalid Base64 string — could not decode');
-      window.__belbooreTools.showEmpty(output, 'Fix the error above and try again');
-    }
+  document.getElementById('b64-run')!.addEventListener('click', () => {
+    activeMode === 'encode' ? runEncode() : runDecode();
   });
 
   document.getElementById('b64-copy')!.addEventListener('click', async () => {
     const text = output.textContent || '';
-    if (!text || output.classList.contains('tool-output--empty')) return;
+    if (!text || output.classList.contains('b64-tool__output--empty')) return;
     window.__belbooreTools.copyToClipboard(text, document.getElementById('b64-copy')!, 1500);
   });
 
   document.getElementById('b64-clear')!.addEventListener('click', () => {
     input.value = '';
-    window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here');
+    window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here');
+    output.classList.add('b64-tool__output--empty');
     window.__belbooreTools.clearErrorBox(errorDiv);
   });
 
   document.getElementById('b64-swap')!.addEventListener('click', () => {
     const currentOutput = output.textContent || '';
-    if (!output.classList.contains('tool-output--empty') && currentOutput) {
+    if (!output.classList.contains('b64-tool__output--empty') && currentOutput) {
       input.value = currentOutput;
-      window.__belbooreTools.showEmpty(output, 'Encoded / decoded result will appear here');
+      window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here');
+      output.classList.add('b64-tool__output--empty');
       window.__belbooreTools.clearErrorBox(errorDiv);
     } else {
-      window.__belbooreTools.showEmpty(output, 'Nothing to swap');
+      window.__belbooreTools.showEmpty(output, root.dataset.nothingToSwap || 'Nothing to swap');
+      output.classList.add('b64-tool__output--empty');
     }
   });
+
 </script>
+
+<style>
+  .b64-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .b64-tool__toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .b64-tool__modes {
+    display: inline-flex;
+    gap: var(--space-2);
+    padding: var(--space-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    background: var(--surface-tertiary);
+  }
+
+  .b64-tool__modes {
+    margin-inline-end: auto;
+  }
+
+  .b64-tool__run-btn {
+    min-height: 40px;
+    border-radius: var(--radius-lg);
+  }
+
+  .b64-tool__quick-actions {
+    display: inline-flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .b64-tool__icon-btn {
+    min-height: 40px;
+    border-radius: var(--radius-lg);
+  }
+
+  .b64-tool__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+
+  .b64-tool__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+
+  .b64-tool__label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .b64-tool__label {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: var(--weight-semibold);
+  }
+
+  .b64-tool__hint {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+  }
+
+  .b64-tool__textarea {
+    min-height: 260px;
+    font-family: var(--font-mono);
+  }
+
+  .b64-tool__output {
+    min-height: 260px;
+    max-height: 420px;
+    overflow: auto;
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 88%, transparent));
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .b64-tool__output--empty {
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .b64-tool__note {
+    margin-top: 0;
+  }
+
+  @media (max-width: 960px) {
+    .b64-tool__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .b64-tool__modes,
+    .b64-tool__quick-actions {
+      width: 100%;
+    }
+
+    .b64-tool__modes .b64-tool__mode-btn,
+    .b64-tool__quick-actions .b64-tool__icon-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>

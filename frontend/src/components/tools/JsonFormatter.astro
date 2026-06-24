@@ -1,42 +1,176 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { Copy, Trash2 } from '@lucide/astro';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'JSON Formatter & Validator',
+    inputLabel: 'Input',
+    inputHint: 'Paste raw JSON and choose an action.',
+    placeholder: '{\n  "example": "data"\n}',
+    outputLabel: 'Output',
+    outputHint: 'Formatted, minified, or validation results appear here.',
+    format: 'Format',
+    minify: 'Minify',
+    validate: 'Validate',
+    copy: 'Copy result',
+    clear: 'Clear input',
+    emptyFormatted: 'Formatted JSON will appear here',
+    emptyMinified: 'Minified JSON will appear here',
+    emptyValidated: 'Paste JSON to validate',
+    fixErrors: 'Fix the errors above and try again',
+    invalidJson: 'Invalid JSON',
+    validJson: 'Valid JSON',
+    topLevelKey: 'top-level key',
+    topLevelKeys: 'top-level keys',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+  },
+  fa: {
+    title: 'فرمت‌کننده و اعتبارسنج JSON',
+    inputLabel: 'ورودی',
+    inputHint: 'JSON خام را وارد کنید و یک عملیات را انتخاب کنید.',
+    placeholder: '{\n  "example": "data"\n}',
+    outputLabel: 'خروجی',
+    outputHint: 'نتیجه فرمت، فشرده یا اعتبارسنجی اینجا نمایش داده می‌شود.',
+    format: 'فرمت',
+    minify: 'فشرده',
+    validate: 'اعتبارسنجی',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن ورودی',
+    emptyFormatted: 'JSON فرمت‌شده اینجا نمایش داده می‌شود',
+    emptyMinified: 'JSON فشرده اینجا نمایش داده می‌شود',
+    emptyValidated: 'برای اعتبارسنجی JSON را وارد کنید',
+    fixErrors: 'خطاهای بالا را برطرف کنید و دوباره تلاش کنید',
+    invalidJson: 'JSON نامعتبر',
+    validJson: 'JSON معتبر',
+    topLevelKey: 'کلید سطح بالا',
+    topLevelKeys: 'کلیدهای سطح بالا',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+  },
+}[lang];
 ---
 
-<ToolWorkspace title="JSON Formatter & Validator">
+<ToolWorkspace title={copy.title}>
   <ToolPrimitives />
   <ToolUtils />
-  <div class="tool-toolbar">
-    <button type="button" id="json-format" class="tool-btn tool-btn--primary">Format</button>
-    <button type="button" id="json-minify" class="tool-btn">Minify</button>
-    <button type="button" id="json-validate" class="tool-btn">Validate</button>
-    <button type="button" id="json-copy" class="tool-btn">Copy</button>
-    <button type="button" id="json-clear" class="tool-btn">Clear</button>
-  </div>
-  <div id="json-error" class="tool-error" style="display: none;" role="alert"></div>
-  <div class="tool-grid-2">
-    <div class="tool-field">
-      <label class="tool-field__label" for="json-input">Input</label>
-      <textarea id="json-input" class="tool-textarea" placeholder='Paste your JSON here... {"example": "data"}'></textarea>
+
+  <section
+    class="json-tool"
+    dir={dir}
+    data-empty-formatted={copy.emptyFormatted}
+    data-empty-minified={copy.emptyMinified}
+    data-empty-validated={copy.emptyValidated}
+    data-fix-errors={copy.fixErrors}
+    data-invalid-json={copy.invalidJson}
+    data-valid-json={copy.validJson}
+    data-copied={copy.copied}
+  >
+    <div class="json-tool__input-shell">
+      <div class="json-tool__input-head">
+        <ToolActionButton id="json-format">
+          <span>{copy.format}</span>
+        </ToolActionButton>
+        <div class="json-tool__input-head-copy">
+          <label class="json-tool__label" for="json-input">{copy.inputLabel}</label>
+          <p class="json-tool__hint">{copy.inputHint}</p>
+        </div>
+      </div>
+      <TextArea
+        id="json-input"
+        className="json-tool__textarea"
+        placeholder={copy.placeholder}
+        rows={11}
+        spellcheck="false"
+      />
     </div>
-    <div class="tool-field">
-      <label class="tool-field__label" for="json-output">Output</label>
-      <div id="json-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Formatted JSON will appear here</div>
+
+    <div class="json-tool__secondary-actions">
+      <Button id="json-minify" variant="secondary">{copy.minify}</Button>
+      <Button id="json-validate" variant="secondary">{copy.validate}</Button>
+      <Button id="json-copy" variant="outline" className="json-tool__icon-btn" aria-label={copy.copy} title={copy.copy}>
+        <Copy size={17} />
+      </Button>
+      <Button id="json-clear" variant="danger" className="json-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
+        <Trash2 size={17} />
+      </Button>
     </div>
-  </div>
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    All processing happens in your browser. Your data is never uploaded.
-  </div>
+
+    <div id="json-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="json-tool__output-shell" dir="ltr">
+      <div class="json-tool__output-head">
+        <div class="json-tool__output-head-copy">
+          <label class="json-tool__label" for="json-output">{copy.outputLabel}</label>
+          <p class="json-tool__hint">{copy.outputHint}</p>
+        </div>
+      </div>
+      <div id="json-output" class="tool-output tool-output--empty json-tool__output" role="status" aria-live="polite">
+        {copy.emptyFormatted}
+      </div>
+    </div>
+
+    <div class="tool-note json-tool__note">
+      {copy.note}
+    </div>
+  </section>
 </ToolWorkspace>
 
 <script>
-  const input = document.getElementById('json-input') as HTMLTextAreaElement;
-  const output = document.getElementById('json-output')!;
-  const errorDiv = document.getElementById('json-error')!;
+  const root = document.querySelector('.json-tool') as HTMLElement | null;
+  const input = document.getElementById('json-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('json-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('json-error') as HTMLDivElement | null;
+  const copyButton = document.getElementById('json-copy') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('json-clear') as HTMLButtonElement | null;
+  const formatButton = document.getElementById('json-format') as HTMLButtonElement | null;
+  const minifyButton = document.getElementById('json-minify') as HTMLButtonElement | null;
+  const validateButton = document.getElementById('json-validate') as HTMLButtonElement | null;
 
   let lastParsed: { value: string; parsed: unknown } | null = null;
+
+  function getEmptyFormatted() {
+    return root?.dataset.emptyFormatted || 'Formatted JSON will appear here';
+  }
+
+  function getEmptyMinified() {
+    return root?.dataset.emptyMinified || 'Minified JSON will appear here';
+  }
+
+  function getEmptyValidated() {
+    return root?.dataset.emptyValidated || 'Paste JSON to validate';
+  }
+
+  function getFixErrors() {
+    return root?.dataset.fixErrors || 'Fix the errors above and try again';
+  }
+
+  function getInvalidJson() {
+    return root?.dataset.invalidJson || 'Invalid JSON';
+  }
+
+  function getValidJson() {
+    return root?.dataset.validJson || 'Valid JSON';
+  }
+
+  function getCopiedText() {
+    return root?.dataset.copied || 'Copied!';
+  }
 
   function parseJson(val: string): unknown {
     if (lastParsed && lastParsed.value === val) return lastParsed.parsed;
@@ -45,55 +179,269 @@ import ToolUtils from './ToolUtils.astro';
     return parsed;
   }
 
-  document.getElementById('json-format')!.addEventListener('click', () => {
+  function setError(message: string) {
+    if (!errorDiv) return;
+    window.__belbooreTools.setErrorBox(errorDiv, message);
+  }
+
+  function clearError() {
+    if (!errorDiv) return;
+    window.__belbooreTools.clearErrorBox(errorDiv);
+  }
+
+  function setOutputEmpty(text: string) {
+    if (!output) return;
+    window.__belbooreTools.showEmpty(output, text);
+    output.classList.add('tool-output--empty');
+  }
+
+  function setOutput(text: string) {
+    if (!output) return;
+    window.__belbooreTools.showOutput(output, text);
+    output.classList.remove('tool-output--empty');
+  }
+
+  function getParsedCount(obj: unknown) {
+    return typeof obj === 'object' && obj !== null ? Object.keys(obj as Record<string, unknown>).length : 1;
+  }
+
+  function formatJson() {
+    if (!input || !output) return;
     const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Formatted JSON will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    if (!val) {
+      setOutputEmpty(getEmptyFormatted());
+      clearError();
+      return;
+    }
+
     try {
       const obj = parseJson(val);
-      window.__belbooreTools.showOutput(output, JSON.stringify(obj, null, 2));
-      window.__belbooreTools.clearErrorBox(errorDiv);
-    } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
-      window.__belbooreTools.showEmpty(output, 'Fix the errors above and try again');
+      setOutput(JSON.stringify(obj, null, 2));
+      clearError();
+    } catch (error: any) {
+      setError(error?.message || getInvalidJson());
+      setOutputEmpty(getFixErrors());
     }
-  });
+  }
 
-  document.getElementById('json-minify')!.addEventListener('click', () => {
+  function minifyJson() {
+    if (!input || !output) return;
     const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, 'Minified JSON will appear here'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    if (!val) {
+      setOutputEmpty(getEmptyMinified());
+      clearError();
+      return;
+    }
+
     try {
       const obj = parseJson(val);
-      window.__belbooreTools.showOutput(output, JSON.stringify(obj));
-      window.__belbooreTools.clearErrorBox(errorDiv);
-    } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
+      setOutput(JSON.stringify(obj));
+      clearError();
+    } catch (error: any) {
+      setError(error?.message || getInvalidJson());
+      setOutputEmpty(getFixErrors());
     }
-  });
+  }
 
-  document.getElementById('json-validate')!.addEventListener('click', () => {
+  function validateJson() {
+    if (!input || !output) return;
     const val = input.value.trim();
-    if (!val) { window.__belbooreTools.clearErrorBox(errorDiv); window.__belbooreTools.showEmpty(output, 'Paste JSON to validate'); return; }
+    if (!val) {
+      clearError();
+      setOutputEmpty(getEmptyValidated());
+      return;
+    }
+
     try {
       const obj = parseJson(val);
-      window.__belbooreTools.clearErrorBox(errorDiv);
-      const count = typeof obj === 'object' && obj !== null ? Object.keys(obj).length : 1;
-      window.__belbooreTools.showOutput(output, 'Valid JSON — ' + count + ' top-level ' + (count === 1 ? 'key' : 'keys'));
-    } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, e.message || 'Invalid JSON');
-      window.__belbooreTools.showEmpty(output, 'Invalid JSON — see error above');
+      clearError();
+      const count = getParsedCount(obj);
+      setOutput(`${getValidJson()} - ${count} ${count === 1 ? copy.topLevelKey : copy.topLevelKeys}`);
+    } catch (error: any) {
+      setError(error?.message || getInvalidJson());
+      setOutputEmpty(getFixErrors());
     }
-  });
+  }
 
-  document.getElementById('json-copy')!.addEventListener('click', async () => {
+  formatButton?.addEventListener('click', formatJson);
+  minifyButton?.addEventListener('click', minifyJson);
+  validateButton?.addEventListener('click', validateJson);
+
+  copyButton?.addEventListener('click', () => {
+    if (!output) return;
     const text = output.textContent || '';
     if (!text || output.classList.contains('tool-output--empty')) return;
-    window.__belbooreTools.copyToClipboard(text, document.getElementById('json-copy')!, 1500);
+    navigator.clipboard.writeText(text).then(() => {
+      copyButton.classList.add('is-copied');
+      copyButton.title = getCopiedText();
+      copyButton.setAttribute('aria-label', getCopiedText());
+      window.setTimeout(() => {
+        copyButton.classList.remove('is-copied');
+        copyButton.title = copy.copy;
+        copyButton.setAttribute('aria-label', copy.copy);
+      }, 1200);
+    }).catch(() => {});
   });
 
-  document.getElementById('json-clear')!.addEventListener('click', () => {
+  clearButton?.addEventListener('click', () => {
+    if (!input || !output) return;
     input.value = '';
     lastParsed = null;
-    window.__belbooreTools.showEmpty(output, 'Formatted JSON will appear here');
-    window.__belbooreTools.clearErrorBox(errorDiv);
+    setOutputEmpty(getEmptyFormatted());
+    clearError();
+    input.focus();
   });
+
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      formatJson();
+    }
+  });
+
+  setOutputEmpty(getEmptyFormatted());
 </script>
+
+<style>
+  .json-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .json-tool__input-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: var(--surface-tertiary);
+    transition:
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .json-tool__input-shell:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .json-tool__input-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    direction: ltr;
+  }
+
+  .json-tool__input-head-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    margin-inline-start: auto;
+    text-align: end;
+    direction: inherit;
+  }
+
+  .json-tool__label {
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .json-tool__hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+
+  .json-tool__textarea {
+    min-height: 260px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    resize: vertical;
+  }
+
+  .json-tool__secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .json-tool__icon-btn.ui-button {
+    width: 42px;
+    min-width: 42px;
+    min-height: 42px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .json-tool__output-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .json-tool__output-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    direction: ltr;
+  }
+
+  .json-tool__output-head-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    margin-inline-start: auto;
+    text-align: end;
+  }
+
+  .json-tool__output {
+    min-height: 260px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .json-tool__note {
+    margin-top: 0;
+  }
+
+  .json-tool .tool-action-button {
+    min-width: 160px;
+    margin-inline-end: auto;
+  }
+
+  @media (max-width: 640px) {
+    .json-tool .tool-action-button {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .json-tool__output-shell {
+      padding: var(--space-3);
+    }
+  }
+</style>
