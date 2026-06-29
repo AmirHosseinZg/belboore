@@ -1,0 +1,197 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import ToolDatePicker from './ToolDatePicker.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.dateDifference.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="date-diff" dir={dir}
+    data-empty={t['tools.dateDifference.selectDates']}
+    data-same-day={t['tools.dateDifference.sameDay']}
+    data-before={t['tools.dateDifference.startBeforeEnd']}
+    data-after={t['tools.dateDifference.startAfterEnd']}
+    data-weeks-days={t['tools.dateDifference.weeksDays']}
+    data-total-days={t['tools.dateDifference.totalDays']}
+    data-absolute-days={t['tools.dateDifference.absoluteDays']}
+    data-signed-days={t['tools.dateDifference.signedDays']}
+    data-start-before={t['tools.dateDifference.startBeforeEnd']}
+    data-start-after={t['tools.dateDifference.startAfterEnd']}
+  >
+
+    <div class="date-diff__calendar-toggle">
+      <span class="tool-field__label">{t['tools.dateDifference.calendar'] || 'Calendar'}</span>
+      <div class="date-diff__toggle-group">
+        <button id="dd-cal-greg" type="button" class="tool-btn tool-btn--primary" data-cal="gregorian">{t['tools.dateDifference.gregorian']}</button>
+        <button id="dd-cal-jalali" type="button" class="tool-btn" data-cal="jalali">{t['tools.dateDifference.jalali']}</button>
+      </div>
+    </div>
+
+    <div class="tool-grid-2">
+      <ToolDatePicker id="dd-start" label={t['tools.dateDifference.startDate']} lang={lang} calendar={lang === 'fa' ? 'jalali' : 'gregorian'} />
+      <ToolDatePicker id="dd-end" label={t['tools.dateDifference.endDate']} lang={lang} calendar={lang === 'fa' ? 'jalali' : 'gregorian'} />
+    </div>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="dd-calculate">{t['tools.dateDifference.calculate']}</ToolActionButton>
+    </div>
+
+    <div id="dd-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div id="dd-relation" class="date-diff__relation" style="display: none;"></div>
+
+    <div id="dd-results" class="date-diff__results" style="display: none;">
+      <div class="tool-result">
+        <div class="date-diff__result-list">
+          <div class="date-diff__result-row">
+            <span class="tool-result__label">{t['tools.dateDifference.totalDays']}</span>
+            <span class="tool-result__value" id="dd-total-days">0</span>
+          </div>
+          <div class="date-diff__result-row">
+            <span class="tool-result__label">{t['tools.dateDifference.absoluteDays']}</span>
+            <span class="tool-result__value" id="dd-abs-days">0</span>
+          </div>
+          <div class="date-diff__result-row">
+            <span class="tool-result__label">{t['tools.dateDifference.signedDays']}</span>
+            <span class="tool-result__value" id="dd-signed-days">0</span>
+          </div>
+          <div class="date-diff__result-row">
+            <span class="tool-result__label">{t['tools.dateDifference.weeksDays'].replace('{weeks}', '').replace('{days}', '')}</span>
+            <span class="tool-result__value" id="dd-weeks-days">0</span>
+          </div>
+        </div>
+      </div>
+      <button id="dd-copy" class="tool-btn" style="align-self: center;">{t['tools.dateDifference.copyResult']}</button>
+    </div>
+
+    <div id="dd-empty" class="tool-output tool-output--empty">{t['tools.dateDifference.selectDates']}</div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.dateDifference.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.date-diff');
+  var results = document.getElementById('dd-results');
+  var empty = document.getElementById('dd-empty');
+  var relation = document.getElementById('dd-relation');
+  var totalDays = document.getElementById('dd-total-days');
+  var absDays = document.getElementById('dd-abs-days');
+  var signedDays = document.getElementById('dd-signed-days');
+  var weeksDays = document.getElementById('dd-weeks-days');
+  var errorDiv = document.getElementById('dd-error');
+  var calcBtn = document.getElementById('dd-calculate');
+  var copyBtn = document.getElementById('dd-copy');
+  var gregBtn = document.getElementById('dd-cal-greg');
+  var jalaliBtn = document.getElementById('dd-cal-jalali');
+
+  function setError(msg){if(!errorDiv)return;window.__belbooreTools.setErrorBox(errorDiv,msg);}
+  function clearError(){if(!errorDiv)return;window.__belbooreTools.clearErrorBox(errorDiv);}
+
+  function setCalendarMode(mode){
+    gregBtn.classList.toggle('tool-btn--primary',mode==='gregorian');
+    gregBtn.classList.toggle('tool-btn--ghost',mode!=='gregorian');
+    jalaliBtn.classList.toggle('tool-btn--primary',mode==='jalali');
+    jalaliBtn.classList.toggle('tool-btn--ghost',mode!=='jalali');
+    if(window.__belbooreDatePickers){
+      if(window.__belbooreDatePickers['dd-start']) window.__belbooreDatePickers['dd-start'].setCalendarMode(mode);
+      if(window.__belbooreDatePickers['dd-end']) window.__belbooreDatePickers['dd-end'].setCalendarMode(mode);
+    }
+  }
+
+  gregBtn.addEventListener('click',function(){setCalendarMode('gregorian');});
+  jalaliBtn.addEventListener('click',function(){setCalendarMode('jalali');});
+
+  function calcDiff(){
+    if(!root||!results||!empty||!totalDays||!absDays||!signedDays||!weeksDays||!relation) return;
+
+    var startVal = window.__belbooreDatePickers&&window.__belbooreDatePickers['dd-start'] ? window.__belbooreDatePickers['dd-start'].getDateValue() : '';
+    var endVal = window.__belbooreDatePickers&&window.__belbooreDatePickers['dd-end'] ? window.__belbooreDatePickers['dd-end'].getDateValue() : '';
+
+    if(!startVal||!endVal){
+      clearError();
+      results.style.display='none';
+      relation.style.display='none';
+      empty.style.display='';
+      return;
+    }
+
+    var sp=startVal.split('-'),ep=endVal.split('-');
+    var start=new Date(+sp[0],+sp[1]-1,+sp[2]);
+    var end=new Date(+ep[0],+ep[1]-1,+ep[2]);
+
+    if(isNaN(start.getTime())||isNaN(end.getTime())) return;
+
+    clearError();
+    empty.style.display='none';
+
+    var diffTime=end.getTime()-start.getTime();
+    var diffDays=Math.round(diffTime/(1000*60*60*24));
+
+    if(diffDays===0){
+      relation.textContent=root.getAttribute('data-same-day')||'Same day';
+    }else if(diffDays>0){
+      relation.textContent=(root.getAttribute('data-before')||'{date} is before {date2}')
+        .replace('{date}',startVal)
+        .replace('{date2}',endVal);
+    }else{
+      relation.textContent=(root.getAttribute('data-after')||'{date} is after {date2}')
+        .replace('{date}',endVal)
+        .replace('{date2}',startVal);
+    }
+    relation.style.display='';
+
+    totalDays.textContent=String(Math.abs(diffDays));
+    absDays.textContent=String(Math.abs(diffDays));
+    signedDays.textContent=String(diffDays);
+
+    var absWeeks=Math.floor(Math.abs(diffDays)/7);
+    var absRem=Math.abs(diffDays)%7;
+    weeksDays.textContent=(root.getAttribute('data-weeks-days')||'{weeks} weeks and {days} days')
+      .replace('{weeks}',String(absWeeks))
+      .replace('{days}',String(absRem));
+
+    results.style.display='';
+  }
+
+  calcBtn.addEventListener('click',calcDiff);
+
+  copyBtn.addEventListener('click',function(){
+    if(!results||!totalDays||!absDays||!signedDays||!weeksDays) return;
+    if(results.style.display==='none') return;
+    var td=root.getAttribute('data-total-days')||'Total Days';
+    var ad=root.getAttribute('data-absolute-days')||'Absolute Days';
+    var sd=root.getAttribute('data-signed-days')||'Signed Difference';
+    var text=td+': '+totalDays.textContent+'\n'+ad+': '+absDays.textContent+'\n'+sd+': '+signedDays.textContent+'\n'+weeksDays.textContent;
+    window.__belbooreTools.copyToClipboard(text,copyBtn,1500);
+  });
+</script>
+
+<style>
+  .date-diff{display:flex;flex-direction:column;gap:var(--space-5);}
+  .date-diff__calendar-toggle{display:flex;flex-direction:column;gap:var(--space-2);}
+  .date-diff__toggle-group{display:flex;gap:var(--space-1);}
+  .date-diff__relation{padding:var(--space-3) var(--space-4);background:var(--color-tech-blue-subtle);border:1px solid rgba(0,82,255,0.12);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--color-tech-blue);}
+  .date-diff__results{display:flex;flex-direction:column;gap:var(--space-4);}
+  .date-diff__result-list{display:flex;flex-direction:column;}
+  .date-diff__result-row{display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle);}
+  .date-diff__result-row:last-child{border-bottom:none;}
+</style>

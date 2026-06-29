@@ -21,6 +21,11 @@ import UnitConverter from '../../../components/tools/UnitConverter.astro';
 import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
 import ImageToBase64 from '../../../components/tools/ImageToBase64.astro';
 import TextDiff from '../../../components/tools/TextDiff.astro';
+import RegexTester from '../../../components/tools/RegexTester.astro';
+import DateDifference from '../../../components/tools/DateDifference.astro';
+import PercentageCalculator from '../../../components/tools/PercentageCalculator.astro';
+import RandomNumber from '../../../components/tools/RandomNumber.astro';
+import BmiCalculator from '../../../components/tools/BmiCalculator.astro';
 
 export function getStaticPaths() {
   return [
@@ -72,6 +77,11 @@ const toolComponentMap: Record<string, any> = {
   'markdown-preview': MarkdownEditor,
   'image-to-base64': ImageToBase64,
   'text-diff': TextDiff,
+  'regex-tester': RegexTester,
+  'date-difference': DateDifference,
+  'percentage-calculator': PercentageCalculator,
+  'random-number': RandomNumber,
+  'bmi-calculator': BmiCalculator,
 };
 
 const ToolComponent = toolComponentMap[slug];

@@ -1,6 +1,6 @@
 # Frontend-Only Tool Status Table
 
-**Last updated:** 2026-06-25
+**Last updated:** 2026-06-29 (Phase 1.1 completed)
 **Source:** `docs/Tools_breakdown.md` — Tier 0 (Pure Client-Side)
 **Cross-reference:** `src/data/tools.ts`, `src/pages/[lang]/tools/[slug].astro` (component map), `src/components/tools/` (live components)
 
@@ -24,8 +24,8 @@
 |--------|:-----:|
 | Tier 0 tools planned in `Tools_breakdown.md` | ~88 |
 | Already registered in `tools.ts` | 35 total (25 builtin + 10 external) |
-| Live builtin components | 17 |
-| Coming-soon builtins (in data, no component) | 8 |
+| Live builtin components | 22 |
+| Coming-soon builtins (in data, no component) | 3 |
 | External redirects | 10 |
 | **Tier 0 tools not yet in data** | **~61** |
 | Extra tools in codebase (not in planned Tier 0) | 5 |
@@ -109,7 +109,7 @@
 | 11 | XML Formatter | — | `not-in-data` | — | — | Pretty-print XML |
 | 12 | YAML Viewer | — | `not-in-data` | — | — | Format & view YAML |
 | 13 | Markdown Viewer & Exporter | `markdown-preview` | `live` | ✅ | needs-improvement | Live preview; needs LaTeX/RTL/PDF export |
-| 14 | Regex Tester | `regex-tester` | `coming-soon` | — | — | In tools.ts, no component yet |
+| 14 | Regex Tester | `regex-tester` | `live` | ✅ | good | Pattern + flags + match UI, bilingual i18n |
 | 15 | Regex Memo | — | `not-in-data` | — | — | Save/organize regex patterns |
 
 ### 4d. Text & Encoding
@@ -191,7 +191,7 @@
 | 9 | Roman Numeral Converter | — | `not-in-data` | — | — | Arabic ↔ Roman numerals |
 | 10 | Color Converter | `color-converter` | `live` | ✅ | good | HEX/RGB/HSL/HSV/CMYK |
 | 11 | Math Evaluator | — | `not-in-data` | — | — | Real-time expression evaluator |
-| 12 | Percentage Calculator | `percentage-calculator` | `coming-soon` | — | — | In tools.ts, no component yet |
+| 12 | Percentage Calculator | `percentage-calculator` | `live` | ✅ | good | 4-mode calculator (X% of Y, X is what % of Y, change, increase/decrease) |
 | 13 | ETA Calculator | — | `not-in-data` | — | — | Time/speed/distance calculator |
 
 ---
@@ -237,9 +237,9 @@ These tools exist in `tools.ts` but are **not** listed in the `Tools_breakdown.m
 
 | Tool | Slug | Status | Why it exists |
 |------|------|--------|---------------|
-| BMI Calculator | `bmi-calculator` | `coming-soon` | Ad-hoc addition; health utility |
-| Random Number Generator | `random-number` | `coming-soon` | Simplified version of "Random Generator" |
-| Date Difference Calculator | `date-difference` | `coming-soon` | Ad-hoc addition; date math |
+| BMI Calculator | `bmi-calculator` | `live` | Ad-hoc addition; health utility |
+| Random Number Generator | `random-number` | `live` | Simplified version of "Random Generator" |
+| Date Difference Calculator | `date-difference` | `live` | Ad-hoc addition; date math |
 | Line Sorter | `line-sorter` | `live` | Simplified version of "List Converter" |
 | Image to Base64 | `image-to-base64` | `live` | Not in planned list (separate from Image Converter) |
 
@@ -264,8 +264,8 @@ Based on **implementation gap** (how many Tier 0 tools are missing):
 
 | Priority | Category | Planned | Live | Coming-Soon | Not-in-Data | Coverage |
 |:--------:|----------|:-------:|:----:|:-----------:|:-----------:|:--------:|
-| **P0** | Developer Tools | 43 | 6 | 1 | 36 | **16%** |
-| **P1** | Text & Number Tools | 13 | 4 | 1 | 8 | **38%** |
+| **P0** | Developer Tools | 43 | 7 | 0 | 36 | **16%** |
+| **P1** | Text & Number Tools | 13 | 5 | 0 | 8 | **38%** |
 | **P2** | Everyday Tools | 11 | 2 | 0 | 9 | **18%** |
 | **P3** | Security & Passwords | 8 | 2 | 0 | 6 | **25%** |
 | **P4** | Network & Diagnostics | 6 | 0 | 0 | 6 | **0%** |
@@ -286,5 +286,42 @@ Based on **implementation gap** (how many Tier 0 tools are missing):
 > *FRONTEND_TOOL_STATUS.md classifies Merge/Compress PDF and YouTube Downloader as `frontend-only (heavy)` but Tools_breakdown.md marks them as Tier 2 (backend-required).
 
 ---
+
+---
+## Phase 1.1 — UI Repair and Calendar Foundation (2026-06-29)
+
+**Scope:** UI consistency pass over all 5 Phase 1 tools. Created reusable calendar/date picker with Gregorian + Jalali support.
+
+**Changes:**
+- All 5 tools now use existing shared UI components (`Select.astro`, `Button.astro`, `Checkbox.astro`, `ToolActionButton.astro`, `ToolPrimitives` CSS classes) instead of raw HTML controls.
+- Raw `type="number"` inputs replaced with `type="text" inputmode="decimal"` for visual consistency.
+- All inputs use `.tool-input` styling.
+- Buttons use `ToolActionButton.astro` (primary) and `Button.astro` (secondary) variants.
+- Empty/error/result states use `.tool-error`, `.tool-empty`, `.tool-result`, `.tool-output` classes from `ToolPrimitives`.
+- Privacy notes use `.tool-note` with icon.
+
+**New Shared Components Created:**
+
+| Component | File | Purpose | Used By |
+|-----------|------|---------|---------|
+| `jalali.ts` | `src/lib/jalali.ts` | Lightweight Gregorian↔Jalali conversion (pure math, no dependencies) | `ToolDatePicker`, `DateDifference` |
+| `ToolDatePicker.astro` | `src/components/tools/ToolDatePicker.astro` | Reusable calendar/date field with popup, month nav, Gregorian/Jalali toggle | `DateDifference` (both start & end) |
+
+**Calendar Foundation:**
+- `ToolDatePicker` supports Gregorian and Jalali/Shamsi modes.
+- Calendar mode toggle in `DateDifference` switches both date pickers simultaneously.
+- Internal value is always normalized to Gregorian ISO date (`YYYY-MM-DD`) for calculation correctness.
+- Display value shows formatted date in the selected calendar mode.
+- English: Gregorian / Jalali · Persian: میلادی / شمسی
+- No external date library added; uses `jalali.ts` (lightweight, pure-math conversion).
+
+**Tool-Specific Improvements:**
+- `regex-tester`: Flags use `Checkbox.astro`. Pattern/test text inputs polished. Error/empty states styled.
+- `date-difference`: Raw `<input type="date">` replaced with `ToolDatePicker`. Calendar mode toggle added.
+- `percentage-calculator`: Raw `<select>` replaced with `Select.astro`. Number inputs replaced with text+inputmode.
+- `random-number`: Number inputs replaced with text+inputmode. `ToolActionButton` for generate.
+- `bmi-calculator`: Number inputs replaced with text+inputmode. Disclaimer styled as `.tool-note`. `ToolActionButton` for calculate.
+
+**Checks run:** `npm run build` — 111 pages, 7.62s, no errors. All 10 Phase 1 routes verified. 3 legacy tools verified.
 
 *Generated by analyzing `docs/Tools_breakdown.md` Tier 0 list against `src/data/tools.ts` and component map in `[slug].astro`.*

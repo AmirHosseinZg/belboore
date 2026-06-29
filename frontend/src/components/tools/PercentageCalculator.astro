@@ -1,0 +1,179 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Select from '../ui/Select.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.percentageCalculator.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="pct-calc" dir={dir}
+    data-empty={t['tools.percentageCalculator.enterValues']}
+    data-x-percent-of-y={t['tools.percentageCalculator.resultXPercentOfY']}
+    data-x-is-what-pct={t['tools.percentageCalculator.resultXIsWhatPercentOfY']}
+    data-change={t['tools.percentageCalculator.resultChange']}
+    data-increase={t['tools.percentageCalculator.resultIncrease']}
+    data-decrease={t['tools.percentageCalculator.resultDecrease']}
+    data-invalid={t['tools.percentageCalculator.invalidInput']}
+    data-div-zero={t['tools.percentageCalculator.divisionByZero']}
+  >
+    <div class="tool-field">
+      <label class="tool-field__label" for="pc-mode">{t['tools.percentageCalculator.formula']}</label>
+      <Select id="pc-mode"
+        options={[
+          { value: '1', label: t['tools.percentageCalculator.mode1'] },
+          { value: '2', label: t['tools.percentageCalculator.mode2'] },
+          { value: '3', label: t['tools.percentageCalculator.mode3'] },
+          { value: '4', label: t['tools.percentageCalculator.mode4'] },
+        ]}
+        selectedValue="1"
+      />
+    </div>
+
+    <div class="pct-calc__inputs">
+      <div class="tool-field">
+        <label class="tool-field__label" for="pc-x">{t['tools.percentageCalculator.x']}</label>
+        <input id="pc-x" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
+      </div>
+      <div class="tool-field">
+        <label class="tool-field__label" for="pc-y">{t['tools.percentageCalculator.y']}</label>
+        <input id="pc-y" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
+      </div>
+      <div class="tool-field" id="pc-field-p" style="display: none;">
+        <label class="tool-field__label" for="pc-p">{t['tools.percentageCalculator.percent']}</label>
+        <input id="pc-p" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="pc-calculate">{t['tools.percentageCalculator.calculate']}</ToolActionButton>
+    </div>
+
+    <div id="pc-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div id="pc-result" class="pct-calc__result" style="display: none;">
+      <div class="tool-result">
+        <div class="tool-result__value" id="pc-value">0</div>
+        <div class="tool-result__label" id="pc-formula"></div>
+      </div>
+      <button id="pc-copy" class="tool-btn" style="align-self: center;">{t['tools.percentageCalculator.copyResult']}</button>
+    </div>
+
+    <div id="pc-empty" class="tool-output tool-output--empty">{t['tools.percentageCalculator.enterValues']}</div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.percentageCalculator.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.pct-calc');
+  var modeSelect = document.getElementById('pc-mode');
+  var xInput = document.getElementById('pc-x');
+  var yInput = document.getElementById('pc-y');
+  var pInput = document.getElementById('pc-p');
+  var calcBtn = document.getElementById('pc-calculate');
+  var copyBtn = document.getElementById('pc-copy');
+  var errorDiv = document.getElementById('pc-error');
+  var resultDiv = document.getElementById('pc-result');
+  var emptyDiv = document.getElementById('pc-empty');
+  var valueDiv = document.getElementById('pc-value');
+  var formulaDiv = document.getElementById('pc-formula');
+  var fieldP = document.getElementById('pc-field-p');
+
+  function setError(msg){if(!errorDiv)return;window.__belbooreTools.setErrorBox(errorDiv,msg);}
+  function clearError(){if(!errorDiv)return;window.__belbooreTools.clearErrorBox(errorDiv);}
+
+  function getVal(input){
+    if(!input) return null;
+    var v=parseFloat(input.value.replace(/[^0-9.-]/g,''));
+    return isNaN(v)?null:v;
+  }
+
+  function updateFields(){
+    if(!modeSelect||!fieldP||!pInput) return;
+    var mode=modeSelect.value;
+    fieldP.style.display=mode==='4'?'':'none';
+    if(mode!=='4') pInput.value='';
+  }
+
+  modeSelect.addEventListener('change',updateFields);
+
+  function calc(){
+    if(!modeSelect||!xInput||!yInput||!pInput||!root||!resultDiv||!emptyDiv||!valueDiv||!formulaDiv) return;
+    var mode=modeSelect.value;
+    var x=getVal(xInput);
+    var y=getVal(yInput);
+    var p=getVal(pInput);
+    clearError();
+
+    if(mode!=='4'&&(x===null||y===null)){setError(root.getAttribute('data-invalid')||'Enter valid numbers');return;}
+    if(mode==='4'&&(x===null||p===null)){setError(root.getAttribute('data-invalid')||'Enter valid numbers');return;}
+
+    emptyDiv.style.display='none';
+    resultDiv.style.display='';
+    var value,formula;
+
+    switch(mode){
+      case '1':
+        if(y===0){setError(root.getAttribute('data-div-zero')||'Division by zero');return;}
+        value=(x*y)/100;
+        formula=(root.getAttribute('data-x-percent-of-y')||'{x}% of {y} = {result}').replace('{x}',x).replace('{y}',y).replace('{result}',value.toFixed(2));
+        break;
+      case '2':
+        if(y===0){setError(root.getAttribute('data-div-zero')||'Division by zero');return;}
+        value=(x/y)*100;
+        formula=(root.getAttribute('data-x-is-what-pct')||'{x} is {result}% of {y}').replace('{x}',x).replace('{y}',y).replace('{result}',value.toFixed(2));
+        break;
+      case '3':
+        if(y===0){setError(root.getAttribute('data-div-zero')||'Division by zero');return;}
+        value=((y-x)/Math.abs(x))*100;
+        formula=(root.getAttribute('data-change')||'Change from {x} to {y} = {result}%').replace('{x}',x).replace('{y}',y).replace('{result}',value.toFixed(2));
+        break;
+      case '4':
+        var isIncrease=p>=0;
+        var absP=Math.abs(p);
+        value=x+(x*(isIncrease?absP:-absP)/100);
+        var template=isIncrease?(root.getAttribute('data-increase')||'{x} increased by {p}% = {result}'):(root.getAttribute('data-decrease')||'{x} decreased by {p}% = {result}');
+        formula=template.replace('{x}',x).replace('{p}',String(absP)).replace('{result}',value.toFixed(2));
+        break;
+      default: return;
+    }
+
+    valueDiv.textContent=value.toFixed(2);
+    formulaDiv.textContent=formula;
+  }
+
+  calcBtn.addEventListener('click',calc);
+  copyBtn.addEventListener('click',function(){
+    if(!valueDiv||!formulaDiv||!resultDiv) return;
+    if(resultDiv.style.display==='none') return;
+    var text=formulaDiv.textContent+' = '+valueDiv.textContent;
+    window.__belbooreTools.copyToClipboard(text,copyBtn,1500);
+  });
+
+  updateFields();
+</script>
+
+<style>
+  .pct-calc{display:flex;flex-direction:column;gap:var(--space-5);}
+  .pct-calc__inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
+  .pct-calc__result{margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-3);}
+  @media(max-width:640px){.pct-calc__inputs{grid-template-columns:1fr;}}
+</style>

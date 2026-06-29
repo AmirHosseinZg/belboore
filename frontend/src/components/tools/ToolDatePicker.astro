@@ -1,0 +1,264 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  value?: string;
+  lang?: 'en' | 'fa';
+  calendar?: 'gregorian' | 'jalali';
+}
+
+const { id, label, value = '', lang = 'en', calendar = 'gregorian' } = Astro.props;
+const dir = lang === 'fa' ? 'rtl' : 'ltr';
+---
+
+<div class="tool-datepicker" id={`${id}-wrapper`} data-lang={lang} data-calendar={calendar} data-value={value} dir={dir}>
+  <div class="tool-field">
+    <label class="tool-field__label" for={id}>{label}</label>
+    <div class="tool-datepicker__input-wrap">
+      <input id={id} class="tool-input tool-datepicker__input" type="text" readonly autocomplete="off" />
+      <button type="button" class="tool-datepicker__toggle" aria-label="Open calendar">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="tool-datepicker__popup" id={`${id}-popup`} style="display: none;">
+    <div class="tool-datepicker__header">
+      <button type="button" class="tool-datepicker__nav" id={`${id}-prev`} aria-label="Previous month">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d={dir === 'rtl' ? "m9 18 6-6-6-6" : "m15 18-6-6 6-6"} /></svg>
+      </button>
+      <span class="tool-datepicker__month-year" id={`${id}-month-year`}></span>
+      <button type="button" class="tool-datepicker__nav" id={`${id}-next`} aria-label="Next month">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d={dir === 'rtl' ? "m15 18-6-6 6-6" : "m9 18 6-6-6-6"} /></svg>
+      </button>
+    </div>
+    <div class="tool-datepicker__weekdays" id={`${id}-weekdays`}></div>
+    <div class="tool-datepicker__grid" id={`${id}-grid`}></div>
+  </div>
+</div>
+
+<style>
+  .tool-datepicker { position: relative; }
+  .tool-datepicker__input-wrap { position: relative; display: flex; align-items: center; }
+  .tool-datepicker__input { padding-inline-end: var(--space-10); cursor: pointer; }
+  .tool-datepicker__toggle {
+    position: absolute; inset-inline-end: var(--space-2);
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; padding: 0; border: none;
+    border-radius: var(--radius-sm); background: transparent;
+    color: var(--text-tertiary); cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  }
+  .tool-datepicker__toggle:hover { color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  .tool-datepicker__popup {
+    position: absolute; z-index: 50; top: calc(100% + var(--space-2)); inset-inline-start: 0;
+    min-width: 280px; background: var(--surface-primary);
+    border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12); padding: var(--space-3);
+  }
+  .tool-datepicker__header {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-2); margin-bottom: var(--space-3);
+  }
+  .tool-datepicker__nav {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; padding: 0; border: none;
+    border-radius: var(--radius-sm); background: transparent;
+    color: var(--text-tertiary); cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+  }
+  .tool-datepicker__nav:hover { color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  .tool-datepicker__month-year { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+  .tool-datepicker__weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); margin-bottom: var(--space-2); }
+  .tool-datepicker__weekday { text-align: center; font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-muted); padding: var(--space-1) 0; }
+  .tool-datepicker__grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: var(--space-1); }
+  .tool-datepicker__day {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; aspect-ratio: 1; border: none; border-radius: var(--radius-sm);
+    background: transparent; font-size: var(--text-sm); color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+  }
+  .tool-datepicker__day:hover { background: var(--surface-tertiary); }
+  .tool-datepicker__day--other { color: var(--text-muted); opacity: 0.5; }
+  .tool-datepicker__day--today { font-weight: var(--weight-bold); color: var(--color-tech-blue); }
+  .tool-datepicker__day--selected { background: var(--color-tech-blue); color: white; font-weight: var(--weight-semibold); }
+  .tool-datepicker__day--selected:hover { background: var(--color-tech-blue-hover); color: white; }
+  [dir="rtl"] .tool-datepicker__popup { inset-inline-start: auto; inset-inline-end: 0; }
+</style>
+
+<script>
+(function(){
+  const id = '{id}';
+  const wrapper = document.getElementById(id+'-wrapper');
+  if(!wrapper) return;
+  const input = document.getElementById(id);
+  const popup = document.getElementById(id+'-popup');
+  const toggle = wrapper.querySelector('.tool-datepicker__toggle');
+  const grid = document.getElementById(id+'-grid');
+  const weekdaysEl = document.getElementById(id+'-weekdays');
+  const monthYearEl = document.getElementById(id+'-month-year');
+  const prevBtn = document.getElementById(id+'-prev');
+  const nextBtn = document.getElementById(id+'-next');
+  if(!input||!popup||!toggle||!grid||!weekdaysEl||!monthYearEl||!prevBtn||!nextBtn) return;
+
+  var WK_FA = ['ش','ی','د','س','چ','پ','ج'];
+  var WK_EN = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var GM_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var GM_FA = ['ژانویه','فوریه','مارس','آوریل','مه','ژوئن','ژوئیه','اوت','سپتامبر','اکتبر','نوامبر','دسامبر'];
+  var JM_EN = ['Farvardin','Ordibehesht','Khordad','Tir','Mordad','Shahrivar','Mehr','Aban','Azar','Dey','Bahman','Esfand'];
+  var JM_FA = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+
+  var lang = wrapper.getAttribute('data-lang')||'en';
+  var calendar = wrapper.getAttribute('data-calendar')||'gregorian';
+  var internalDate = null;
+  var viewYear = 2026, viewMonth = 6, isOpen = false;
+
+  function toJalali(gy,gm,gd){
+    var gdm=[0,31,59,90,120,151,181,212,243,273,304,334];
+    var gy2=gm>2?gy+1:gy;
+    var days=355666+365*gy+Math.floor((gy2+3)/4)-Math.floor((gy2+99)/100)+Math.floor((gy2+399)/400)+gd+gdm[gm-1];
+    var jy=-1595+33*Math.floor(days/12053);
+    var d=days%12053;
+    jy+=4*Math.floor(d/1461);
+    d%=1461;
+    if(d>365){jy+=Math.floor((d-1)/365);d=(d-1)%365;}
+    var jm=d<186?1+Math.floor(d/31):7+Math.floor((d-186)/30);
+    var jd=1+(d<186?d%31:(d-186)%30);
+    return[jy,jm,jd];
+  }
+  function toGregorian(jy,jm,jd){
+    var jy1=jy+1595;
+    var days=-355668+365*jy1+Math.floor(jy1/33)*8+Math.floor(((jy1%33)+3)/4)+jd+(jm<7?(jm-1)*31:(jm-7)*30+186);
+    var gy=400*Math.floor(days/146097);
+    days%=146097;
+    if(days>36524){gy+=100*Math.floor(--days/36524);days%=36524;if(days>=365)days++;}
+    gy+=4*Math.floor(days/1461);
+    days%=1461;
+    if(days>365){gy+=Math.floor((days-1)/365);days=(days-1)%365;}
+    var mo=[0,0,31,59,90,120,151,181,212,243,273,304,334];
+    var gmm=days<31?1:days<59?2:days<90?3:days<120?4:days<151?5:days<181?6:days<212?7:days<243?8:days<273?9:days<304?10:days<334?11:12;
+    var gdd=1+days-mo[gmm];
+    return[gy<0?gy+1:gy,gmm,gdd];
+  }
+  function daysInMonth(y,m,cal){
+    if(cal==='gregorian') return new Date(y,m,0).getDate();
+    if(m<=6) return 31;
+    if(m<=11) return 30;
+    var base=y%33;
+    return(base===0||base===1||base===5||base===9||base===13||base===17||base===22||base===26||base===30)?30:29;
+  }
+  function getFirstWeekday(y,m,cal){
+    if(cal==='gregorian') return new Date(y,m-1,1).getDay();
+    var g=toGregorian(y,m,1);
+    return new Date(g[0],g[1]-1,g[2]).getDay();
+  }
+  function formatDisplay(d){
+    if(!d) return '';
+    var gy=d.getFullYear(),gm=d.getMonth()+1,gd=d.getDate();
+    if(calendar==='jalali'){
+      var j=toJalali(gy,gm,gd);
+      var ms=lang==='fa'?JM_FA:JM_EN;
+      return jd(2)+' '+ms[j[1]-1]+' '+j[0];
+      function jd(v){return j[2];}
+    }
+    var ms=lang==='fa'?GM_FA:GM_EN;
+    return gd+' '+ms[gm-1]+' '+gy;
+  }
+  function updateInput(){
+    input.value = formatDisplay(internalDate);
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  function renderCalendar(){
+    var days=daysInMonth(viewYear,viewMonth,calendar);
+    var firstDay=getFirstWeekday(viewYear,viewMonth,calendar);
+    var monthNames=calendar==='gregorian'?(lang==='fa'?GM_FA:GM_EN):(lang==='fa'?JM_FA:JM_EN);
+    monthYearEl.textContent=monthNames[viewMonth-1]+' '+viewYear;
+    var wd=lang==='fa'?WK_FA:WK_EN;
+    weekdaysEl.innerHTML=wd.map(function(w){return'<span class="tool-datepicker__weekday">'+w+'</span>';}).join('');
+    var today=new Date();
+    var tj=toJalali(today.getFullYear(),today.getMonth()+1,today.getDate());
+    var cells='';
+    for(var i=0;i<firstDay;i++) cells+='<span class="tool-datepicker__day tool-datepicker__day--other"></span>';
+    for(var d=1;d<=days;d++){
+      var cls='tool-datepicker__day';
+      if(calendar==='gregorian'){
+        if(viewYear===today.getFullYear()&&viewMonth===today.getMonth()+1&&d===today.getDate()) cls+=' tool-datepicker__day--today';
+        if(internalDate&&viewYear===internalDate.getFullYear()&&viewMonth===internalDate.getMonth()+1&&d===internalDate.getDate()) cls+=' tool-datepicker__day--selected';
+      }else{
+        if(viewYear===tj[0]&&viewMonth===tj[1]&&d===tj[2]) cls+=' tool-datepicker__day--today';
+        if(internalDate){
+          var sd=toJalali(internalDate.getFullYear(),internalDate.getMonth()+1,internalDate.getDate());
+          if(viewYear===sd[0]&&viewMonth===sd[1]&&d===sd[2]) cls+=' tool-datepicker__day--selected';
+        }
+      }
+      cells+='<button type="button" class="'+cls+'" data-day="'+d+'">'+d+'</button>';
+    }
+    grid.innerHTML=cells;
+    var btns=grid.querySelectorAll('.tool-datepicker__day[data-day]');
+    for(var b=0;b<btns.length;b++){
+      btns[b].addEventListener('click',function(){
+        var day=parseInt(this.getAttribute('data-day'),10);
+        if(calendar==='gregorian') internalDate=new Date(viewYear,viewMonth-1,day);
+        else{var g=toGregorian(viewYear,viewMonth,day);internalDate=new Date(g[0],g[1]-1,g[2]);}
+        updateInput();
+        closePopup();
+      });
+    }
+  }
+  function openPopup(){
+    isOpen=true;popup.style.display='';
+    if(internalDate){
+      if(calendar==='gregorian'){viewYear=internalDate.getFullYear();viewMonth=internalDate.getMonth()+1;}
+      else{var j=toJalali(internalDate.getFullYear(),internalDate.getMonth()+1,internalDate.getDate());viewYear=j[0];viewMonth=j[1];}
+    }else{
+      var now=new Date();
+      if(calendar==='gregorian'){viewYear=now.getFullYear();viewMonth=now.getMonth()+1;}
+      else{var j=toJalali(now.getFullYear(),now.getMonth()+1,now.getDate());viewYear=j[0];viewMonth=j[1];}
+    }
+    renderCalendar();
+  }
+  function closePopup(){isOpen=false;popup.style.display='none';}
+  function navigate(delta){viewMonth+=delta;if(viewMonth<1){viewMonth=12;viewYear--;}if(viewMonth>12){viewMonth=1;viewYear++;}renderCalendar();}
+
+  toggle.addEventListener('click',function(e){e.stopPropagation();if(isOpen)closePopup();else openPopup();});
+  input.addEventListener('click',function(){if(isOpen)closePopup();else openPopup();});
+  prevBtn.addEventListener('click',function(e){e.stopPropagation();navigate(-1);});
+  nextBtn.addEventListener('click',function(e){e.stopPropagation();navigate(1);});
+  document.addEventListener('click',function(e){if(isOpen&&!wrapper.contains(e.target))closePopup();});
+  window.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)closePopup();});
+
+  function setCalendarMode(mode){
+    calendar=mode;
+    wrapper.setAttribute('data-calendar',mode);
+    if(isOpen){
+      if(internalDate){
+        if(mode==='gregorian'){viewYear=internalDate.getFullYear();viewMonth=internalDate.getMonth()+1;}
+        else{var j=toJalali(internalDate.getFullYear(),internalDate.getMonth()+1,internalDate.getDate());viewYear=j[0];viewMonth=j[1];}
+      }else{
+        var now=new Date();
+        if(mode==='gregorian'){viewYear=now.getFullYear();viewMonth=now.getMonth()+1;}
+        else{var j=toJalali(now.getFullYear(),now.getMonth()+1,now.getDate());viewYear=j[0];viewMonth=j[1];}
+      }
+      renderCalendar();
+    }
+    updateInput();
+  }
+  function setDate(iso){
+    if(iso){var p=iso.split('-');if(p.length===3){internalDate=new Date(+p[0],+p[1]-1,+p[2]);updateInput();}}
+    else{internalDate=null;input.value='';}
+  }
+  function getDateValue(){
+    if(!internalDate) return '';
+    var y=internalDate.getFullYear(),m=String(internalDate.getMonth()+1).padStart(2,'0'),d=String(internalDate.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+d;
+  }
+
+  window.__belbooreDatePickers = window.__belbooreDatePickers||{};
+  window.__belbooreDatePickers[id] = {setCalendarMode:setCalendarMode, setDate:setDate, getDateValue:getDateValue, getDate:function(){return internalDate;}};
+})();
+</script>

@@ -1,0 +1,173 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import Checkbox from '../ui/Checkbox.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.randomNumber.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="rng-tool" dir={dir}
+    data-empty={t['tools.randomNumber.empty']}
+    data-invalid-range={t['tools.randomNumber.invalidRange']}
+    data-invalid-count={t['tools.randomNumber.invalidCount']}
+    data-range-exceeded={t['tools.randomNumber.rangeExceeded']}
+  >
+    <div class="rng-tool__grid">
+      <div class="tool-field">
+        <label class="tool-field__label" for="rng-min">{t['tools.randomNumber.minimum']}</label>
+        <input id="rng-min" class="tool-input tool-input--mono" type="text" inputmode="decimal" value="1" autocomplete="off" />
+      </div>
+      <div class="tool-field">
+        <label class="tool-field__label" for="rng-max">{t['tools.randomNumber.maximum']}</label>
+        <input id="rng-max" class="tool-input tool-input--mono" type="text" inputmode="decimal" value="100" autocomplete="off" />
+      </div>
+      <div class="tool-field">
+        <label class="tool-field__label" for="rng-count">{t['tools.randomNumber.count']}</label>
+        <input id="rng-count" class="tool-input tool-input--mono" type="text" inputmode="numeric" value="5" autocomplete="off" />
+      </div>
+    </div>
+
+    <div class="tool-toolbar">
+      <div class="tool-field" style="flex: 0 0 auto;">
+        <label class="tool-field__label">{t['tools.randomNumber.integer']} / {t['tools.randomNumber.decimal']}</label>
+        <div class="rng-tool__type-toggle">
+          <button id="rng-type-int" type="button" class="tool-btn tool-btn--primary">{t['tools.randomNumber.integer']}</button>
+          <button id="rng-type-dec" type="button" class="tool-btn">{t['tools.randomNumber.decimal']}</button>
+        </div>
+      </div>
+      <div class="tool-field" id="rng-precision-field" style="flex: 0 0 auto; display: none;">
+        <label class="tool-field__label" for="rng-precision">{t['tools.randomNumber.precision']}</label>
+        <input id="rng-precision" class="tool-input" type="text" inputmode="numeric" value="2" style="width: 70px;" autocomplete="off" />
+      </div>
+      <Checkbox id="rng-allow-dupes">{t['tools.randomNumber.allowDuplicates']}</Checkbox>
+    </div>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="rng-generate">{t['tools.randomNumber.generate']}</ToolActionButton>
+    </div>
+
+    <div id="rng-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div id="rng-output" class="tool-output tool-output--empty rng-tool__output" role="status" aria-live="polite">
+      {t['tools.randomNumber.empty']}
+    </div>
+
+    <div class="tool-toolbar">
+      <Button id="rng-copy" variant="secondary">{t['tools.randomNumber.copyAll']}</Button>
+    </div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.randomNumber.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.rng-tool');
+  var minInput = document.getElementById('rng-min');
+  var maxInput = document.getElementById('rng-max');
+  var countInput = document.getElementById('rng-count');
+  var precisionInput = document.getElementById('rng-precision');
+  var precisionField = document.getElementById('rng-precision-field');
+  var typeInt = document.getElementById('rng-type-int');
+  var typeDec = document.getElementById('rng-type-dec');
+  var allowDupes = document.getElementById('rng-allow-dupes');
+  var output = document.getElementById('rng-output');
+  var errorDiv = document.getElementById('rng-error');
+  var generateBtn = document.getElementById('rng-generate');
+  var copyBtn = document.getElementById('rng-copy');
+
+  var isDecimal = false;
+
+  function setError(msg){if(!errorDiv)return;window.__belbooreTools.setErrorBox(errorDiv,msg);}
+  function clearError(){if(!errorDiv)return;window.__belbooreTools.clearErrorBox(errorDiv);}
+
+  function getNum(id){var el=document.getElementById(id);if(!el)return NaN;return parseFloat(el.value.replace(/[^0-9.-]/g,''));}
+  function getInt(id){var el=document.getElementById(id);if(!el)return NaN;return parseInt(el.value.replace(/[^0-9]/g,''),10);}
+
+  function setActiveType(dec){
+    isDecimal=dec;
+    if(typeInt){typeInt.classList.toggle('tool-btn--primary',!dec);typeInt.classList.toggle('tool-btn--ghost',dec);}
+    if(typeDec){typeDec.classList.toggle('tool-btn--primary',dec);typeDec.classList.toggle('tool-btn--ghost',!dec);}
+    if(precisionField) precisionField.style.display=dec?'':'none';
+  }
+
+  typeInt.addEventListener('click',function(){setActiveType(false);});
+  typeDec.addEventListener('click',function(){setActiveType(true);});
+
+  function generateRandom(){
+    if(!root||!output||!precisionInput) return;
+    var min=getNum('rng-min');
+    var max=getNum('rng-max');
+    var count=getInt('rng-count');
+    var precision=parseInt(precisionInput.value.replace(/[^0-9]/g,''),10);
+
+    if(isNaN(count)||count<1){setError(root.getAttribute('data-invalid-count')||'Count must be a positive number');return;}
+    if(isNaN(min)||isNaN(max)||min>max){setError(root.getAttribute('data-invalid-range')||'Minimum must be less than or equal to maximum');return;}
+    if(isDecimal&&(isNaN(precision)||precision<1)){setError('Precision must be at least 1');return;}
+
+    var range=max-min;
+    if(!isDecimal&&!allowDupes.checked&&count>(range+1)){setError(root.getAttribute('data-range-exceeded')||'Count exceeds available unique integers');return;}
+
+    clearError();
+    var results=[];
+    var used=new Set();
+
+    for(var i=0;i<count;i++){
+      var val;
+      var attempts=0;
+      var maxAttempts=count*10;
+      do{
+        var arr=new Uint32Array(1);
+        crypto.getRandomValues(arr);
+        if(isDecimal){val=min+(arr[0]/4294967296)*range;val=parseFloat(val.toFixed(precision));}
+        else val=min+(arr[0]%(range+1));
+        attempts++;
+        if(attempts>maxAttempts) break;
+      }while(!allowDupes.checked&&used.has(val)&&!isDecimal);
+
+      if(!isDecimal) used.add(val);
+      results.push(String(val));
+    }
+
+    output.textContent=results.join('\n');
+    output.classList.remove('tool-output--empty');
+  }
+
+  generateBtn.addEventListener('click',generateRandom);
+  countInput.addEventListener('keydown',function(e){if(e.key==='Enter')generateRandom();});
+
+  copyBtn.addEventListener('click',function(){
+    if(!output) return;
+    var text=output.textContent||'';
+    if(!text||output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text,copyBtn,1500);
+  });
+
+  setActiveType(false);
+</script>
+
+<style>
+  .rng-tool{display:flex;flex-direction:column;gap:var(--space-5);}
+  .rng-tool__grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
+  .rng-tool__type-toggle{display:flex;gap:var(--space-1);}
+  .rng-tool__output{min-height:140px;white-space:pre-wrap;word-break:break-word;font-family:var(--font-mono);direction:ltr;text-align:left;}
+  @media(max-width:640px){.rng-tool__grid{grid-template-columns:1fr;}}
+</style>
