@@ -1,0 +1,199 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Device Information',
+    hint: 'View browser, screen, navigator, capabilities, and locale information. Click Refresh to update viewport and time values.',
+    refresh: 'Refresh',
+    copyAll: 'Copy All as JSON',
+    note: 'All processing happens in your browser. No data is sent anywhere. WebGL vendor/renderer may not be available in some browsers due to fingerprinting protections.',
+    copied: 'Copied!',
+    sectionScreen: 'Screen',
+    sectionNavigator: 'Navigator',
+    sectionCapabilities: 'Browser Capabilities',
+    sectionTime: 'Time & Locale',
+    sectionWebgl: 'WebGL',
+  },
+  fa: {
+    title: 'اطلاعات دستگاه',
+    hint: 'اطلاعات مرورگر، صفحه، راهبر، قابلیت‌ها و locale را مشاهده کنید. برای به‌روزرسانی مقادیر viewport و زمان روی Refresh کلیک کنید.',
+    refresh: 'به‌روزرسانی',
+    copyAll: 'کپی همه به صورت JSON',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود. داده‌ای ارسال نمی‌شود. فروشنده/رندرکننده WebGL ممکن است در برخی مرورگرها به دلیل محافظت از اثرانگشت در دسترس نباشد.',
+    copied: 'کپی شد!',
+    sectionScreen: 'صفحه',
+    sectionNavigator: 'راهبر',
+    sectionCapabilities: 'قابلیت‌های مرورگر',
+    sectionTime: 'زمان و locale',
+    sectionWebgl: 'WebGL',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="di-tool" dir={dir} data-copied={copy.copied}>
+    <p class="di-tool__hint">{copy.hint}</p>
+
+    <div id="di-output" class="di-tool__output">
+      <div class="di-tool__loading" id="di-loading">{copy.sectionScreen}...</div>
+    </div>
+
+    <div class="di-tool__actions">
+      <ToolActionButton id="di-refresh">{copy.refresh}</ToolActionButton>
+      <Button id="di-copy" variant="outline">{copy.copyAll}</Button>
+    </div>
+    <div class="tool-note di-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const output = document.getElementById('di-output') as HTMLDivElement | null;
+  const refreshBtn = document.getElementById('di-refresh') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('di-copy') as HTMLButtonElement | null;
+  const section = document.querySelector('.di-tool') as HTMLElement | null;
+  const COPIED = section?.dataset.copied || '';
+
+  const KB = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+  const render = () => {
+    if (!output) return;
+
+    const data: Record<string, Record<string, unknown>> = {};
+
+    // Screen
+    const screen: Record<string, unknown> = {};
+    screen['Width'] = screen.width;
+    screen['Height'] = screen.height;
+    screen['Available Width'] = screen.availWidth;
+    screen['Available Height'] = screen.availHeight;
+    screen['Color Depth'] = screen.colorDepth + ' bit';
+    screen['Pixel Depth'] = screen.pixelDepth + ' bit';
+    screen['Device Pixel Ratio'] = window.devicePixelRatio;
+    screen['Viewport Width'] = window.innerWidth;
+    screen['Viewport Height'] = window.innerHeight;
+    if (screen.orientation?.type) screen['Orientation'] = screen.orientation.type;
+    data['Screen'] = screen;
+
+    // Navigator
+    const nav: Record<string, unknown> = {};
+    nav['User Agent'] = navigator.userAgent;
+    nav['Platform'] = (navigator as any).platform || 'Unknown';
+    nav['Language'] = navigator.language;
+    nav['Languages'] = navigator.languages?.join(', ') || 'Unknown';
+    nav['Cookies Enabled'] = navigator.cookieEnabled;
+    nav['Online'] = navigator.onLine;
+    nav['Hardware Concurrency'] = navigator.hardwareConcurrency || 'Unknown';
+    nav['Device Memory'] = (navigator as any).deviceMemory ? (navigator as any).deviceMemory + ' GB' : 'Unknown';
+    nav['Max Touch Points'] = navigator.maxTouchPoints;
+    if ((navigator as any).doNotTrack) nav['Do Not Track'] = (navigator as any).doNotTrack;
+    data['Navigator'] = nav;
+
+    // Capabilities
+    const caps: Record<string, unknown> = {};
+    caps['Local Storage'] = typeof localStorage !== 'undefined' ? '✅ Available' : '❌ Unavailable';
+    caps['Session Storage'] = typeof sessionStorage !== 'undefined' ? '✅ Available' : '❌ Unavailable';
+    caps['Clipboard API'] = typeof navigator.clipboard?.writeText === 'function' ? '✅ Available' : '❌ Unavailable';
+    caps['Geolocation API'] = typeof navigator.geolocation?.getCurrentPosition === 'function' ? '✅ Available' : '❌ Unavailable';
+    caps['Service Worker'] = 'serviceWorker' in navigator ? '✅ Available' : '❌ Unavailable';
+    caps['Web Share API'] = typeof navigator.share === 'function' ? '✅ Available' : '❌ Unavailable';
+    data['Browser Capabilities'] = caps;
+
+    // Time & Locale
+    const time: Record<string, unknown> = {};
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    time['Time Zone'] = tz;
+    time['Locale'] = Intl.DateTimeFormat().resolvedOptions().locale;
+    time['Current Time'] = new Date().toLocaleString();
+    time['UTC Offset'] = 'UTC' + (new Date().getTimezoneOffset() <= 0 ? '+' : '') + (-new Date().getTimezoneOffset() / 60);
+    data['Time & Locale'] = time;
+
+    // WebGL
+    const gl: Record<string, unknown> = {};
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (ctx) {
+        gl['WebGL Support'] = '✅ Supported';
+        const ext = ctx.getExtension('WEBGL_debug_renderer_info');
+        if (ext) {
+          gl['Vendor'] = ctx.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+          gl['Renderer'] = ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+        } else {
+          gl['Vendor/Renderer'] = 'Unavailable (fingerprinting protection)';
+        }
+      } else {
+        gl['WebGL Support'] = '❌ Not supported';
+      }
+    } catch { gl['WebGL Support'] = '❌ Error detecting WebGL'; }
+    data['WebGL'] = gl;
+
+    // Build HTML
+    const sectionLabels: Record<string, string> = {
+      'Screen': section?.querySelector('[data-i18n-screen]')?.textContent || 'Screen',
+      'Navigator': section?.querySelector('[data-i18n-navigator]')?.textContent || 'Navigator',
+      'Browser Capabilities': section?.querySelector('[data-i18n-capabilities]')?.textContent || 'Browser Capabilities',
+      'Time & Locale': section?.querySelector('[data-i18n-time]')?.textContent || 'Time & Locale',
+      'WebGL': section?.querySelector('[data-i18n-webgl]')?.textContent || 'WebGL',
+    };
+
+    let html = '';
+    for (const [group, fields] of Object.entries(data)) {
+      html += `<div class="di-tool__group"><h3 class="di-tool__group-title">${sectionLabels[group] || group}</h3><table class="di-tool__table"><tbody>`;
+      for (const [key, val] of Object.entries(fields)) {
+        const display = String(val ?? 'Unknown').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        html += `<tr><td class="di-tool__key">${key}</td><td class="di-tool__val"><code>${display}</code></td></tr>`;
+      }
+      html += '</tbody></table></div>';
+    }
+
+    output.innerHTML = html;
+  };
+
+  render();
+  refreshBtn?.addEventListener('click', render);
+  copyBtn?.addEventListener('click', () => {
+    const text = output?.textContent || '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn!.classList.add('is-copied');
+      const orig = copyBtn!.innerHTML;
+      copyBtn!.innerHTML = COPIED;
+      setTimeout(() => { copyBtn!.innerHTML = orig; copyBtn!.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+</script>
+
+<style>
+  .di-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .di-tool__hint { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+  .di-tool__output { display: flex; flex-direction: column; gap: var(--space-4); }
+  .di-tool__loading { color: var(--text-muted); font-style: italic; }
+  .di-tool__group { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3) var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-tertiary); }
+  .di-tool__group-title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-tech-blue); }
+  .di-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .di-tool__table td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--border-subtle); text-align: start; }
+  .di-tool__key { color: var(--text-secondary); font-weight: var(--weight-medium); white-space: nowrap; vertical-align: top; }
+  .di-tool__val { word-break: break-all; }
+  .di-tool__val code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); }
+  .di-tool__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+  .di-tool .tool-action-button { min-width: 148px; }
+  .di-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .di-tool .tool-action-button { width: 100%; min-width: 0; } .di-tool__actions { flex-direction: column; align-items: stretch; } }
+</style>

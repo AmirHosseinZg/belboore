@@ -1,0 +1,245 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'HTTP Status Codes',
+    hint: 'Search HTTP status codes by code, phrase, class, or description. Filter by status class.',
+    search: 'Search status codes...',
+    all: 'All',
+    filter1xx: '1xx Informational',
+    filter2xx: '2xx Success',
+    filter3xx: '3xx Redirection',
+    filter4xx: '4xx Client Error',
+    filter5xx: '5xx Server Error',
+    empty: 'No matching status codes found.',
+    emptyAll: 'Start typing to search HTTP status codes.',
+    note: 'All data is stored locally. No network requests are made.',
+    code: 'Code',
+    phrase: 'Reason Phrase',
+    category: 'Class',
+    description: 'Description',
+    tableCaption: 'HTTP Status Code reference table',
+  },
+  fa: {
+    title: 'کدهای وضعیت HTTP',
+    hint: 'جستجوی کدهای وضعیت HTTP بر اساس کد، عبارت، دسته یا توضیحات. فیلتر بر اساس دسته وضعیت.',
+    search: 'جستجوی کدهای وضعیت...',
+    all: 'همه',
+    filter1xx: '۱xx اطلاعاتی',
+    filter2xx: '۲xx موفقیت',
+    filter3xx: '۳xx تغییر مسیر',
+    filter4xx: '۴xx خطای مشتری',
+    filter5xx: '۵xx خطای سرور',
+    empty: 'کد وضعیت منطبقی یافت نشد.',
+    emptyAll: 'تایپ را شروع کنید تا کدهای وضعیت HTTP جستجو شود.',
+    note: 'تمام داده‌ها به صورت محلی ذخیره شده است. هیچ درخواست شبکه‌ای انجام نمی‌شود.',
+    code: 'کد',
+    phrase: 'عبارت',
+    category: 'دسته',
+    description: 'توضیحات',
+    tableCaption: 'جدول مرجع کدهای وضعیت HTTP',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="hc-tool" dir={dir} data-empty={copy.empty} data-emptyall={copy.emptyAll}>
+    <p class="hc-tool__hint">{copy.hint}</p>
+
+    <div class="hc-tool__filters">
+      <div class="hc-tool__search">
+        <Input
+          id="hc-search"
+          label={copy.search}
+          placeholder="e.g. 404, redirect, too many"
+          inputClassName="hc-tool__search-input"
+          spellcheck={false}
+        />
+      </div>
+      <div class="hc-tool__class-filters" role="group" aria-label="Status class filter">
+        <button class="hc-tool__class-btn is-active" data-class="all" type="button">{copy.all}</button>
+        <button class="hc-tool__class-btn" data-class="1xx" type="button">{copy.filter1xx}</button>
+        <button class="hc-tool__class-btn" data-class="2xx" type="button">{copy.filter2xx}</button>
+        <button class="hc-tool__class-btn" data-class="3xx" type="button">{copy.filter3xx}</button>
+        <button class="hc-tool__class-btn" data-class="4xx" type="button">{copy.filter4xx}</button>
+        <button class="hc-tool__class-btn" data-class="5xx" type="button">{copy.filter5xx}</button>
+      </div>
+    </div>
+
+    <div id="hc-count" class="hc-tool__count" role="status"></div>
+    <div class="hc-tool__table-wrap">
+      <table class="hc-tool__table" id="hc-table" role="table" aria-label={copy.tableCaption}>
+        <thead>
+          <tr>
+            <th>{copy.code}</th>
+            <th>{copy.phrase}</th>
+            <th>{copy.category}</th>
+            <th>{copy.description}</th>
+          </tr>
+        </thead>
+        <tbody id="hc-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="tool-note hc-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const searchInput = document.getElementById('hc-search') as HTMLInputElement | null;
+  const tbody = document.getElementById('hc-tbody') as HTMLElement | null;
+  const countEl = document.getElementById('hc-count') as HTMLElement | null;
+  const section = document.querySelector('.hc-tool') as HTMLElement | null;
+  const classBtns = document.querySelectorAll('.hc-tool__class-btn');
+  const EMPTY = section?.dataset.empty || '';
+  const EMPTY_ALL = section?.dataset.emptyall || '';
+
+  const STATUS_DATA: { code: number; phrase: string; category: string; description: string }[] = [
+    { code: 100, phrase: 'Continue', category: '1xx Informational', description: 'Server has received request headers; client should continue.' },
+    { code: 101, phrase: 'Switching Protocols', category: '1xx Informational', description: 'Server agrees to switch protocols per Upgrade header.' },
+    { code: 102, phrase: 'Processing', category: '1xx Informational', description: 'Server has received and is processing (WebDAV).' },
+    { code: 103, phrase: 'Early Hints', category: '1xx Informational', description: 'Server sends preliminary headers before final response.' },
+    { code: 200, phrase: 'OK', category: '2xx Success', description: 'Request succeeded. Response contains the result.' },
+    { code: 201, phrase: 'Created', category: '2xx Success', description: 'Request succeeded; a new resource was created.' },
+    { code: 202, phrase: 'Accepted', category: '2xx Success', description: 'Request accepted for processing, but not yet completed.' },
+    { code: 204, phrase: 'No Content', category: '2xx Success', description: 'Request succeeded; no response body (e.g., DELETE).' },
+    { code: 206, phrase: 'Partial Content', category: '2xx Success', description: 'Partial GET request fulfilled (range request).' },
+    { code: 300, phrase: 'Multiple Choices', category: '3xx Redirection', description: 'Multiple representations available; client should choose.' },
+    { code: 301, phrase: 'Moved Permanently', category: '3xx Redirection', description: 'Resource moved permanently; update links to new URL.' },
+    { code: 302, phrase: 'Found', category: '3xx Redirection', description: 'Resource temporarily located at a different URI.' },
+    { code: 303, phrase: 'See Other', category: '3xx Redirection', description: 'Use GET at another URI to retrieve the resource.' },
+    { code: 304, phrase: 'Not Modified', category: '3xx Redirection', description: 'Resource not modified since last request (caching).' },
+    { code: 307, phrase: 'Temporary Redirect', category: '3xx Redirection', description: 'Repeat request at another URI; method stays same.' },
+    { code: 308, phrase: 'Permanent Redirect', category: '3xx Redirection', description: 'Resource moved permanently; method and body stay same.' },
+    { code: 400, phrase: 'Bad Request', category: '4xx Client Error', description: 'Server cannot process due to malformed request.' },
+    { code: 401, phrase: 'Unauthorized', category: '4xx Client Error', description: 'Authentication required or failed.' },
+    { code: 403, phrase: 'Forbidden', category: '4xx Client Error', description: 'Server understood but refuses to authorize.' },
+    { code: 404, phrase: 'Not Found', category: '4xx Client Error', description: 'Resource not found on the server.' },
+    { code: 405, phrase: 'Method Not Allowed', category: '4xx Client Error', description: 'HTTP method not supported for this endpoint.' },
+    { code: 406, phrase: 'Not Acceptable', category: '4xx Client Error', description: 'Resource cannot generate acceptable media types.' },
+    { code: 408, phrase: 'Request Timeout', category: '4xx Client Error', description: 'Server timed out waiting for the request.' },
+    { code: 409, phrase: 'Conflict', category: '4xx Client Error', description: 'Request conflicts with current server state.' },
+    { code: 410, phrase: 'Gone', category: '4xx Client Error', description: 'Resource permanently gone; no forwarding address.' },
+    { code: 411, phrase: 'Length Required', category: '4xx Client Error', description: 'Content-Length header is required.' },
+    { code: 413, phrase: 'Payload Too Large', category: '4xx Client Error', description: 'Request body is larger than server limit.' },
+    { code: 415, phrase: 'Unsupported Media Type', category: '4xx Client Error', description: 'Media type in request is not supported.' },
+    { code: 418, phrase: "I'm a teapot", category: '4xx Client Error', description: 'HTCPCP/1.0 — server refuses to brew coffee (RFC 2324).' },
+    { code: 422, phrase: 'Unprocessable Content', category: '4xx Client Error', description: 'Request well-formed but semantically invalid.' },
+    { code: 429, phrase: 'Too Many Requests', category: '4xx Client Error', description: 'Rate limit exceeded; back off and retry later.' },
+    { code: 431, phrase: 'Request Header Fields Too Large', category: '4xx Client Error', description: 'Headers exceed server limit.' },
+    { code: 451, phrase: 'Unavailable For Legal Reasons', category: '4xx Client Error', description: 'Resource blocked due to legal demands.' },
+    { code: 500, phrase: 'Internal Server Error', category: '5xx Server Error', description: 'Generic server error — something went wrong.' },
+    { code: 501, phrase: 'Not Implemented', category: '5xx Server Error', description: 'Server does not support the requested functionality.' },
+    { code: 502, phrase: 'Bad Gateway', category: '5xx Server Error', description: 'Invalid response from upstream server.' },
+    { code: 503, phrase: 'Service Unavailable', category: '5xx Server Error', description: 'Server temporarily unavailable (overloaded or down).' },
+    { code: 504, phrase: 'Gateway Timeout', category: '5xx Server Error', description: 'Upstream server did not respond in time.' },
+    { code: 505, phrase: 'HTTP Version Not Supported', category: '5xx Server Error', description: 'HTTP version used in request not supported.' },
+    { code: 511, phrase: 'Network Authentication Required', category: '5xx Server Error', description: 'Network access requires authentication (captive portal).' },
+  ];
+
+  let activeClass = 'all';
+  let searchQuery = '';
+
+  function getFilteredData(): typeof STATUS_DATA {
+    let data = STATUS_DATA;
+
+    if (activeClass !== 'all') {
+      if (activeClass === '1xx') data = data.filter(e => e.code >= 100 && e.code < 200);
+      else if (activeClass === '2xx') data = data.filter(e => e.code >= 200 && e.code < 300);
+      else if (activeClass === '3xx') data = data.filter(e => e.code >= 300 && e.code < 400);
+      else if (activeClass === '4xx') data = data.filter(e => e.code >= 400 && e.code < 500);
+      else if (activeClass === '5xx') data = data.filter(e => e.code >= 500 && e.code < 600);
+    }
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      data = data.filter(e =>
+        String(e.code).includes(q) ||
+        e.phrase.toLowerCase().includes(q) ||
+        e.category.toLowerCase().includes(q) ||
+        e.description.toLowerCase().includes(q)
+      );
+    }
+
+    return data;
+  }
+
+  function renderTable() {
+    if (!tbody || !countEl) return;
+    const results = getFilteredData();
+
+    if (searchQuery && results.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="hc-tool__empty-row">${EMPTY}</td></tr>`;
+      countEl.textContent = '0 results';
+      return;
+    }
+    if (!searchQuery && activeClass === 'all') {
+      tbody.innerHTML = `<tr><td colspan="4" class="hc-tool__empty-row">${EMPTY_ALL}</td></tr>`;
+      countEl.textContent = '';
+      return;
+    }
+
+    countEl.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+    tbody.innerHTML = results.map(e =>
+      `<tr><td class="hc-tool__code"><code>${e.code}</code></td><td class="hc-tool__phrase">${e.phrase}</td><td class="hc-tool__cat">${e.category}</td><td class="hc-tool__desc">${e.description}</td></tr>`
+    ).join('');
+  }
+
+  searchInput?.addEventListener('input', () => {
+    searchQuery = searchInput.value;
+    renderTable();
+  });
+
+  classBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      classBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      activeClass = (btn as HTMLElement).dataset.class || 'all';
+      renderTable();
+    });
+  });
+
+  renderTable();
+</script>
+
+<style>
+  .hc-tool { display: flex; flex-direction: column; gap: var(--space-4); }
+  .hc-tool__hint { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+  .hc-tool__filters { display: flex; flex-direction: column; gap: var(--space-3); }
+  .hc-tool__search { max-width: 480px; }
+  .hc-tool__search-input { font-family: var(--font-mono); }
+  .hc-tool__class-filters { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+  .hc-tool__class-btn { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: var(--space-1) var(--space-3); font: inherit; font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--text-tertiary); background: var(--surface-tertiary); cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .hc-tool__class-btn:hover { border-color: var(--color-tech-blue); color: var(--color-tech-blue); }
+  .hc-tool__class-btn.is-active { color: var(--color-tech-blue); background: var(--surface-primary); border-color: var(--color-tech-blue); box-shadow: var(--shadow-sm); }
+  .hc-tool__class-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .hc-tool__count { font-size: var(--text-xs); color: var(--text-muted); }
+  .hc-tool__table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .hc-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); min-width: 550px; }
+  .hc-tool__table th { padding: var(--space-2) var(--space-3); background: var(--surface-tertiary); color: var(--text-tertiary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; text-align: start; border-bottom: 2px solid var(--border-subtle); }
+  .hc-tool__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); }
+  .hc-tool__empty-row { text-align: center; color: var(--text-muted); font-style: italic; padding: var(--space-6) var(--space-3); }
+  .hc-tool__code { width: 60px; }
+  .hc-tool__code code { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-tech-blue); font-weight: var(--weight-semibold); }
+  .hc-tool__phrase { font-weight: var(--weight-medium); color: var(--text-primary); white-space: nowrap; }
+  .hc-tool__cat { color: var(--text-secondary); white-space: nowrap; }
+  .hc-tool__desc { color: var(--text-primary); }
+  .hc-tool__note { margin-top: var(--space-2); }
+  @media (max-width: 640px) { .hc-tool__table { font-size: var(--text-xs); } .hc-tool__search { max-width: 100%; } .hc-tool__class-filters { gap: var(--space-1); } }
+</style>

@@ -39,6 +39,11 @@ import SqlPrettify from '../../../components/tools/SqlPrettify.astro';
 import XmlFormatter from '../../../components/tools/XmlFormatter.astro';
 import YamlViewer from '../../../components/tools/YamlViewer.astro';
 import RegexMemo from '../../../components/tools/RegexMemo.astro';
+import KeycodeInfo from '../../../components/tools/KeycodeInfo.astro';
+import UserAgentParser from '../../../components/tools/UserAgentParser.astro';
+import DeviceInfo from '../../../components/tools/DeviceInfo.astro';
+import MimeTypes from '../../../components/tools/MimeTypes.astro';
+import HttpStatusCodes from '../../../components/tools/HttpStatusCodes.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
 import PasswordGenerator from '../../../components/tools/PasswordGenerator.astro';
 import CaseConverter from '../../../components/tools/CaseConverter.astro';
@@ -147,6 +152,11 @@ const toolComponentMap: Record<string, any> = {
   'xml-formatter': XmlFormatter,
   'yaml-viewer': YamlViewer,
   'regex-memo': RegexMemo,
+  'keycode-info': KeycodeInfo,
+  'user-agent-parser': UserAgentParser,
+  'device-information': DeviceInfo,
+  'mime-types': MimeTypes,
+  'http-status-codes': HttpStatusCodes,
 };
 
 const ToolComponent = toolComponentMap[slug];

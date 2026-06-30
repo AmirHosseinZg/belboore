@@ -1,0 +1,209 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Keycode Info',
+    hint: 'Focus the area below and press any key to see keyboard event properties.',
+    captureLabel: 'Focus this area and press any key',
+    reset: 'Reset',
+    copyJson: 'Copy JSON',
+    property: 'Property',
+    value: 'Value',
+    note: 'All processing happens in your browser. No data is sent anywhere.',
+    copied: 'Copied!',
+    noKey: 'Waiting for key press...',
+    mainKey: 'Key',
+    mainCode: 'Code',
+    event: 'Keyboard Event',
+    modifiers: 'Modifier Keys',
+  },
+  fa: {
+    title: 'اطلاعات Keycode',
+    hint: 'محل زیر را فوکوس کنید و هر کلیدی را فشار دهید تا مشخصات رویداد صفحه‌کلید را ببینید.',
+    captureLabel: 'این محل را فوکوس کنید و هر کلیدی را فشار دهید',
+    reset: 'بازنشانی',
+    copyJson: 'کپی JSON',
+    property: 'ویژگی',
+    value: 'مقدار',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود. داده‌ای ارسال نمی‌شود.',
+    copied: 'کپی شد!',
+    noKey: 'در انتظار فشار کلید...',
+    mainKey: 'کلید',
+    mainCode: 'کد',
+    event: 'رویداد صفحه‌کلید',
+    modifiers: 'کلیدهای اصلاح‌کننده',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="kc-tool" dir={dir} data-copied={copy.copied} data-nokey={copy.noKey}>
+    <div class="kc-tool__hint">{copy.hint}</div>
+
+    <div class="kc-tool__capture-area" id="kc-capture" tabindex="0" role="application" aria-label={copy.captureLabel}>
+      <span id="kc-placeholder" class="kc-tool__placeholder">{copy.captureLabel}</span>
+      <div id="kc-display" class="kc-tool__display" style="display:none;">
+        <div class="kc-tool__main-key" id="kc-main-key">—</div>
+        <div class="kc-tool__main-code" id="kc-main-code">—</div>
+      </div>
+    </div>
+
+    <div id="kc-details" class="kc-tool__details" style="display:none;">
+      <div class="kc-tool__section" id="kc-event-section">
+        <h3 class="kc-tool__section-title">{copy.event}</h3>
+        <div id="kc-event-table" class="kc-tool__table"></div>
+      </div>
+      <div class="kc-tool__section" id="kc-modifiers-section">
+        <h3 class="kc-tool__section-title">{copy.modifiers}</h3>
+        <div id="kc-modifiers-table" class="kc-tool__table"></div>
+      </div>
+    </div>
+
+    <div class="kc-tool__actions">
+      <Button id="kc-copy" variant="outline">{copy.copyJson}</Button>
+      <Button id="kc-reset" variant="danger">{copy.reset}</Button>
+    </div>
+
+    <div class="tool-note kc-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const capture = document.getElementById('kc-capture') as HTMLElement | null;
+  const display = document.getElementById('kc-display') as HTMLElement | null;
+  const placeholder = document.getElementById('kc-placeholder') as HTMLElement | null;
+  const mainKey = document.getElementById('kc-main-key') as HTMLElement | null;
+  const mainCode = document.getElementById('kc-main-code') as HTMLElement | null;
+  const details = document.getElementById('kc-details') as HTMLElement | null;
+  const eventTable = document.getElementById('kc-event-table') as HTMLElement | null;
+  const modTable = document.getElementById('kc-modifiers-table') as HTMLElement | null;
+  const copyBtn = document.getElementById('kc-copy') as HTMLButtonElement | null;
+  const resetBtn = document.getElementById('kc-reset') as HTMLButtonElement | null;
+  const section = document.querySelector('.kc-tool') as HTMLElement | null;
+  const COPIED = section?.dataset.copied || '';
+
+  let lastEvent: KeyboardEvent | null = null;
+
+  function renderKeyInfo(e: KeyboardEvent) {
+    lastEvent = e;
+    if (placeholder) placeholder.style.display = 'none';
+    if (display) display.style.display = '';
+    if (details) details.style.display = '';
+    if (mainKey) mainKey.textContent = e.key === ' ' ? 'Space' : e.key;
+    if (mainCode) mainCode.textContent = e.code;
+
+    const eventProps = [
+      ['event.key', e.key === ' ' ? 'Space' : e.key],
+      ['event.code', e.code],
+      ['event.keyCode', String(e.keyCode)],
+      ['event.which', String(e.which)],
+      ['event.location', String(e.location) + ' (' + ['Standard', 'Left', 'Right', 'Numpad'][e.location] + ')'],
+      ['event.repeat', String(e.repeat)],
+    ];
+
+    if (eventTable) {
+      eventTable.innerHTML = '<table class="kc-tool__table-inner"><tbody>'
+        + eventProps.map(([prop, val]) =>
+          `<tr><td class="kc-tool__prop"><code>${prop}</code></td><td class="kc-tool__val"><code>${val}</code></td></tr>`
+        ).join('')
+        + '</tbody></table>';
+    }
+
+    const modProps = [
+      ['ctrlKey', String(e.ctrlKey)],
+      ['shiftKey', String(e.shiftKey)],
+      ['altKey', String(e.altKey)],
+      ['metaKey', String(e.metaKey)],
+    ];
+
+    if (modTable) {
+      modTable.innerHTML = '<table class="kc-tool__table-inner"><tbody>'
+        + modProps.map(([prop, val]) =>
+          `<tr><td class="kc-tool__prop"><code>${prop}</code></td><td class="kc-tool__val">${val === 'true' ? '✅ Yes' : '—'}</td></tr>`
+        ).join('')
+        + '</tbody></table>';
+    }
+  }
+
+  function resetView() {
+    lastEvent = null;
+    if (placeholder) placeholder.style.display = '';
+    if (display) display.style.display = 'none';
+    if (details) details.style.display = 'none';
+    if (mainKey) mainKey.textContent = '—';
+    if (mainCode) mainCode.textContent = '—';
+    if (eventTable) eventTable.innerHTML = '';
+    if (modTable) modTable.innerHTML = '';
+    if (capture) capture.focus();
+  }
+
+  capture?.addEventListener('keydown', (e: Event) => {
+    const ke = e as KeyboardEvent;
+    e.preventDefault();
+    // Prevent page scrolling for arrow/space keys only within capture
+    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'PageUp', 'PageDown', 'Home', 'End'].includes(ke.code)) {
+      e.preventDefault();
+    }
+    renderKeyInfo(ke);
+  });
+
+  resetBtn?.addEventListener('click', resetView);
+  copyBtn?.addEventListener('click', () => {
+    if (!lastEvent) return;
+    const data: Record<string, unknown> = {
+      key: lastEvent.key,
+      code: lastEvent.code,
+      keyCode: lastEvent.keyCode,
+      which: lastEvent.which,
+      location: lastEvent.location,
+      repeat: lastEvent.repeat,
+      ctrlKey: lastEvent.ctrlKey,
+      shiftKey: lastEvent.shiftKey,
+      altKey: lastEvent.altKey,
+      metaKey: lastEvent.metaKey,
+    };
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
+      const orig = copyBtn!.innerHTML;
+      copyBtn!.innerHTML = COPIED;
+      setTimeout(() => { copyBtn!.innerHTML = orig; }, 1200);
+    }).catch(() => {});
+  });
+</script>
+
+<style>
+  .kc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .kc-tool__hint { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+  .kc-tool__capture-area { display: flex; align-items: center; justify-content: center; min-height: 180px; border: 2px dashed var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-tertiary); cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); text-align: center; padding: var(--space-6); }
+  .kc-tool__capture-area:focus { outline: none; border-color: var(--color-tech-blue); box-shadow: 0 0 0 4px var(--color-tech-blue-subtle); }
+  .kc-tool__placeholder { color: var(--text-muted); font-size: var(--text-base); font-style: italic; }
+  .kc-tool__display { display: flex; flex-direction: column; align-items: center; gap: var(--space-2); }
+  .kc-tool__main-key { font-size: 3rem; font-weight: 700; color: var(--color-tech-blue); line-height: 1.1; font-family: var(--font-mono); }
+  .kc-tool__main-code { font-size: var(--text-lg); color: var(--text-secondary); font-family: var(--font-mono); }
+  .kc-tool__details { display: flex; flex-direction: column; gap: var(--space-4); }
+  .kc-tool__section { display: flex; flex-direction: column; gap: var(--space-2); }
+  .kc-tool__section-title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .kc-tool__table-inner { width: 100%; border-collapse: collapse; }
+  .kc-tool__table-inner td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); font-size: var(--text-sm); }
+  .kc-tool__prop { color: var(--color-tech-blue); font-weight: var(--weight-medium); white-space: nowrap; }
+  .kc-tool__prop code, .kc-tool__val code { font-family: var(--font-mono); font-size: var(--text-sm); }
+  .kc-tool__val { color: var(--text-primary); word-break: break-all; }
+  .kc-tool__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .kc-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .kc-tool__capture-area { min-height: 140px; padding: var(--space-4); } .kc-tool__main-key { font-size: 2rem; } }
+</style>
