@@ -1,0 +1,427 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { Copy, Trash2, FileJson, Download } from '@lucide/astro';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import { JSON_SAMPLE_ARRAY } from './jsonUtils';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'JSON to CSV Converter',
+    inputLabel: 'Input JSON Array',
+    inputHint: 'Paste a JSON array of objects.',
+    placeholder: '[\n  { "id": 1, "name": "Alice" }\n]',
+    outputLabel: 'CSV Output',
+    outputHint: 'Converted CSV output ready to copy or download.',
+    convert: 'Convert to CSV',
+    copy: 'Copy CSV',
+    download: 'Download CSV',
+    clear: 'Clear input',
+    loadExample: 'Load example',
+    empty: 'CSV output will appear here',
+    fixErrors: 'Fix the errors above and try again',
+    notArray: 'Input must be a JSON array of objects. Wrap your object in [ ] brackets.',
+    emptyArray: 'Array is empty. No CSV to generate.',
+    notObject: 'Each array element must be a JSON object.',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+    downloadFile: 'data.csv',
+  },
+  fa: {
+    title: 'تبدیل JSON به CSV',
+    inputLabel: 'ورودی JSON',
+    inputHint: 'یک آرایه JSON از اشیاء را وارد کنید.',
+    placeholder: '[\n  { "id": 1, "name": "علی" }\n]',
+    outputLabel: 'خروجی CSV',
+    outputHint: 'خروجی CSV آماده برای کپی یا دانلود.',
+    convert: 'تبدیل به CSV',
+    copy: 'کپی CSV',
+    download: 'دانلود CSV',
+    clear: 'پاک کردن ورودی',
+    loadExample: 'نمونه',
+    empty: 'خروجی CSV اینجا نمایش داده می‌شود',
+    fixErrors: 'خطاهای بالا را برطرف کنید و دوباره تلاش کنید',
+    notArray: 'ورودی باید یک آرایه JSON از اشیاء باشد.',
+    emptyArray: 'آرایه خالی است. CSV قابل تولید نیست.',
+    notObject: 'هر عنصر آرایه باید یک شیء JSON باشد.',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+    downloadFile: 'data.csv',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="json-csv-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-fix-errors={copy.fixErrors}
+    data-not-array={copy.notArray}
+    data-empty-array={copy.emptyArray}
+    data-not-object={copy.notObject}
+    data-copied={copy.copied}
+    data-download-file={copy.downloadFile}
+  >
+    <div class="json-csv-tool__grid">
+      <div class="json-csv-tool__panel">
+        <div class="json-csv-tool__panel-head">
+          <label class="json-csv-tool__label" for="json-csv-input">{copy.inputLabel}</label>
+          <p class="json-csv-tool__hint">{copy.inputHint}</p>
+        </div>
+        <div class="json-csv-tool__textarea-shell">
+          <TextArea
+            id="json-csv-input"
+            className="json-csv-tool__textarea"
+            placeholder={copy.placeholder}
+            rows={14}
+            spellcheck="false"
+          />
+        </div>
+      </div>
+
+      <div class="json-csv-tool__panel">
+        <div class="json-csv-tool__panel-head">
+          <label class="json-csv-tool__label" for="json-csv-output">{copy.outputLabel}</label>
+          <p class="json-csv-tool__hint">{copy.outputHint}</p>
+        </div>
+        <div class="json-csv-tool__textarea-shell">
+          <textarea
+            id="json-csv-output"
+            class="json-csv-tool__textarea json-csv-tool__textarea--output"
+            rows={14}
+            readonly
+            spellcheck="false"
+            placeholder={copy.empty}
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="json-csv-tool__toolbar">
+      <ToolActionButton id="json-csv-run">
+        {copy.convert}
+      </ToolActionButton>
+      <Button id="json-csv-copy" variant="outline" className="json-csv-tool__icon-btn" aria-label={copy.copy} title={copy.copy}>
+        <Copy size={17} />
+        <span class="json-csv-tool__btn-text">{copy.copy}</span>
+      </Button>
+      <Button id="json-csv-download" variant="secondary" className="json-csv-tool__icon-btn" aria-label={copy.download} title={copy.download}>
+        <Download size={17} />
+        <span class="json-csv-tool__btn-text">{copy.download}</span>
+      </Button>
+      <Button id="json-csv-clear" variant="danger" className="json-csv-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
+        <Trash2 size={17} />
+      </Button>
+      <Button id="json-csv-example" variant="secondary" className="json-csv-tool__icon-btn" aria-label={copy.loadExample} title={copy.loadExample}>
+        <FileJson size={17} />
+        <span class="json-csv-tool__btn-text">{copy.loadExample}</span>
+      </Button>
+    </div>
+
+    <div id="json-csv-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note json-csv-tool__note">
+      {copy.note}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const root = document.querySelector('.json-csv-tool') as HTMLElement | null;
+  const input = document.getElementById('json-csv-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('json-csv-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('json-csv-error') as HTMLDivElement | null;
+  const runButton = document.getElementById('json-csv-run') as HTMLButtonElement | null;
+  const copyButton = document.getElementById('json-csv-copy') as HTMLButtonElement | null;
+  const downloadButton = document.getElementById('json-csv-download') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('json-csv-clear') as HTMLButtonElement | null;
+  const exampleButton = document.getElementById('json-csv-example') as HTMLButtonElement | null;
+
+  const SAMPLE = JSON.stringify([
+    { id: 1, name: "Alice", role: "admin", active: true, email: "alice@example.com" },
+    { id: 2, name: "Bob", role: "editor", active: false, email: "bob@example.com" },
+    { id: 3, name: "Charlie", role: "viewer", active: true, email: "charlie@example.com" }
+  ], null, 2);
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function flattenObject(obj: Record<string, any>, prefix = ''): Record<string, string> {
+    const result: Record<string, string> = {};
+    for (const key of Object.keys(obj)) {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      const value = obj[key];
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        Object.assign(result, flattenObject(value, fullKey));
+      } else if (value === null) {
+        result[fullKey] = 'null';
+      } else if (value === undefined) {
+        result[fullKey] = '';
+      } else if (typeof value === 'string') {
+        result[fullKey] = value;
+      } else if (Array.isArray(value)) {
+        const allPrimitive = value.every(v => v === null || typeof v !== 'object');
+        if (allPrimitive) {
+          result[fullKey] = value.map(v => v === null ? 'null' : String(v)).join(', ');
+        } else {
+          result[fullKey] = JSON.stringify(value);
+        }
+      } else {
+        result[fullKey] = String(value);
+      }
+    }
+    return result;
+  }
+
+  function escapeCsv(val: string): string {
+    if (val.includes('"') || val.includes(',') || val.includes('\n') || val.includes('\r')) {
+      return `"${val.replace(/"/g, '""')}"`;
+    }
+    return val;
+  }
+
+  function runConvert() {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    if (!val) {
+      output.value = '';
+      output.placeholder = getData('empty', 'CSV output will appear here');
+      if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+      return;
+    }
+    try {
+      const data = JSON.parse(val);
+      if (!Array.isArray(data)) {
+        output.value = '';
+        output.placeholder = getData('empty', 'CSV output will appear here');
+        if (errorDiv) window.__belbooreTools.setErrorBox(errorDiv, getData('not-array', 'Input must be a JSON array of objects.'));
+        return;
+      }
+      if (data.length === 0) {
+        output.value = '';
+        output.placeholder = getData('empty', 'CSV output will appear here');
+        if (errorDiv) window.__belbooreTools.setErrorBox(errorDiv, getData('empty-array', 'Array is empty.'));
+        return;
+      }
+      const allKeys = new Set<string>();
+      const flattenedRows: Record<string, string>[] = [];
+      for (const item of data) {
+        if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+          if (errorDiv) window.__belbooreTools.setErrorBox(errorDiv, getData('not-object', 'Each array element must be a JSON object.'));
+          output.value = '';
+          output.placeholder = getData('empty', 'CSV output will appear here');
+          return;
+        }
+        const flat = flattenObject(item as Record<string, any>);
+        flattenedRows.push(flat);
+        for (const key of Object.keys(flat)) {
+          allKeys.add(key);
+        }
+      }
+      const headers = Array.from(allKeys);
+      const lines: string[] = [];
+      lines.push(headers.map(h => escapeCsv(h)).join(','));
+      for (const row of flattenedRows) {
+        lines.push(headers.map(h => escapeCsv(row[h] || '')).join(','));
+      }
+      output.value = lines.join('\n');
+      output.placeholder = '';
+      if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+    } catch (e: any) {
+      output.value = '';
+      output.placeholder = getData('fix-errors', 'Fix the errors above and try again');
+      if (errorDiv) window.__belbooreTools.setErrorBox(errorDiv, e?.message || 'Invalid JSON');
+    }
+  }
+
+  runButton?.addEventListener('click', runConvert);
+
+  copyButton?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    const text = output.value;
+    navigator.clipboard.writeText(text).then(() => {
+      copyButton.classList.add('is-copied');
+      window.setTimeout(() => copyButton.classList.remove('is-copied'), 1200);
+    }).catch(() => {});
+  });
+
+  downloadButton?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    const blob = new Blob([output.value], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = getData('download-file', 'data.csv');
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  clearButton?.addEventListener('click', () => {
+    if (!input || !output) return;
+    input.value = '';
+    output.value = '';
+    output.placeholder = getData('empty', 'CSV output will appear here');
+    if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+    input.focus();
+  });
+
+  exampleButton?.addEventListener('click', () => {
+    if (!input) return;
+    input.value = SAMPLE;
+    input.focus();
+    runConvert();
+  });
+
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      runConvert();
+    }
+  });
+</script>
+
+<style>
+  .json-csv-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .json-csv-tool__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .json-csv-tool__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: var(--surface-tertiary);
+    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .json-csv-tool__panel:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .json-csv-tool__panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .json-csv-tool__label {
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .json-csv-tool__hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+
+  .json-csv-tool__textarea {
+    width: 100%;
+    min-height: 260px;
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    resize: vertical;
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .json-csv-tool__textarea:focus {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .json-csv-tool__textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .json-csv-tool__textarea--output {
+    background: var(--surface-secondary);
+    resize: none;
+  }
+
+  .json-csv-tool__textarea--output:focus {
+    border-color: var(--border-subtle);
+    box-shadow: none;
+  }
+
+  .json-csv-tool__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .json-csv-tool .tool-action-button {
+    min-width: 148px;
+    margin-inline-end: auto;
+  }
+
+  .json-csv-tool__icon-btn.ui-button {
+    min-width: 42px;
+    min-height: 42px;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1);
+  }
+
+  .json-csv-tool__btn-text {
+    display: inline;
+  }
+
+  .json-csv-tool__note {
+    margin-top: 0;
+  }
+
+  @media (max-width: 768px) {
+    .json-csv-tool__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .json-csv-tool .tool-action-button {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .json-csv-tool__btn-text {
+      display: none;
+    }
+  }
+</style>

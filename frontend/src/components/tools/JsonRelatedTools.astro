@@ -1,0 +1,121 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+
+interface Props {
+  lang?: Lang;
+  currentSlug?: string;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+const currentSlug = Astro.props.currentSlug || 'json-formatter';
+
+const relatedTools = [
+  {
+    slug: 'json-formatter',
+    name: { en: 'JSON Formatter', fa: 'مرتب‌کننده JSON' },
+    icon: '{ }',
+  },
+  {
+    slug: 'json-minify',
+    name: { en: 'JSON Minify', fa: 'فشرده‌سازی JSON' },
+    icon: '🗜️',
+  },
+  {
+    slug: 'json-diff',
+    name: { en: 'JSON Diff Checker', fa: 'مقایسه JSON' },
+    icon: '↔️',
+  },
+  {
+    slug: 'json-tree-viewer',
+    name: { en: 'JSON Tree Viewer', fa: 'نمایش درختی JSON' },
+    icon: '🌳',
+  },
+  {
+    slug: 'json-to-csv',
+    name: { en: 'JSON to CSV', fa: 'تبدیل JSON به CSV' },
+    icon: '📊',
+  },
+].filter(t => t.slug !== currentSlug);
+---
+
+<div class="json-related-tools" dir={dir}>
+  <p class="json-related-tools__label">{(lang === 'fa') ? 'ابزارهای مرتبط JSON' : 'Related JSON Tools'}</p>
+  <div class="json-related-tools__list">
+    {relatedTools.map(t => (
+      <a href={`/${lang}/tools/${t.slug}`} class="json-related-tools__link">
+        <span class="json-related-tools__icon">{t.icon}</span>
+        <span class="json-related-tools__name">{t.name[lang]}</span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .json-related-tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+
+  .json-related-tools__label {
+    margin: 0;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .json-related-tools__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .json-related-tools__link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+
+  .json-related-tools__link:hover {
+    border-color: var(--color-tech-blue);
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+  }
+
+  .json-related-tools__icon {
+    font-size: 14px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .json-related-tools__name {
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .json-related-tools__list {
+      flex-direction: column;
+    }
+
+    .json-related-tools__link {
+      width: 100%;
+    }
+  }
+</style>

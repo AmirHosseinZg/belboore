@@ -5,6 +5,10 @@ import type { Lang } from '../../../i18n/utils';
 import { tools, getTool, getToolsByCategory } from '../../../data/tools';
 import ToolCard from '../../../components/ToolCard.astro';
 import JsonFormatter from '../../../components/tools/JsonFormatter.astro';
+import JsonMinifyTool from '../../../components/tools/JsonMinifyTool.astro';
+import JsonToCsvTool from '../../../components/tools/JsonToCsvTool.astro';
+import JsonTreeViewerTool from '../../../components/tools/JsonTreeViewerTool.astro';
+import JsonDiffTool from '../../../components/tools/JsonDiffTool.astro';
 import Base64Encoder from '../../../components/tools/Base64Encoder.astro';
 import UrlEncoder from '../../../components/tools/UrlEncoder.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
@@ -62,6 +66,10 @@ const relatedTools = getToolsByCategory(tool.category)
 
 const toolComponentMap: Record<string, any> = {
   'json-formatter': JsonFormatter,
+  'json-minify': JsonMinifyTool,
+  'json-to-csv': JsonToCsvTool,
+  'json-tree-viewer': JsonTreeViewerTool,
+  'json-diff': JsonDiffTool,
   'base64-encoder': Base64Encoder,
   'url-encoder': UrlEncoder,
   'uuid-generator': UuidGenerator,

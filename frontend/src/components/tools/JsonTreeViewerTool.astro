@@ -1,0 +1,707 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { Copy, Trash2, FileJson, Maximize2, Minimize2 } from '@lucide/astro';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'JSON Tree Viewer',
+    inputLabel: 'Input JSON',
+    inputHint: 'Paste JSON to view as an interactive tree.',
+    placeholder: '{\n  "example": "data"\n}',
+    treeLabel: 'Tree View',
+    treeHint: 'Click arrows to expand/collapse nodes.',
+    render: 'Render Tree',
+    expandAll: 'Expand All',
+    collapseAll: 'Collapse All',
+    copy: 'Copy tree JSON',
+    clear: 'Clear input',
+    loadExample: 'Load example',
+    empty: 'Paste JSON and click Render Tree to see the tree view',
+    fixErrors: 'Fix the errors above and try again',
+    invalidJson: 'Invalid JSON',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+  },
+  fa: {
+    title: 'نمایش درختی JSON',
+    inputLabel: 'ورودی JSON',
+    inputHint: 'JSON را وارد کنید تا به صورت درخت تعاملی نمایش داده شود.',
+    placeholder: '{\n  "example": "data"\n}',
+    treeLabel: 'نمایش درختی',
+    treeHint: 'برای باز و بسته کردن گره‌ها روی فلش‌ها کلیک کنید.',
+    render: 'نمایش درخت',
+    expandAll: 'باز کردن همه',
+    collapseAll: 'بستن همه',
+    copy: 'کپی JSON درخت',
+    clear: 'پاک کردن ورودی',
+    loadExample: 'نمونه',
+    empty: 'JSON را وارد کنید و روی نمایش درخت کلیک کنید',
+    fixErrors: 'خطاهای بالا را برطرف کنید و دوباره تلاش کنید',
+    invalidJson: 'JSON نامعتبر',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="json-tree-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-fix-errors={copy.fixErrors}
+    data-invalid-json={copy.invalidJson}
+    data-copied={copy.copied}
+  >
+    <div class="json-tree-tool__layout">
+      <div class="json-tree-tool__input-shell">
+        <div class="json-tree-tool__input-head">
+          <ToolActionButton id="json-tree-render">
+            {copy.render}
+          </ToolActionButton>
+          <div class="json-tree-tool__input-head-copy">
+            <label class="json-tree-tool__label" for="json-tree-input">{copy.inputLabel}</label>
+            <p class="json-tree-tool__hint">{copy.inputHint}</p>
+          </div>
+        </div>
+        <TextArea
+          id="json-tree-input"
+          className="json-tree-tool__textarea"
+          placeholder={copy.placeholder}
+          rows={10}
+          spellcheck="false"
+        />
+        <div class="json-tree-tool__secondary-actions">
+          <Button id="json-tree-expand-all" variant="secondary" disabled aria-disabled="true">
+            <Maximize2 size={15} />
+            {copy.expandAll}
+          </Button>
+          <Button id="json-tree-collapse-all" variant="secondary" disabled aria-disabled="true">
+            <Minimize2 size={15} />
+            {copy.collapseAll}
+          </Button>
+          <Button id="json-tree-copy" variant="outline" className="json-tree-tool__icon-btn" aria-label={copy.copy} title={copy.copy} disabled aria-disabled="true">
+            <Copy size={17} />
+            <span class="json-tree-tool__btn-text">{copy.copy}</span>
+          </Button>
+          <Button id="json-tree-clear" variant="danger" className="json-tree-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
+            <Trash2 size={17} />
+          </Button>
+          <Button id="json-tree-example" variant="secondary" className="json-tree-tool__icon-btn" aria-label={copy.loadExample} title={copy.loadExample}>
+            <FileJson size={17} />
+            <span class="json-tree-tool__btn-text">{copy.loadExample}</span>
+          </Button>
+        </div>
+      </div>
+
+      <div class="json-tree-tool__output-shell">
+        <div class="json-tree-tool__output-head">
+          <label class="json-tree-tool__label" for="json-tree-output">{copy.treeLabel}</label>
+          <p class="json-tree-tool__hint">{copy.treeHint}</p>
+        </div>
+        <div id="json-tree-error" class="tool-error" style="display: none;" role="alert"></div>
+        <div
+          id="json-tree-output"
+          class="json-tree-tool__tree"
+          role="tree"
+          aria-label={copy.treeLabel}
+        >
+          <div class="json-tree-tool__empty">{copy.empty}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-note json-tree-tool__note">
+      {copy.note}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const root = document.querySelector('.json-tree-tool') as HTMLElement | null;
+  const input = document.getElementById('json-tree-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('json-tree-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('json-tree-error') as HTMLDivElement | null;
+  const renderButton = document.getElementById('json-tree-render') as HTMLButtonElement | null;
+  const expandAllBtn = document.getElementById('json-tree-expand-all') as HTMLButtonElement | null;
+  const collapseAllBtn = document.getElementById('json-tree-collapse-all') as HTMLButtonElement | null;
+  const copyButton = document.getElementById('json-tree-copy') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('json-tree-clear') as HTMLButtonElement | null;
+  const exampleButton = document.getElementById('json-tree-example') as HTMLButtonElement | null;
+
+  let currentJson = '';
+
+  const SAMPLE = JSON.stringify({
+    name: "Belboore",
+    version: 1.0,
+    features: ["json", "tree", "viewer", "open-source"],
+    active: true,
+    metadata: null,
+    author: {
+      name: "Developer",
+      contact: {
+        email: null,
+        website: "https://example.com"
+      },
+      roles: ["admin", "maintainer"]
+    },
+    stats: {
+      stars: 128,
+      forks: 32,
+      openIssues: 4
+    }
+  }, null, 2);
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function escapeHtml(str: string): string {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderTree() {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    currentJson = val;
+    if (!val) {
+      output.innerHTML = `<div class="json-tree-tool__empty">${escapeHtml(getData('empty', ''))}</div>`;
+      if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+      expandAllBtn?.setAttribute('disabled', 'true');
+      expandAllBtn?.setAttribute('aria-disabled', 'true');
+      collapseAllBtn?.setAttribute('disabled', 'true');
+      collapseAllBtn?.setAttribute('aria-disabled', 'true');
+      copyButton?.setAttribute('disabled', 'true');
+      copyButton?.setAttribute('aria-disabled', 'true');
+      return;
+    }
+    try {
+      const data = JSON.parse(val);
+      if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+      const treeHtml = buildTree(data, true);
+      output.innerHTML = treeHtml;
+      expandAllBtn?.removeAttribute('disabled');
+      expandAllBtn?.setAttribute('aria-disabled', 'false');
+      collapseAllBtn?.removeAttribute('disabled');
+      collapseAllBtn?.setAttribute('aria-disabled', 'false');
+      copyButton?.removeAttribute('disabled');
+      copyButton?.setAttribute('aria-disabled', 'false');
+    } catch (e: any) {
+      output.innerHTML = `<div class="json-tree-tool__empty">${escapeHtml(getData('fix-errors', ''))}</div>`;
+      if (errorDiv) window.__belbooreTools.setErrorBox(errorDiv, e?.message || getData('invalid-json', 'Invalid JSON'));
+      expandAllBtn?.setAttribute('disabled', 'true');
+      expandAllBtn?.setAttribute('aria-disabled', 'true');
+      collapseAllBtn?.setAttribute('disabled', 'true');
+      collapseAllBtn?.setAttribute('aria-disabled', 'true');
+      copyButton?.setAttribute('disabled', 'true');
+      copyButton?.setAttribute('aria-disabled', 'true');
+    }
+  }
+
+  function getTypeLabel(val: unknown): string {
+    if (val === null) return 'null';
+    if (Array.isArray(val)) return `array[${val.length}]`;
+    if (typeof val === 'object') return `object{${Object.keys(val as Record<string, unknown>).length}}`;
+    return typeof val;
+  }
+
+  function buildTree(data: unknown, isRoot: boolean): string {
+    if (data === null) {
+      return `<span class="json-tree-tool__val json-tree-tool__val--null">null</span>`;
+    }
+    if (typeof data === 'string') {
+      const maxLen = 120;
+      const display = data.length > maxLen ? data.slice(0, maxLen) + '...' : data;
+      return `<span class="json-tree-tool__val json-tree-tool__val--string">"${escapeHtml(display)}"</span>`;
+    }
+    if (typeof data === 'number') {
+      return `<span class="json-tree-tool__val json-tree-tool__val--number">${data}</span>`;
+    }
+    if (typeof data === 'boolean') {
+      return `<span class="json-tree-tool__val json-tree-tool__val--boolean">${data}</span>`;
+    }
+    if (Array.isArray(data)) {
+      if (data.length === 0) {
+        return `<span class="json-tree-tool__bracket">[ ]</span>`;
+      }
+      const items = data.map((item, index) => {
+        const isComplex = item !== null && typeof item === 'object';
+        const valHtml = buildTree(item, false);
+        const label = `<span class="json-tree-tool__key json-tree-tool__key--index">${index}</span>`;
+        const sep = `<span class="json-tree-tool__sep">: </span>`;
+        if (isComplex) {
+          return `<div class="json-tree-tool__node" role="treeitem" aria-expanded="true">
+            <button class="json-tree-tool__toggle" aria-label="Toggle node" tabindex="0">
+              <svg width="10" height="10" viewBox="0 0 10 10" class="json-tree-tool__caret"><path d="M3 1l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <span class="json-tree-tool__node-label">${label}${sep}</span>
+            <span class="json-tree-tool__type">${getTypeLabel(item)}</span>
+            <div class="json-tree-tool__children">${valHtml}</div>
+          </div>`;
+        }
+        return `<div class="json-tree-tool__leaf">
+          <span class="json-tree-tool__leaf-indent"></span>
+          <span class="json-tree-tool__node-label">${label}${sep}</span>
+          ${valHtml}
+        </div>`;
+      }).join('');
+      const showToggle = data.some(item => item !== null && typeof item === 'object');
+      return `<div class="json-tree-tool__branch">
+        ${showToggle ? `<button class="json-tree-tool__toggle json-tree-tool__toggle--open" aria-expanded="true" aria-label="Toggle array">
+          <svg width="10" height="10" viewBox="0 0 10 10" class="json-tree-tool__caret"><path d="M3 1l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>` : `<span class="json-tree-tool__toggle-spacer"></span>`}
+        <span class="json-tree-tool__bracket">[</span>
+        <span class="json-tree-tool__count">${data.length}</span>
+        <div class="json-tree-tool__children">${items}</div>
+        <div class="json-tree-tool__leaf"><span class="json-tree-tool__leaf-indent"></span><span class="json-tree-tool__bracket">]</span></div>
+      </div>`;
+    }
+    if (typeof data === 'object') {
+      const obj = data as Record<string, unknown>;
+      const keys = Object.keys(obj);
+      if (keys.length === 0) {
+        return `<span class="json-tree-tool__bracket">{ }</span>`;
+      }
+      const items = keys.map(key => {
+        const val = obj[key];
+        const isComplex = val !== null && typeof val === 'object';
+        const valHtml = buildTree(val, false);
+        const label = `<span class="json-tree-tool__key">"${escapeHtml(key)}"</span>`;
+        const sep = `<span class="json-tree-tool__sep">: </span>`;
+        if (isComplex) {
+          return `<div class="json-tree-tool__node" role="treeitem" aria-expanded="true">
+            <button class="json-tree-tool__toggle" aria-label="Toggle node" tabindex="0">
+              <svg width="10" height="10" viewBox="0 0 10 10" class="json-tree-tool__caret"><path d="M3 1l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <span class="json-tree-tool__node-label">${label}${sep}</span>
+            <span class="json-tree-tool__type">${getTypeLabel(val)}</span>
+            <div class="json-tree-tool__children">${valHtml}</div>
+          </div>`;
+        }
+        return `<div class="json-tree-tool__leaf">
+          <span class="json-tree-tool__leaf-indent"></span>
+          <span class="json-tree-tool__node-label">${label}${sep}</span>
+          ${valHtml}
+        </div>`;
+      }).join('');
+      return `<div class="json-tree-tool__branch">
+        <button class="json-tree-tool__toggle json-tree-tool__toggle--open" aria-expanded="true" aria-label="Toggle object">
+          <svg width="10" height="10" viewBox="0 0 10 10" class="json-tree-tool__caret"><path d="M3 1l5 4-5 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+        <span class="json-tree-tool__bracket">{</span>
+        <span class="json-tree-tool__count">${keys.length}</span>
+        <div class="json-tree-tool__children">${items}</div>
+        <div class="json-tree-tool__leaf"><span class="json-tree-tool__leaf-indent"></span><span class="json-tree-tool__bracket">}</span></div>
+      </div>`;
+    }
+    return `<span>${escapeHtml(String(data))}</span>`;
+  }
+
+  output?.addEventListener('click', (e) => {
+    const toggle = (e.target as HTMLElement).closest('.json-tree-tool__toggle');
+    if (!toggle) return;
+    const node = toggle.closest('.json-tree-tool__node, .json-tree-tool__branch') as HTMLElement | null;
+    if (!node) return;
+    const children = node.querySelector(':scope > .json-tree-tool__children') as HTMLElement | null;
+    const isOpen = toggle.classList.contains('json-tree-tool__toggle--open');
+    if (isOpen) {
+      toggle.classList.remove('json-tree-tool__toggle--open');
+      toggle.setAttribute('aria-expanded', 'false');
+      if (children) children.style.display = 'none';
+    } else {
+      toggle.classList.add('json-tree-tool__toggle--open');
+      toggle.setAttribute('aria-expanded', 'true');
+      if (children) children.style.display = '';
+    }
+  });
+
+  output?.addEventListener('keydown', (e) => {
+    const toggle = (e.target as HTMLElement).closest('.json-tree-tool__toggle');
+    if (!toggle) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      (toggle as HTMLElement).click();
+    }
+  });
+
+  function expandAll() {
+    if (!output) return;
+    const toggles = output.querySelectorAll('.json-tree-tool__toggle:not(.json-tree-tool__toggle--open)');
+    toggles.forEach(t => {
+      t.classList.add('json-tree-tool__toggle--open');
+      t.setAttribute('aria-expanded', 'true');
+      const node = (t as HTMLElement).closest('.json-tree-tool__node, .json-tree-tool__branch') as HTMLElement | null;
+      if (node) {
+        const children = node.querySelector(':scope > .json-tree-tool__children') as HTMLElement | null;
+        if (children) children.style.display = '';
+      }
+    });
+  }
+
+  function collapseAll() {
+    if (!output) return;
+    const toggles = output.querySelectorAll('.json-tree-tool__toggle.json-tree-tool__toggle--open');
+    toggles.forEach(t => {
+      t.classList.remove('json-tree-tool__toggle--open');
+      t.setAttribute('aria-expanded', 'false');
+      const node = (t as HTMLElement).closest('.json-tree-tool__node, .json-tree-tool__branch') as HTMLElement | null;
+      if (node) {
+        const children = node.querySelector(':scope > .json-tree-tool__children') as HTMLElement | null;
+        if (children) children.style.display = 'none';
+      }
+    });
+  }
+
+  renderButton?.addEventListener('click', renderTree);
+
+  expandAllBtn?.addEventListener('click', expandAll);
+  collapseAllBtn?.addEventListener('click', collapseAll);
+
+  copyButton?.addEventListener('click', () => {
+    if (!currentJson) return;
+    navigator.clipboard.writeText(currentJson).then(() => {
+      copyButton.classList.add('is-copied');
+      window.setTimeout(() => copyButton.classList.remove('is-copied'), 1200);
+    }).catch(() => {});
+  });
+
+  clearButton?.addEventListener('click', () => {
+    if (!input || !output) return;
+    input.value = '';
+    currentJson = '';
+    output.innerHTML = `<div class="json-tree-tool__empty">${escapeHtml(getData('empty', ''))}</div>`;
+    if (errorDiv) window.__belbooreTools.clearErrorBox(errorDiv);
+    expandAllBtn?.setAttribute('disabled', 'true');
+    expandAllBtn?.setAttribute('aria-disabled', 'true');
+    collapseAllBtn?.setAttribute('disabled', 'true');
+    collapseAllBtn?.setAttribute('aria-disabled', 'true');
+    copyButton?.setAttribute('disabled', 'true');
+    copyButton?.setAttribute('aria-disabled', 'true');
+    input.focus();
+  });
+
+  exampleButton?.addEventListener('click', () => {
+    if (!input) return;
+    input.value = SAMPLE;
+    input.focus();
+    renderTree();
+  });
+
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      renderTree();
+    }
+  });
+</script>
+
+<style>
+  .json-tree-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .json-tree-tool__layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .json-tree-tool__input-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: var(--surface-tertiary);
+    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .json-tree-tool__input-shell:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .json-tree-tool__input-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    direction: ltr;
+  }
+
+  .json-tree-tool__input-head-copy {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    min-width: 0;
+    margin-inline-start: auto;
+    text-align: end;
+    direction: inherit;
+  }
+
+  .json-tree-tool__label {
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .json-tree-tool__hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+
+  .json-tree-tool__textarea {
+    min-height: 200px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    resize: vertical;
+  }
+
+  .json-tree-tool__secondary-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .json-tree-tool .tool-action-button {
+    min-width: 148px;
+    margin-inline-end: auto;
+  }
+
+  .json-tree-tool__icon-btn.ui-button {
+    min-width: 42px;
+    min-height: 42px;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1);
+  }
+
+  .json-tree-tool__btn-text {
+    display: inline;
+    font-size: var(--text-xs);
+  }
+
+  .json-tree-tool__output-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%), linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .json-tree-tool__output-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .json-tree-tool__tree {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    line-height: 1.8;
+    min-height: 160px;
+    padding: var(--space-3);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 500px;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .json-tree-tool__empty {
+    color: var(--text-muted);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    font-family: var(--font-sans);
+  }
+
+  .json-tree-tool__branch {
+    position: relative;
+  }
+
+  .json-tree-tool__node {
+    position: relative;
+  }
+
+  .json-tree-tool__leaf {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    padding-inline-start: 20px;
+  }
+
+  .json-tree-tool__leaf-indent {
+    display: inline-block;
+    width: 0;
+  }
+
+  .json-tree-tool__children {
+    padding-inline-start: 20px;
+  }
+
+  .json-tree-tool__toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: 3px;
+    background: var(--surface-tertiary);
+    cursor: pointer;
+    vertical-align: middle;
+    margin-inline-end: 2px;
+    color: var(--text-tertiary);
+    transition: background var(--duration-fast) var(--ease-out);
+    flex-shrink: 0;
+    position: absolute;
+    inset-inline-start: 0;
+    top: 3px;
+  }
+
+  .json-tree-tool__toggle:hover {
+    background: var(--surface-primary);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+  }
+
+  .json-tree-tool__toggle:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 1px;
+  }
+
+  .json-tree-tool__toggle-spacer {
+    display: inline-block;
+    width: 18px;
+    flex-shrink: 0;
+  }
+
+  .json-tree-tool__toggle--open .json-tree-tool__caret {
+    transform: rotate(90deg);
+  }
+
+  .json-tree-tool__caret {
+    transition: transform 0.15s ease;
+  }
+
+  .json-tree-tool__bracket {
+    color: var(--text-muted);
+    font-weight: var(--weight-semibold);
+  }
+
+  .json-tree-tool__count {
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-inline-start: 4px;
+  }
+
+  .json-tree-tool__key {
+    color: var(--text-primary);
+    font-weight: var(--weight-medium);
+  }
+
+  .json-tree-tool__key--index {
+    color: #8b5cf6;
+    font-weight: var(--weight-semibold);
+  }
+
+  .json-tree-tool__node-label {
+    display: inline;
+  }
+
+  .json-tree-tool__type {
+    display: inline;
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    margin-inline-start: 4px;
+    font-family: var(--font-sans);
+  }
+
+  .json-tree-tool__sep {
+    color: var(--text-muted);
+    margin-inline-end: 2px;
+  }
+
+  .json-tree-tool__val {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .json-tree-tool__val--string {
+    color: #059669;
+  }
+
+  .json-tree-tool__val--number {
+    color: #d97706;
+  }
+
+  .json-tree-tool__val--boolean {
+    color: #dc2626;
+  }
+
+  .json-tree-tool__val--null {
+    color: #8b8fa3;
+    font-style: italic;
+  }
+
+  .json-tree-tool__error {
+    margin-top: 0;
+  }
+
+  .json-tree-tool__note {
+    margin-top: 0;
+  }
+
+  @media (max-width: 640px) {
+    .json-tree-tool .tool-action-button {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .json-tree-tool__btn-text {
+      display: none;
+    }
+
+    .json-tree-tool__tree {
+      max-height: 360px;
+      font-size: var(--text-xs);
+    }
+  }
+</style>

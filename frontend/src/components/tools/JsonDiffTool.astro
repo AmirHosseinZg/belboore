@@ -1,0 +1,618 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { Copy, Trash2, FileJson } from '@lucide/astro';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'JSON Diff Checker',
+    inputLabel1: 'Original JSON',
+    inputLabel2: 'Changed JSON',
+    inputHint1: 'Paste the original JSON.',
+    inputHint2: 'Paste the modified JSON.',
+    placeholder: '{\n  "key": "value"\n}',
+    diffLabel: 'Differences',
+    diffHint: 'Added, removed, and changed values are listed below.',
+    compare: 'Compare',
+    noDifferences: 'No differences found — the JSON structures are identical.',
+    copy: 'Copy diff result',
+    clear: 'Clear inputs',
+    loadExample: 'Load example',
+    empty: 'Click Compare to see differences.',
+    fixErrors1: 'Original JSON has errors. Fix them and try again.',
+    fixErrors2: 'Changed JSON has errors. Fix them and try again.',
+    invalidJson: 'Invalid JSON',
+    path: 'Path',
+    type: 'Change',
+    oldValue: 'Old Value',
+    newValue: 'New Value',
+    added: 'added',
+    removed: 'removed',
+    changed: 'changed',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+  },
+  fa: {
+    title: 'مقایسه JSON',
+    inputLabel1: 'JSON اصلی',
+    inputLabel2: 'JSON تغییر یافته',
+    inputHint1: 'JSON اصلی را وارد کنید.',
+    inputHint2: 'JSON تغییر یافته را وارد کنید.',
+    placeholder: '{\n  "key": "value"\n}',
+    diffLabel: 'تفاوت‌ها',
+    diffHint: 'مقادیر اضافه، حذف و تغییر یافته در زیر فهرست شده‌اند.',
+    compare: 'مقایسه',
+    noDifferences: 'تفاوتی یافت نشد — ساختار JSON یکسان است.',
+    copy: 'کپی نتیجه مقایسه',
+    clear: 'پاک کردن ورودی‌ها',
+    loadExample: 'نمونه',
+    empty: 'برای مشاهده تفاوت‌ها روی مقایسه کلیک کنید.',
+    fixErrors1: 'JSON اصلی دارای خطا است. خطاها را برطرف کنید.',
+    fixErrors2: 'JSON تغییر یافته دارای خطا است. خطاها را برطرف کنید.',
+    invalidJson: 'JSON نامعتبر',
+    path: 'مسیر',
+    type: 'نوع تغییر',
+    oldValue: 'مقدار قدیم',
+    newValue: 'مقدار جدید',
+    added: 'اضافه شده',
+    removed: 'حذف شده',
+    changed: 'تغییر یافته',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="json-diff-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-fix-errors1={copy.fixErrors1}
+    data-fix-errors2={copy.fixErrors2}
+    data-invalid-json={copy.invalidJson}
+    data-no-differences={copy.noDifferences}
+    data-copied={copy.copied}
+    data-path={copy.path}
+    data-type={copy.type}
+    data-old-value={copy.oldValue}
+    data-new-value={copy.newValue}
+    data-added={copy.added}
+    data-removed={copy.removed}
+    data-changed={copy.changed}
+  >
+    <div class="json-diff-tool__grid">
+      <div class="json-diff-tool__panel">
+        <div class="json-diff-tool__panel-head">
+          <label class="json-diff-tool__label" for="json-diff-input-1">{copy.inputLabel1}</label>
+          <p class="json-diff-tool__hint">{copy.inputHint1}</p>
+        </div>
+        <div class="json-diff-tool__textarea-shell">
+          <TextArea
+            id="json-diff-input-1"
+            className="json-diff-tool__textarea"
+            placeholder={copy.placeholder}
+            rows={10}
+            spellcheck="false"
+          />
+        </div>
+      </div>
+
+      <div class="json-diff-tool__panel">
+        <div class="json-diff-tool__panel-head">
+          <label class="json-diff-tool__label" for="json-diff-input-2">{copy.inputLabel2}</label>
+          <p class="json-diff-tool__hint">{copy.inputHint2}</p>
+        </div>
+        <div class="json-diff-tool__textarea-shell">
+          <TextArea
+            id="json-diff-input-2"
+            className="json-diff-tool__textarea"
+            placeholder={copy.placeholder}
+            rows={10}
+            spellcheck="false"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="json-diff-tool__toolbar">
+      <ToolActionButton id="json-diff-run">
+        {copy.compare}
+      </ToolActionButton>
+      <Button id="json-diff-copy" variant="outline" className="json-diff-tool__icon-btn" aria-label={copy.copy} title={copy.copy}>
+        <Copy size={17} />
+        <span class="json-diff-tool__btn-text">{copy.copy}</span>
+      </Button>
+      <Button id="json-diff-clear" variant="danger" className="json-diff-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
+        <Trash2 size={17} />
+      </Button>
+      <Button id="json-diff-example" variant="secondary" className="json-diff-tool__icon-btn" aria-label={copy.loadExample} title={copy.loadExample}>
+        <FileJson size={17} />
+        <span class="json-diff-tool__btn-text">{copy.loadExample}</span>
+      </Button>
+    </div>
+
+    <div id="json-diff-error-1" class="tool-error" style="display: none;" role="alert"></div>
+    <div id="json-diff-error-2" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="json-diff-tool__output-shell">
+      <div class="json-diff-tool__output-head">
+        <label class="json-diff-tool__label">{copy.diffLabel}</label>
+        <p class="json-diff-tool__hint">{copy.diffHint}</p>
+      </div>
+      <div id="json-diff-output" class="json-diff-tool__result" role="region" aria-live="polite" aria-label={copy.diffLabel}>
+        <p class="json-diff-tool__empty">{copy.empty}</p>
+      </div>
+    </div>
+
+    <div class="tool-note json-diff-tool__note">
+      {copy.note}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const root = document.querySelector('.json-diff-tool') as HTMLElement | null;
+  const input1 = document.getElementById('json-diff-input-1') as HTMLTextAreaElement | null;
+  const input2 = document.getElementById('json-diff-input-2') as HTMLTextAreaElement | null;
+  const output = document.getElementById('json-diff-output') as HTMLDivElement | null;
+  const errorDiv1 = document.getElementById('json-diff-error-1') as HTMLDivElement | null;
+  const errorDiv2 = document.getElementById('json-diff-error-2') as HTMLDivElement | null;
+  const runButton = document.getElementById('json-diff-run') as HTMLButtonElement | null;
+  const copyButton = document.getElementById('json-diff-copy') as HTMLButtonElement | null;
+  const clearButton = document.getElementById('json-diff-clear') as HTMLButtonElement | null;
+  const exampleButton = document.getElementById('json-diff-example') as HTMLButtonElement | null;
+
+  const SAMPLE_ORIGINAL = JSON.stringify({
+    name: "Belboore",
+    version: 1.0,
+    features: ["json", "tools"],
+    active: true,
+    author: {
+      name: "Developer",
+      email: "dev@example.com"
+    }
+  }, null, 2);
+
+  const SAMPLE_CHANGED = JSON.stringify({
+    name: "Belboore",
+    version: 1.1,
+    features: ["json", "tools", "diff"],
+    active: true,
+    author: {
+      name: "Developer",
+      email: "hello@belboore.com",
+      website: "https://belboore.com"
+    },
+    rating: 5
+  }, null, 2);
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function escapeHtml(str: string): string {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function diffArrays(a: unknown[], b: unknown[], path: string): DiffItem[] {
+    const result: DiffItem[] = [];
+    const maxLen = Math.max(a.length, b.length);
+    for (let i = 0; i < maxLen; i++) {
+      const itemPath = path + `[${i}]`;
+      if (i >= a.length) {
+        result.push({ path: itemPath, type: 'added', oldValue: '', newValue: stringify(b[i]) });
+      } else if (i >= b.length) {
+        result.push({ path: itemPath, type: 'removed', oldValue: stringify(a[i]), newValue: '' });
+      } else {
+        result.push(...compare(a[i], b[i], itemPath));
+      }
+    }
+    return result;
+  }
+
+  function diffObjects(a: Record<string, unknown>, b: Record<string, unknown>, path: string): DiffItem[] {
+    const result: DiffItem[] = [];
+    const allKeys = new Set([...Object.keys(a), ...Object.keys(b)]);
+    for (const key of allKeys) {
+      const keyPath = path ? path + '.' + key : key;
+      if (!(key in a)) {
+        result.push({ path: keyPath, type: 'added', oldValue: '', newValue: stringify(b[key]) });
+      } else if (!(key in b)) {
+        result.push({ path: keyPath, type: 'removed', oldValue: stringify(a[key]), newValue: '' });
+      } else {
+        result.push(...compare(a[key], b[key], keyPath));
+      }
+    }
+    return result;
+  }
+
+  function compare(a: unknown, b: unknown, path: string): DiffItem[] {
+    if (a === b) return [];
+    if (typeof a !== typeof b || a === null || b === null) {
+      return [{ path, type: 'changed', oldValue: stringify(a), newValue: stringify(b) }];
+    }
+    if (Array.isArray(a) && Array.isArray(b)) {
+      return diffArrays(a, b, path);
+    }
+    if (typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+      return diffObjects(a as Record<string, unknown>, b as Record<string, unknown>, path);
+    }
+    return [{ path, type: 'changed', oldValue: stringify(a), newValue: stringify(b) }];
+  }
+
+  function stringify(val: unknown): string {
+    if (val === null) return 'null';
+    if (val === undefined) return '';
+    if (typeof val === 'string') return `"${val}"`;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+    return JSON.stringify(val);
+  }
+
+  interface DiffItem {
+    path: string;
+    type: 'added' | 'removed' | 'changed';
+    oldValue: string;
+    newValue: string;
+  }
+
+  function runDiff() {
+    if (!input1 || !input2 || !output) return;
+    const val1 = input1.value.trim();
+    const val2 = input2.value.trim();
+    if (errorDiv1) window.__belbooreTools.clearErrorBox(errorDiv1);
+    if (errorDiv2) window.__belbooreTools.clearErrorBox(errorDiv2);
+    let parsed1: unknown, parsed2: unknown;
+    try {
+      parsed1 = JSON.parse(val1);
+    } catch (e: any) {
+      if (errorDiv1) window.__belbooreTools.setErrorBox(errorDiv1, e?.message || getData('invalid-json', 'Invalid JSON'));
+      output.innerHTML = `<p class="json-diff-tool__empty">${escapeHtml(getData('fix-errors1', ''))}</p>`;
+      return;
+    }
+    try {
+      parsed2 = JSON.parse(val2);
+    } catch (e: any) {
+      if (errorDiv2) window.__belbooreTools.setErrorBox(errorDiv2, e?.message || getData('invalid-json', 'Invalid JSON'));
+      output.innerHTML = `<p class="json-diff-tool__empty">${escapeHtml(getData('fix-errors2', ''))}</p>`;
+      return;
+    }
+    const diffs = compare(parsed1, parsed2, '');
+    if (diffs.length === 0) {
+      output.innerHTML = `<div class="json-diff-tool__no-diff">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>${escapeHtml(getData('no-differences', ''))}</span>
+      </div>`;
+      return;
+    }
+    const headers = ['path', 'type', 'oldValue', 'newValue'];
+    let html = `<div class="json-diff-tool__table-wrap"><table class="json-diff-tool__table" role="table">
+      <thead><tr>
+        <th scope="col">${escapeHtml(getPathLabel())}</th>
+        <th scope="col">${escapeHtml(getTypeLabel())}</th>
+        <th scope="col">${escapeHtml(getOldLabel())}</th>
+        <th scope="col">${escapeHtml(getNewLabel())}</th>
+      </tr></thead><tbody>`;
+    for (const diff of diffs) {
+      const typeClass = diff.type === 'added' ? 'json-diff-tool__type--added' : diff.type === 'removed' ? 'json-diff-tool__type--removed' : 'json-diff-tool__type--changed';
+      const typeIcon = diff.type === 'added' ? '+' : diff.type === 'removed' ? '−' : '↔';
+      const typeLabel = diff.type === 'added' ? getAddedLabel() : diff.type === 'removed' ? getRemovedLabel() : getChangedLabel();
+      html += `<tr>
+        <td class="json-diff-tool__cell json-diff-tool__cell--path"><code>${escapeHtml(diff.path || '(root)')}</code></td>
+        <td class="json-diff-tool__cell ${typeClass}"><span class="json-diff-tool__type-badge">${typeIcon} ${escapeHtml(typeLabel)}</span></td>
+        <td class="json-diff-tool__cell json-diff-tool__cell--old"><code>${escapeHtml(diff.oldValue)}</code></td>
+        <td class="json-diff-tool__cell json-diff-tool__cell--new"><code>${escapeHtml(diff.newValue)}</code></td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+    output.innerHTML = html;
+  }
+
+  function getPathLabel() { return root?.dataset.path || 'Path'; }
+  function getTypeLabel() { return root?.dataset.type || 'Change'; }
+  function getOldLabel() { return root?.dataset.oldValue || 'Old Value'; }
+  function getNewLabel() { return root?.dataset.newValue || 'New Value'; }
+  function getAddedLabel() { return root?.dataset.added || 'added'; }
+  function getRemovedLabel() { return root?.dataset.removed || 'removed'; }
+  function getChangedLabel() { return root?.dataset.changed || 'changed'; }
+
+  runButton?.addEventListener('click', runDiff);
+
+  copyButton?.addEventListener('click', () => {
+    if (!output) return;
+    const text = output.textContent || '';
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyButton.classList.add('is-copied');
+      window.setTimeout(() => copyButton.classList.remove('is-copied'), 1200);
+    }).catch(() => {});
+  });
+
+  clearButton?.addEventListener('click', () => {
+    if (!input1 || !input2 || !output) return;
+    input1.value = '';
+    input2.value = '';
+    output.innerHTML = `<p class="json-diff-tool__empty">${escapeHtml(getData('empty', ''))}</p>`;
+    if (errorDiv1) window.__belbooreTools.clearErrorBox(errorDiv1);
+    if (errorDiv2) window.__belbooreTools.clearErrorBox(errorDiv2);
+    input1.focus();
+  });
+
+  exampleButton?.addEventListener('click', () => {
+    if (!input1 || !input2) return;
+    input1.value = SAMPLE_ORIGINAL;
+    input2.value = SAMPLE_CHANGED;
+    runDiff();
+    input1.focus();
+  });
+
+  input2?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      runDiff();
+    }
+  });
+</script>
+
+<style>
+  .json-diff-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .json-diff-tool__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+  }
+
+  .json-diff-tool__panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding: var(--space-3) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: calc(var(--radius-lg) - 4px);
+    background: var(--surface-tertiary);
+    transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  }
+
+  .json-diff-tool__panel:focus-within {
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 0 0 3px var(--color-tech-blue-subtle);
+  }
+
+  .json-diff-tool__panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .json-diff-tool__label {
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .json-diff-tool__hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    line-height: var(--leading-snug);
+  }
+
+  .json-diff-tool__textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    resize: vertical;
+  }
+
+  .json-diff-tool__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    align-items: center;
+  }
+
+  .json-diff-tool .tool-action-button {
+    min-width: 148px;
+    margin-inline-end: auto;
+  }
+
+  .json-diff-tool__icon-btn.ui-button {
+    min-width: 42px;
+    min-height: 42px;
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-1);
+  }
+
+  .json-diff-tool__btn-text {
+    display: inline;
+    font-size: var(--text-xs);
+  }
+
+  .json-diff-tool__output-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%), linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .json-diff-tool__output-head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .json-diff-tool__result {
+    min-height: 120px;
+    padding: var(--space-3);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+  }
+
+  .json-diff-tool__empty {
+    color: var(--text-muted);
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80px;
+    margin: 0;
+  }
+
+  .json-diff-tool__no-diff {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    color: var(--color-success);
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
+    min-height: 80px;
+  }
+
+  .json-diff-tool__table-wrap {
+    overflow-x: auto;
+  }
+
+  .json-diff-tool__table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+  }
+
+  .json-diff-tool__table th {
+    position: sticky;
+    top: 0;
+    background: var(--surface-secondary);
+    padding: var(--space-3) var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: start;
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+  }
+
+  .json-diff-tool__table td {
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: top;
+  }
+
+  .json-diff-tool__table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .json-diff-tool__table tr:hover td {
+    background: var(--surface-tertiary);
+  }
+
+  .json-diff-tool__cell--path code {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    word-break: break-all;
+  }
+
+  .json-diff-tool__type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    white-space: nowrap;
+  }
+
+  .json-diff-tool__type--added .json-diff-tool__type-badge {
+    background: var(--color-success-subtle);
+    color: var(--color-success);
+  }
+
+  .json-diff-tool__type--removed .json-diff-tool__type-badge {
+    background: var(--color-error-subtle);
+    color: var(--color-error);
+  }
+
+  .json-diff-tool__type--changed .json-diff-tool__type-badge {
+    background: var(--color-warning-subtle);
+    color: var(--color-warning);
+  }
+
+  .json-diff-tool__cell--old code {
+    color: var(--color-error);
+    text-decoration: line-through;
+  }
+
+  .json-diff-tool__cell--new code {
+    color: var(--color-success);
+  }
+
+  .json-diff-tool__cell code {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .json-diff-tool__note {
+    margin-top: 0;
+  }
+
+  @media (max-width: 768px) {
+    .json-diff-tool__grid {
+      grid-template-columns: 1fr;
+    }
+
+    .json-diff-tool .tool-action-button {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .json-diff-tool__btn-text {
+      display: none;
+    }
+
+    .json-diff-tool__table th:nth-child(3),
+    .json-diff-tool__table td:nth-child(3),
+    .json-diff-tool__table th:nth-child(4),
+    .json-diff-tool__table td:nth-child(4) {
+      display: none;
+    }
+  }
+</style>
