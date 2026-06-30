@@ -6,6 +6,8 @@ import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
+import ToolInputField from './ToolInputField.astro';
+import ToolResultCard from './ToolResultCard.astro';
 import Select from '../ui/Select.astro';
 
 interface Props {
@@ -45,18 +47,9 @@ const dir = languages[lang].dir;
     </div>
 
     <div class="pct-calc__inputs">
-      <div class="tool-field">
-        <label class="tool-field__label" for="pc-x">{t['tools.percentageCalculator.x']}</label>
-        <input id="pc-x" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
-      </div>
-      <div class="tool-field">
-        <label class="tool-field__label" for="pc-y">{t['tools.percentageCalculator.y']}</label>
-        <input id="pc-y" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
-      </div>
-      <div class="tool-field" id="pc-field-p" style="display: none;">
-        <label class="tool-field__label" for="pc-p">{t['tools.percentageCalculator.percent']}</label>
-        <input id="pc-p" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="0" autocomplete="off" />
-      </div>
+      <ToolInputField id="pc-x" label={t['tools.percentageCalculator.x']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
+      <ToolInputField id="pc-y" label={t['tools.percentageCalculator.y']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
+      <ToolInputField id="pc-p" label={t['tools.percentageCalculator.percent']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" className="pct-calc__percent-field" />
     </div>
 
     <div class="tool-toolbar">
@@ -65,13 +58,12 @@ const dir = languages[lang].dir;
 
     <div id="pc-error" class="tool-error" style="display: none;" role="alert"></div>
 
-    <div id="pc-result" class="pct-calc__result" style="display: none;">
+    <ToolResultCard id="pc-result" className="pct-calc__result" copyId="pc-copy" copyLabel={t['tools.percentageCalculator.copyResult']}>
       <div class="tool-result">
         <div class="tool-result__value" id="pc-value">0</div>
         <div class="tool-result__label" id="pc-formula"></div>
       </div>
-      <button id="pc-copy" class="tool-btn" style="align-self: center;">{t['tools.percentageCalculator.copyResult']}</button>
-    </div>
+    </ToolResultCard>
 
     <div id="pc-empty" class="tool-output tool-output--empty">{t['tools.percentageCalculator.enterValues']}</div>
 
@@ -95,7 +87,7 @@ const dir = languages[lang].dir;
   var emptyDiv = document.getElementById('pc-empty');
   var valueDiv = document.getElementById('pc-value');
   var formulaDiv = document.getElementById('pc-formula');
-  var fieldP = document.getElementById('pc-field-p');
+  var fieldP = document.querySelector('.pct-calc__percent-field');
 
   function setError(msg){if(!errorDiv)return;window.__belbooreTools.setErrorBox(errorDiv,msg);}
   function clearError(){if(!errorDiv)return;window.__belbooreTools.clearErrorBox(errorDiv);}
@@ -174,6 +166,7 @@ const dir = languages[lang].dir;
 <style>
   .pct-calc{display:flex;flex-direction:column;gap:var(--space-5);}
   .pct-calc__inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
-  .pct-calc__result{margin-top:var(--space-2);display:flex;flex-direction:column;gap:var(--space-3);}
+  .pct-calc__percent-field{display:none;}
+  .pct-calc__result{margin-top:var(--space-2);}
   @media(max-width:640px){.pct-calc__inputs{grid-template-columns:1fr;}}
 </style>

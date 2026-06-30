@@ -6,6 +6,9 @@ import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
+import ToolInputField from './ToolInputField.astro';
+import ToolResultCard from './ToolResultCard.astro';
+import ToolSegmentedControl from './ToolSegmentedControl.astro';
 
 interface Props {
   lang?: Lang;
@@ -31,24 +34,19 @@ const dir = languages[lang].dir;
     data-category-label={t['tools.bmiCalculator.category']}
   >
     <div class="tool-toolbar">
-      <div class="tool-field" style="flex: 0 0 auto;">
-        <label class="tool-field__label">{t['tools.bmiCalculator.unit']}</label>
-        <div class="bmi-tool__unit-toggle">
-          <button id="bmi-unit-metric" type="button" class="tool-btn tool-btn--primary">{t['tools.bmiCalculator.metric']}</button>
-          <button id="bmi-unit-imp" type="button" class="tool-btn">{t['tools.bmiCalculator.imperial']}</button>
-        </div>
-      </div>
+      <ToolSegmentedControl
+        label={t['tools.bmiCalculator.unit']}
+        className="bmi-tool__segment"
+        items={[
+          { id: 'bmi-unit-metric', value: 'metric', label: t['tools.bmiCalculator.metric'], active: true },
+          { id: 'bmi-unit-imp', value: 'imperial', label: t['tools.bmiCalculator.imperial'] },
+        ]}
+      />
     </div>
 
     <div class="bmi-tool__inputs tool-grid-2">
-      <div class="tool-field">
-        <label class="tool-field__label" for="bmi-weight">{t['tools.bmiCalculator.weight']} (<span id="bmi-weight-unit">{t['tools.bmiCalculator.kg']}</span>)</label>
-        <input id="bmi-weight" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="70" autocomplete="off" />
-      </div>
-      <div class="tool-field">
-        <label class="tool-field__label" for="bmi-height">{t['tools.bmiCalculator.height']} (<span id="bmi-height-unit">{t['tools.bmiCalculator.cm']}</span>)</label>
-        <input id="bmi-height" class="tool-input tool-input--mono" type="text" inputmode="decimal" placeholder="175" autocomplete="off" />
-      </div>
+      <ToolInputField id="bmi-weight" label={`${t['tools.bmiCalculator.weight']} (${t['tools.bmiCalculator.kg']})`} placeholder="70" inputmode="decimal" inputClassName="tool-input--mono" />
+      <ToolInputField id="bmi-height" label={`${t['tools.bmiCalculator.height']} (${t['tools.bmiCalculator.cm']})`} placeholder="175" inputmode="decimal" inputClassName="tool-input--mono" />
     </div>
 
     <div class="tool-toolbar">
@@ -57,14 +55,13 @@ const dir = languages[lang].dir;
 
     <div id="bmi-error" class="tool-error" style="display: none;" role="alert"></div>
 
-    <div id="bmi-result" class="bmi-tool__result" style="display: none;">
+    <ToolResultCard id="bmi-result" className="bmi-tool__result" copyId="bmi-copy" copyLabel={t['tools.bmiCalculator.copyResult']}>
       <div class="tool-result">
         <div class="tool-result__value" id="bmi-value">0</div>
         <div class="tool-result__label">{t['tools.bmiCalculator.yourBmi']}</div>
       </div>
       <div class="bmi-tool__category" id="bmi-category"></div>
-      <button id="bmi-copy" class="tool-btn" style="align-self: center;">{t['tools.bmiCalculator.copyResult']}</button>
-    </div>
+    </ToolResultCard>
 
     <div id="bmi-empty" class="tool-output tool-output--empty">{t['tools.bmiCalculator.enterValues']}</div>
 
@@ -91,8 +88,6 @@ const dir = languages[lang].dir;
   var emptyDiv = document.getElementById('bmi-empty');
   var valueDiv = document.getElementById('bmi-value');
   var categoryDiv = document.getElementById('bmi-category');
-  var weightUnit = document.getElementById('bmi-weight-unit');
-  var heightUnit = document.getElementById('bmi-height-unit');
   var metricBtn = document.getElementById('bmi-unit-metric');
   var impBtn = document.getElementById('bmi-unit-imp');
 
@@ -105,15 +100,17 @@ const dir = languages[lang].dir;
 
   function setUnit(metric){
     isMetric=metric;
-    if(metricBtn){metricBtn.classList.toggle('tool-btn--primary',metric);metricBtn.classList.toggle('tool-btn--ghost',!metric);}
-    if(impBtn){impBtn.classList.toggle('tool-btn--primary',!metric);impBtn.classList.toggle('tool-btn--ghost',metric);}
-    if(weightUnit) weightUnit.textContent=metric?t['tools.bmiCalculator.kg']:t['tools.bmiCalculator.lb'];
-    if(heightUnit) heightUnit.textContent=metric?t['tools.bmiCalculator.cm']:t['tools.bmiCalculator.inch'];
+    if(metricBtn){metricBtn.classList.toggle('tool-btn--primary',metric);metricBtn.classList.toggle('tool-btn--ghost',!metric);metricBtn.setAttribute('aria-pressed', metric ? 'true' : 'false');}
+    if(impBtn){impBtn.classList.toggle('tool-btn--primary',!metric);impBtn.classList.toggle('tool-btn--ghost',metric);impBtn.setAttribute('aria-pressed', metric ? 'false' : 'true');}
     if(weightInput) weightInput.value='';
     if(heightInput) heightInput.value='';
     if(resultDiv) resultDiv.style.display='none';
     if(emptyDiv) emptyDiv.style.display='';
     clearError();
+    var weightLabel=document.querySelector('label[for="bmi-weight"]');
+    var heightLabel=document.querySelector('label[for="bmi-height"]');
+    if(weightLabel) weightLabel.textContent=t['tools.bmiCalculator.weight']+' ('+(metric?t['tools.bmiCalculator.kg']:t['tools.bmiCalculator.lb'])+')';
+    if(heightLabel) heightLabel.textContent=t['tools.bmiCalculator.height']+' ('+(metric?t['tools.bmiCalculator.cm']:t['tools.bmiCalculator.inch'])+')';
   }
 
   metricBtn.addEventListener('click',function(){setUnit(true);});
@@ -167,8 +164,7 @@ const dir = languages[lang].dir;
 
 <style>
   .bmi-tool{display:flex;flex-direction:column;gap:var(--space-5);}
-  .bmi-tool__unit-toggle{display:flex;gap:var(--space-1);}
+  .bmi-tool__segment{flex:0 0 auto;}
   .bmi-tool__inputs{max-width:480px;}
-  .bmi-tool__result{display:flex;flex-direction:column;gap:var(--space-3);}
   .bmi-tool__category{padding:var(--space-3) var(--space-4);border:1px solid;border-radius:var(--radius-md);font-size:var(--text-lg);font-weight:var(--weight-bold);text-align:center;background:var(--surface-primary);}
 </style>

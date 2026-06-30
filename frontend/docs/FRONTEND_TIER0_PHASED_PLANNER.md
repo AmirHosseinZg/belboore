@@ -40,7 +40,8 @@
 
 **Shared components created:**
 - `src/lib/jalali.ts` — Pure-math Gregorian↔Jalali conversion (0 deps, < 5KB)
-- `src/components/tools/ToolDatePicker.astro` — Reusable date picker with popup calendar, month nav, Gregorian/Jalali mode toggle
+- `src/components/tools/ToolCalendarField.astro` — Reusable date picker with popup calendar, month nav, Gregorian/Jalali mode toggle, holiday metadata from `public/calendar-data/`
+- `src/components/tools/ToolDatePicker.astro` — (deleted) Superseded by `ToolCalendarField.astro`
 
 **UI improvements applied to all 5 tools:**
 - Raw `type="number"` → `type="text" inputmode="decimal"`
@@ -50,9 +51,11 @@
 - Copy buttons with proper `tool-btn` styling
 - Consistent empty/error/result states
 
-**Calendar:** DateDifference now supports Gregorian and Jalali/Shamsi calendars via `ToolDatePicker`. Two-way toggle switches both start/end pickers simultaneously. Internal date normalization uses Gregorian ISO values.
+**Calendar:** DateDifference now supports Gregorian and Jalali/Shamsi calendars via `ToolCalendarField`. Two-way toggle switches both start/end pickers simultaneously. Internal date normalization uses Gregorian ISO values. Holiday metadata loaded on-demand from `public/calendar-data/` (35 Jalali year files, 1390–1424).
 
-**Completed:** 2026-06-29
+**Cleanup:** Removed orphaned `ToolDatePicker.astro`.
+
+**Completed:** 2026-06-30
 
 ---
 
@@ -285,6 +288,7 @@
 | Phase | Tools | Effort | Layer |
 |:-----:|:-----:|:------:|:-----:|
 | P1 — Quick Wins | 5 new | 3d | 1 | ✅ Complete 2026-06-29
+| P1.1 — UI Repair & Calendar Foundation | — | 1d | 1 | ✅ Complete 2026-06-30
 | P2 — JSON Toolkit | 4 new + 1 enhanced | 5d | 1 |
 | P3 — Format Converters | 4 new | 4d | 1 |
 | P4 — Text & Encoding | 5 new + 2 enhanced | 4.5d | 1 |

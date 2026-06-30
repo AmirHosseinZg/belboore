@@ -1,0 +1,55 @@
+---
+interface Props {
+  id: string;
+  label: string;
+  hint?: string;
+  placeholder?: string;
+  type?: string;
+  inputmode?: string;
+  autocomplete?: string;
+  value?: string | number;
+  className?: string;
+  inputClassName?: string;
+  readonly?: boolean;
+  disabled?: boolean;
+  spellcheck?: boolean;
+}
+
+const {
+  id,
+  label,
+  hint,
+  placeholder = '',
+  type = 'text',
+  inputmode = 'text',
+  autocomplete = 'off',
+  value,
+  className = '',
+  inputClassName = '',
+  readonly = false,
+  disabled = false,
+  spellcheck,
+  ...rest
+} = Astro.props;
+
+const hintId = hint ? `${id}-hint` : undefined;
+---
+
+<div class:list={['tool-field', className]}>
+  <label class="tool-field__label" for={id}>{label}</label>
+  <input
+    id={id}
+    class:list={['tool-input', inputClassName]}
+    type={type}
+    inputmode={inputmode}
+    autocomplete={autocomplete}
+    placeholder={placeholder}
+    value={value}
+    aria-describedby={hintId}
+    readonly={readonly}
+    disabled={disabled}
+    spellcheck={spellcheck}
+    {...rest}
+  />
+  {hint && <p id={hintId} class="tool-field__hint">{hint}</p>}
+</div>

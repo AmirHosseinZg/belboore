@@ -6,6 +6,8 @@ import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
+import ToolInputField from './ToolInputField.astro';
+import ToolSegmentedControl from './ToolSegmentedControl.astro';
 import Button from '../ui/Button.astro';
 import Checkbox from '../ui/Checkbox.astro';
 
@@ -27,34 +29,24 @@ const dir = languages[lang].dir;
     data-invalid-range={t['tools.randomNumber.invalidRange']}
     data-invalid-count={t['tools.randomNumber.invalidCount']}
     data-range-exceeded={t['tools.randomNumber.rangeExceeded']}
+    data-mode-label={lang === 'fa' ? 'نوع عدد' : 'Number type'}
   >
     <div class="rng-tool__grid">
-      <div class="tool-field">
-        <label class="tool-field__label" for="rng-min">{t['tools.randomNumber.minimum']}</label>
-        <input id="rng-min" class="tool-input tool-input--mono" type="text" inputmode="decimal" value="1" autocomplete="off" />
-      </div>
-      <div class="tool-field">
-        <label class="tool-field__label" for="rng-max">{t['tools.randomNumber.maximum']}</label>
-        <input id="rng-max" class="tool-input tool-input--mono" type="text" inputmode="decimal" value="100" autocomplete="off" />
-      </div>
-      <div class="tool-field">
-        <label class="tool-field__label" for="rng-count">{t['tools.randomNumber.count']}</label>
-        <input id="rng-count" class="tool-input tool-input--mono" type="text" inputmode="numeric" value="5" autocomplete="off" />
-      </div>
+      <ToolInputField id="rng-min" label={t['tools.randomNumber.minimum']} inputmode="decimal" value="1" inputClassName="tool-input--mono" />
+      <ToolInputField id="rng-max" label={t['tools.randomNumber.maximum']} inputmode="decimal" value="100" inputClassName="tool-input--mono" />
+      <ToolInputField id="rng-count" label={t['tools.randomNumber.count']} inputmode="numeric" value="5" inputClassName="tool-input--mono" />
     </div>
 
     <div class="tool-toolbar">
-      <div class="tool-field" style="flex: 0 0 auto;">
-        <label class="tool-field__label">{t['tools.randomNumber.integer']} / {t['tools.randomNumber.decimal']}</label>
-        <div class="rng-tool__type-toggle">
-          <button id="rng-type-int" type="button" class="tool-btn tool-btn--primary">{t['tools.randomNumber.integer']}</button>
-          <button id="rng-type-dec" type="button" class="tool-btn">{t['tools.randomNumber.decimal']}</button>
-        </div>
-      </div>
-      <div class="tool-field" id="rng-precision-field" style="flex: 0 0 auto; display: none;">
-        <label class="tool-field__label" for="rng-precision">{t['tools.randomNumber.precision']}</label>
-        <input id="rng-precision" class="tool-input" type="text" inputmode="numeric" value="2" style="width: 70px;" autocomplete="off" />
-      </div>
+      <ToolSegmentedControl
+        label={lang === 'fa' ? 'نوع عدد' : 'Number type'}
+        className="rng-tool__segment"
+        items={[
+          { id: 'rng-type-int', value: 'integer', label: t['tools.randomNumber.integer'], active: true },
+          { id: 'rng-type-dec', value: 'decimal', label: t['tools.randomNumber.decimal'] },
+        ]}
+      />
+      <ToolInputField id="rng-precision" label={t['tools.randomNumber.precision']} inputmode="numeric" value="2" className="rng-tool__precision-field" />
       <Checkbox id="rng-allow-dupes">{t['tools.randomNumber.allowDuplicates']}</Checkbox>
     </div>
 
@@ -85,7 +77,7 @@ const dir = languages[lang].dir;
   var maxInput = document.getElementById('rng-max');
   var countInput = document.getElementById('rng-count');
   var precisionInput = document.getElementById('rng-precision');
-  var precisionField = document.getElementById('rng-precision-field');
+  var precisionField = document.querySelector('.rng-tool__precision-field');
   var typeInt = document.getElementById('rng-type-int');
   var typeDec = document.getElementById('rng-type-dec');
   var allowDupes = document.getElementById('rng-allow-dupes');
@@ -104,8 +96,8 @@ const dir = languages[lang].dir;
 
   function setActiveType(dec){
     isDecimal=dec;
-    if(typeInt){typeInt.classList.toggle('tool-btn--primary',!dec);typeInt.classList.toggle('tool-btn--ghost',dec);}
-    if(typeDec){typeDec.classList.toggle('tool-btn--primary',dec);typeDec.classList.toggle('tool-btn--ghost',!dec);}
+    if(typeInt){typeInt.classList.toggle('tool-btn--primary',!dec);typeInt.classList.toggle('tool-btn--ghost',dec);typeInt.setAttribute('aria-pressed', dec ? 'false' : 'true');}
+    if(typeDec){typeDec.classList.toggle('tool-btn--primary',dec);typeDec.classList.toggle('tool-btn--ghost',!dec);typeDec.setAttribute('aria-pressed', dec ? 'true' : 'false');}
     if(precisionField) precisionField.style.display=dec?'':'none';
   }
 
@@ -167,7 +159,8 @@ const dir = languages[lang].dir;
 <style>
   .rng-tool{display:flex;flex-direction:column;gap:var(--space-5);}
   .rng-tool__grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
-  .rng-tool__type-toggle{display:flex;gap:var(--space-1);}
+  .rng-tool__segment{flex:0 0 auto;}
+  .rng-tool__precision-field{display:none;flex:0 0 110px;}
   .rng-tool__output{min-height:140px;white-space:pre-wrap;word-break:break-word;font-family:var(--font-mono);direction:ltr;text-align:left;}
   @media(max-width:640px){.rng-tool__grid{grid-template-columns:1fr;}}
 </style>
