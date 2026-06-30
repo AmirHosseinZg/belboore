@@ -1,0 +1,23 @@
+---
+import { Dices } from '@lucide/astro';
+
+interface Props {
+  name: string;
+  size?: number;
+  className?: string;
+}
+
+const {
+  name,
+  size = 24,
+  className = '',
+} = Astro.props;
+
+const iconMap = {
+  dices: Dices,
+} as const;
+
+const IconComponent = iconMap[name as keyof typeof iconMap];
+---
+
+{IconComponent ? <IconComponent size={size} class={className} aria-hidden="true" /> : null}

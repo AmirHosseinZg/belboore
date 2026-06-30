@@ -26,6 +26,7 @@ import DateDifference from '../../../components/tools/DateDifference.astro';
 import PercentageCalculator from '../../../components/tools/PercentageCalculator.astro';
 import RandomNumber from '../../../components/tools/RandomNumber.astro';
 import BmiCalculator from '../../../components/tools/BmiCalculator.astro';
+import LucideIcon from '../../../components/ui/LucideIcon.astro';
 
 export function getStaticPaths() {
   return [
@@ -89,6 +90,7 @@ const recentMeta = JSON.stringify({
   slug: tool.slug,
   name: name,
   icon: tool.icon,
+  lucideIcon: tool.lucideIcon || '',
   iconPath: tool.iconPath || '',
   type: tool.type,
   url: tool.url || '',
@@ -136,7 +138,9 @@ const recentMeta = JSON.stringify({
       <article class="tool-detail">
         <header class="tool-detail__header">
           <div class="tool-detail__icon-wrap">
-            {tool.iconPath ? (
+            {tool.lucideIcon ? (
+              <LucideIcon name={tool.lucideIcon} size={48} className="tool-detail__icon-lucide" />
+            ) : tool.iconPath ? (
               <img
                 src={tool.iconPath}
                 alt=""
@@ -312,6 +316,10 @@ const recentMeta = JSON.stringify({
     border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
+  }
+
+  .tool-detail__icon-lucide {
+    color: var(--color-tech-blue);
   }
 
   .tool-detail__icon {

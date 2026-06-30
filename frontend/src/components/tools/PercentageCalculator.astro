@@ -33,33 +33,35 @@ const dir = languages[lang].dir;
     data-invalid={t['tools.percentageCalculator.invalidInput']}
     data-div-zero={t['tools.percentageCalculator.divisionByZero']}
   >
-    <div class="tool-field">
-      <label class="tool-field__label" for="pc-mode">{t['tools.percentageCalculator.formula']}</label>
-      <Select id="pc-mode"
-        options={[
-          { value: '1', label: t['tools.percentageCalculator.mode1'] },
-          { value: '2', label: t['tools.percentageCalculator.mode2'] },
-          { value: '3', label: t['tools.percentageCalculator.mode3'] },
-          { value: '4', label: t['tools.percentageCalculator.mode4'] },
-        ]}
-        selectedValue="1"
-      />
-    </div>
+    <div class="pct-calc__controls">
+      <div class="tool-field">
+        <label class="tool-field__label" for="pc-mode">{t['tools.percentageCalculator.formula']}</label>
+        <Select id="pc-mode"
+          options={[
+            { value: '1', label: t['tools.percentageCalculator.mode1'] },
+            { value: '2', label: t['tools.percentageCalculator.mode2'] },
+            { value: '3', label: t['tools.percentageCalculator.mode3'] },
+            { value: '4', label: t['tools.percentageCalculator.mode4'] },
+          ]}
+          selectedValue="1"
+        />
+      </div>
 
-    <div class="pct-calc__inputs">
-      <ToolInputField id="pc-x" label={t['tools.percentageCalculator.x']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
-      <ToolInputField id="pc-y" label={t['tools.percentageCalculator.y']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
-      <ToolInputField id="pc-p" label={t['tools.percentageCalculator.percent']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" className="pct-calc__percent-field" />
-    </div>
+      <div class="pct-calc__inputs">
+        <ToolInputField id="pc-x" label={t['tools.percentageCalculator.x']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
+        <ToolInputField id="pc-y" label={t['tools.percentageCalculator.y']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" />
+        <ToolInputField id="pc-p" label={t['tools.percentageCalculator.percent']} placeholder="0" inputmode="decimal" inputClassName="tool-input--mono" className="pct-calc__percent-field" />
+      </div>
 
-    <div class="tool-toolbar">
-      <ToolActionButton id="pc-calculate">{t['tools.percentageCalculator.calculate']}</ToolActionButton>
+      <div class="tool-toolbar pct-calc__toolbar">
+        <ToolActionButton id="pc-calculate">{t['tools.percentageCalculator.calculate']}</ToolActionButton>
+      </div>
     </div>
 
     <div id="pc-error" class="tool-error" style="display: none;" role="alert"></div>
 
     <ToolResultCard id="pc-result" className="pct-calc__result" copyId="pc-copy" copyLabel={t['tools.percentageCalculator.copyResult']}>
-      <div class="tool-result">
+      <div class="tool-result pct-calc__result-surface">
         <div class="tool-result__value" id="pc-value">0</div>
         <div class="tool-result__label" id="pc-formula"></div>
       </div>
@@ -165,8 +167,14 @@ const dir = languages[lang].dir;
 
 <style>
   .pct-calc{display:flex;flex-direction:column;gap:var(--space-5);}
+  .pct-calc__controls{display:flex;flex-direction:column;gap:var(--space-5);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
   .pct-calc__inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
+  .pct-calc__inputs :global(.tool-input){min-height:46px;border-radius:var(--radius-lg);background:color-mix(in srgb,var(--surface-primary) 82%,var(--surface-secondary));}
   .pct-calc__percent-field{display:none;}
+  .pct-calc__toolbar{justify-content:flex-end;padding:0;}
   .pct-calc__result{margin-top:var(--space-2);}
-  @media(max-width:640px){.pct-calc__inputs{grid-template-columns:1fr;}}
+  .pct-calc__result-surface{padding:var(--space-5);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));border:1px solid var(--border-subtle);box-shadow:var(--shadow-sm);}
+  .pct-calc__result-surface :global(.tool-result__value){font-size:clamp(1.8rem,4vw,2.4rem);}
+  .pct-calc__result-surface :global(.tool-result__label){margin-top:var(--space-3);line-height:1.7;}
+  @media(max-width:640px){.pct-calc__controls{padding:var(--space-4);}.pct-calc__inputs{grid-template-columns:1fr;}.pct-calc__result-surface{padding:var(--space-4);}}
 </style>

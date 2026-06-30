@@ -2,14 +2,15 @@
 import type { Lang } from '../../i18n/utils';
 import { languages } from '../../i18n/utils';
 import { ui } from '../../i18n/ui';
+import { Copy, Dices, Info } from '@lucide/astro';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
-import ToolInputField from './ToolInputField.astro';
-import ToolSegmentedControl from './ToolSegmentedControl.astro';
 import Button from '../ui/Button.astro';
 import Checkbox from '../ui/Checkbox.astro';
+import Input from '../ui/Input.astro';
+import Tabs from '../ui/Tabs.astro';
 
 interface Props {
   lang?: Lang;
@@ -31,41 +32,65 @@ const dir = languages[lang].dir;
     data-range-exceeded={t['tools.randomNumber.rangeExceeded']}
     data-mode-label={lang === 'fa' ? 'نوع عدد' : 'Number type'}
   >
-    <div class="rng-tool__grid">
-      <ToolInputField id="rng-min" label={t['tools.randomNumber.minimum']} inputmode="decimal" value="1" inputClassName="tool-input--mono" />
-      <ToolInputField id="rng-max" label={t['tools.randomNumber.maximum']} inputmode="decimal" value="100" inputClassName="tool-input--mono" />
-      <ToolInputField id="rng-count" label={t['tools.randomNumber.count']} inputmode="numeric" value="5" inputClassName="tool-input--mono" />
-    </div>
+    <div class="rng-tool__controls">
+      <div class="rng-tool__grid">
+        <Input id="rng-min" label={t['tools.randomNumber.minimum']} inputmode="decimal" value="1" inputClassName="tool-input--mono rng-tool__input-control" />
+        <Input id="rng-max" label={t['tools.randomNumber.maximum']} inputmode="decimal" value="100" inputClassName="tool-input--mono rng-tool__input-control" />
+        <Input id="rng-count" label={t['tools.randomNumber.count']} inputmode="numeric" value="5" inputClassName="tool-input--mono rng-tool__input-control" />
+      </div>
 
-    <div class="tool-toolbar">
-      <ToolSegmentedControl
-        label={lang === 'fa' ? 'نوع عدد' : 'Number type'}
-        className="rng-tool__segment"
-        items={[
-          { id: 'rng-type-int', value: 'integer', label: t['tools.randomNumber.integer'], active: true },
-          { id: 'rng-type-dec', value: 'decimal', label: t['tools.randomNumber.decimal'] },
-        ]}
-      />
-      <ToolInputField id="rng-precision" label={t['tools.randomNumber.precision']} inputmode="numeric" value="2" className="rng-tool__precision-field" />
-      <Checkbox id="rng-allow-dupes">{t['tools.randomNumber.allowDuplicates']}</Checkbox>
-    </div>
+      <div class="rng-tool__options">
+        <div class="tool-field rng-tool__segment">
+          <Tabs
+            id="rng-type-tabs"
+            className="rng-tool__tabs"
+            ariaLabel={lang === 'fa' ? 'نوع عدد' : 'Number type'}
+            activeId="integer"
+            tabs={[
+              { id: 'integer', label: t['tools.randomNumber.integer'] },
+              { id: 'decimal', label: t['tools.randomNumber.decimal'] },
+            ]}
+          />
+        </div>
+        <Input
+          id="rng-precision"
+          label={t['tools.randomNumber.precision']}
+          inputmode="numeric"
+          value="2"
+          className="rng-tool__precision-field"
+          inputClassName="tool-input--mono rng-tool__input-control"
+        />
+        <div class="rng-tool__checkbox-wrap">
+          <span class="tool-field__label rng-tool__checkbox-label">&nbsp;</span>
+          <Checkbox id="rng-allow-dupes">{t['tools.randomNumber.allowDuplicates']}</Checkbox>
+        </div>
+      </div>
 
-    <div class="tool-toolbar">
-      <ToolActionButton id="rng-generate">{t['tools.randomNumber.generate']}</ToolActionButton>
+      <div class="tool-toolbar rng-tool__toolbar">
+        <ToolActionButton id="rng-generate">
+          <Dices size={18} />
+          {t['tools.randomNumber.generate']}
+        </ToolActionButton>
+      </div>
     </div>
 
     <div id="rng-error" class="tool-error" style="display: none;" role="alert"></div>
 
-    <div id="rng-output" class="tool-output tool-output--empty rng-tool__output" role="status" aria-live="polite">
-      {t['tools.randomNumber.empty']}
-    </div>
-
-    <div class="tool-toolbar">
-      <Button id="rng-copy" variant="secondary">{t['tools.randomNumber.copyAll']}</Button>
+    <div class="rng-tool__result-shell">
+      <div class="rng-tool__result-head">
+        <span class="tool-field__label">{t['tools.randomNumber.title']}</span>
+        <Button id="rng-copy" variant="secondary">
+          <Copy size={16} />
+          {t['tools.randomNumber.copyAll']}
+        </Button>
+      </div>
+      <div id="rng-output" class="tool-output tool-output--empty rng-tool__output" role="status" aria-live="polite">
+        {t['tools.randomNumber.empty']}
+      </div>
     </div>
 
     <div class="tool-note">
-      <span class="tool-note__icon">i</span>
+      <span class="tool-note__icon"><Info size={14} /></span>
       {t['tools.randomNumber.note']}
     </div>
   </section>
@@ -78,8 +103,7 @@ const dir = languages[lang].dir;
   var countInput = document.getElementById('rng-count');
   var precisionInput = document.getElementById('rng-precision');
   var precisionField = document.querySelector('.rng-tool__precision-field');
-  var typeInt = document.getElementById('rng-type-int');
-  var typeDec = document.getElementById('rng-type-dec');
+  var typeTabs = document.getElementById('rng-type-tabs');
   var allowDupes = document.getElementById('rng-allow-dupes');
   var output = document.getElementById('rng-output');
   var errorDiv = document.getElementById('rng-error');
@@ -96,13 +120,14 @@ const dir = languages[lang].dir;
 
   function setActiveType(dec){
     isDecimal=dec;
-    if(typeInt){typeInt.classList.toggle('tool-btn--primary',!dec);typeInt.classList.toggle('tool-btn--ghost',dec);typeInt.setAttribute('aria-pressed', dec ? 'false' : 'true');}
-    if(typeDec){typeDec.classList.toggle('tool-btn--primary',dec);typeDec.classList.toggle('tool-btn--ghost',!dec);typeDec.setAttribute('aria-pressed', dec ? 'true' : 'false');}
     if(precisionField) precisionField.style.display=dec?'':'none';
   }
 
-  typeInt.addEventListener('click',function(){setActiveType(false);});
-  typeDec.addEventListener('click',function(){setActiveType(true);});
+  typeTabs?.addEventListener('ui-tabs:change', function(event){
+    var customEvent = event;
+    var tabId = customEvent.detail && customEvent.detail.tabId;
+    setActiveType(tabId === 'decimal');
+  });
 
   function generateRandom(){
     if(!root||!output||!precisionInput) return;
@@ -158,9 +183,19 @@ const dir = languages[lang].dir;
 
 <style>
   .rng-tool{display:flex;flex-direction:column;gap:var(--space-5);}
+  .rng-tool__controls{display:flex;flex-direction:column;gap:var(--space-5);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
   .rng-tool__grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);}
-  .rng-tool__segment{flex:0 0 auto;}
+  .rng-tool__options{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(120px,180px) auto;gap:var(--space-4);align-items:end;}
+  .rng-tool__segment{min-width:0;}
+  .rng-tool__tabs{width:max-content;max-width:100%;}
   .rng-tool__precision-field{display:none;flex:0 0 110px;}
+  .rng-tool__input-control{min-height:46px;font-size:var(--text-sm);}
+  .rng-tool__checkbox-wrap{display:flex;flex-direction:column;gap:var(--space-2);}
+  .rng-tool__checkbox-label{visibility:hidden;}
+  .rng-tool__toolbar{justify-content:flex-end;padding:0;}
+  .rng-tool__result-shell{display:flex;flex-direction:column;gap:var(--space-3);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));box-shadow:var(--shadow-sm);}
+  .rng-tool__result-head{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);flex-wrap:wrap;}
   .rng-tool__output{min-height:140px;white-space:pre-wrap;word-break:break-word;font-family:var(--font-mono);direction:ltr;text-align:left;}
-  @media(max-width:640px){.rng-tool__grid{grid-template-columns:1fr;}}
+  @media(max-width:840px){.rng-tool__options{grid-template-columns:1fr;}}
+  @media(max-width:640px){.rng-tool__controls,.rng-tool__result-shell{padding:var(--space-4);}.rng-tool__grid{grid-template-columns:1fr;}.rng-tool__result-head{align-items:stretch;}.rng-tool__result-head :global(.ui-button){width:100%;}}
 </style>

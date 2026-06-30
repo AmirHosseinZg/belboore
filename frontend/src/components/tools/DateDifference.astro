@@ -8,7 +8,7 @@ import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
 import ToolCalendarField from './ToolCalendarField.astro';
 import ToolResultCard from './ToolResultCard.astro';
-import ToolSegmentedControl from './ToolSegmentedControl.astro';
+import Tabs from '../ui/Tabs.astro';
 
 interface Props {
   lang?: Lang;
@@ -34,22 +34,28 @@ const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
     data-copy-result={t['tools.dateDifference.copyResult']}
     data-default-calendar={defaultCal}
   >
-    <ToolSegmentedControl
-      label={lang === 'fa' ? 'تقویم' : 'Calendar'}
-      className="date-diff__calendar-mode"
-      items={[
-        { id: 'dd-cal-greg', value: 'gregorian', label: t['tools.dateDifference.gregorian'], active: defaultCal === 'gregorian' },
-        { id: 'dd-cal-jalali', value: 'jalali', label: t['tools.dateDifference.jalali'], active: defaultCal === 'jalali' },
-      ]}
-    />
+    <div class="date-diff__controls">
+      <div class="tool-field date-diff__calendar-mode">
+        <Tabs
+          id="dd-cal-tabs"
+          className="date-diff__calendar-tabs"
+          ariaLabel={lang === 'fa' ? 'تقویم' : 'Calendar'}
+          activeId={defaultCal}
+          tabs={[
+            { id: 'gregorian', label: t['tools.dateDifference.gregorian'] },
+            { id: 'jalali', label: t['tools.dateDifference.jalali'] },
+          ]}
+        />
+      </div>
 
-    <div class="tool-grid-2">
-      <ToolCalendarField id="dd-start" label={t['tools.dateDifference.startDate']} lang={lang} calendar={defaultCal} />
-      <ToolCalendarField id="dd-end" label={t['tools.dateDifference.endDate']} lang={lang} calendar={defaultCal} />
-    </div>
+      <div class="tool-grid-2 date-diff__fields">
+        <ToolCalendarField id="dd-start" label={t['tools.dateDifference.startDate']} lang={lang} calendar={defaultCal} className="date-diff__start-field" />
+        <ToolCalendarField id="dd-end" label={t['tools.dateDifference.endDate']} lang={lang} calendar={defaultCal} />
+      </div>
 
-    <div class="tool-toolbar">
-      <ToolActionButton id="dd-calc">{t['tools.dateDifference.calculate']}</ToolActionButton>
+      <div class="tool-toolbar date-diff__toolbar">
+        <ToolActionButton id="dd-calc">{t['tools.dateDifference.calculate']}</ToolActionButton>
+      </div>
     </div>
 
     <div id="dd-error" class="tool-error" style="display: none;" role="alert"></div>
@@ -57,7 +63,7 @@ const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
     <div id="dd-relation" class="date-diff__relation" style="display: none;"></div>
 
     <ToolResultCard id="dd-results" className="date-diff__results" copyId="dd-copy" copyLabel={t['tools.dateDifference.copyResult']}>
-      <div class="tool-result">
+      <div class="tool-result date-diff__result-surface">
         <div class="date-diff__rows">
           <div class="date-diff__row">
             <span class="tool-result__label">{t['tools.dateDifference.totalDays']}</span>
@@ -100,8 +106,7 @@ const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
   var errorDiv = document.getElementById('dd-error');
   var calcBtn = document.getElementById('dd-calc');
   var copyBtn = document.getElementById('dd-copy');
-  var gregBtn = document.getElementById('dd-cal-greg');
-  var jalaliBtn = document.getElementById('dd-cal-jalali');
+  var calTabs = document.getElementById('dd-cal-tabs');
 
   function setError(m){if(!errorDiv) return;window.__belbooreTools.setErrorBox(errorDiv,m);}
   function clearError(){if(!errorDiv) return;window.__belbooreTools.clearErrorBox(errorDiv);}
@@ -110,21 +115,17 @@ const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
 
   function setCalMode(mode){
     currentMode = mode;
-    var isGreg = mode === 'gregorian';
-    gregBtn.classList.toggle('tool-btn--primary', isGreg);
-    gregBtn.classList.toggle('tool-btn--ghost', !isGreg);
-    gregBtn.setAttribute('aria-pressed', isGreg ? 'true' : 'false');
-    jalaliBtn.classList.toggle('tool-btn--primary', !isGreg);
-    jalaliBtn.classList.toggle('tool-btn--ghost', isGreg);
-    jalaliBtn.setAttribute('aria-pressed', isGreg ? 'false' : 'true');
     if(window.__belbooreCalendars){
       if(window.__belbooreCalendars['dd-start']) window.__belbooreCalendars['dd-start'].setCalendarMode(mode);
       if(window.__belbooreCalendars['dd-end']) window.__belbooreCalendars['dd-end'].setCalendarMode(mode);
     }
   }
 
-  gregBtn.addEventListener('click', function(){ setCalMode('gregorian'); });
-  jalaliBtn.addEventListener('click', function(){ setCalMode('jalali'); });
+  calTabs?.addEventListener('ui-tabs:change', function(event){
+    var customEvent = event;
+    var tabId = customEvent.detail && customEvent.detail.tabId;
+    setCalMode(tabId === 'jalali' ? 'jalali' : 'gregorian');
+  });
   setCalMode(currentMode);
 
   function calcDiff(){
@@ -189,10 +190,25 @@ const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
 
 <style>
   .date-diff{display:flex;flex-direction:column;gap:var(--space-5);}
+  .date-diff__controls{display:flex;flex-direction:column;gap:var(--space-6);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
   .date-diff__calendar-mode{flex:0 0 auto;}
-  .date-diff__relation{padding:var(--space-3) var(--space-4);background:var(--color-tech-blue-subtle);border:1px solid rgba(0,82,255,0.12);border-radius:var(--radius-md);font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--color-tech-blue);}
+  .date-diff__calendar-tabs{width:max-content;max-width:100%;}
+  .date-diff__fields{width:min(100%, 760px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5);align-items:start;}
+  .date-diff__start-field{margin-bottom:0;}
+  .date-diff__toolbar{justify-content:flex-end;padding:0;}
+  .date-diff__relation{padding:var(--space-4) var(--space-5);background:var(--color-tech-blue-subtle);border:1px solid rgba(0,82,255,0.12);border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--color-tech-blue);}
   .date-diff__results{display:flex;flex-direction:column;gap:var(--space-4);}
-  .date-diff__rows{display:flex;flex-direction:column;}
-  .date-diff__row{display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle);}
+  .date-diff__result-surface{padding:var(--space-5);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));border:1px solid var(--border-subtle);box-shadow:var(--shadow-sm);}
+  .date-diff__rows{display:flex;flex-direction:column;gap:var(--space-1);}
+  .date-diff__row{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle);}
   .date-diff__row:last-child{border-bottom:none;}
+  .date-diff__row :global(.tool-result__label){text-align:start;color:var(--text-secondary);}
+  .date-diff__row :global(.tool-result__value){font-size:clamp(1.1rem,2vw,1.5rem);text-align:end;}
+  @media(max-width:640px){
+    .date-diff__controls{padding:var(--space-4);}
+    .date-diff__fields{width:100%;grid-template-columns:1fr;gap:var(--space-4);}
+    .date-diff__relation,.date-diff__result-surface{padding:var(--space-4);}
+    .date-diff__row{align-items:flex-start;flex-direction:column;}
+    .date-diff__row :global(.tool-result__value){text-align:start;}
+  }
 </style>

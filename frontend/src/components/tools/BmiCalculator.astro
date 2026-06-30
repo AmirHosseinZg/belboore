@@ -33,30 +33,32 @@ const dir = languages[lang].dir;
     data-your-bmi={t['tools.bmiCalculator.yourBmi']}
     data-category-label={t['tools.bmiCalculator.category']}
   >
-    <div class="tool-toolbar">
-      <ToolSegmentedControl
-        label={t['tools.bmiCalculator.unit']}
-        className="bmi-tool__segment"
-        items={[
-          { id: 'bmi-unit-metric', value: 'metric', label: t['tools.bmiCalculator.metric'], active: true },
-          { id: 'bmi-unit-imp', value: 'imperial', label: t['tools.bmiCalculator.imperial'] },
-        ]}
-      />
-    </div>
+    <div class="bmi-tool__controls">
+      <div class="tool-toolbar bmi-tool__unit-toolbar">
+        <ToolSegmentedControl
+          label={t['tools.bmiCalculator.unit']}
+          className="bmi-tool__segment"
+          items={[
+            { id: 'bmi-unit-metric', value: 'metric', label: t['tools.bmiCalculator.metric'], active: true },
+            { id: 'bmi-unit-imp', value: 'imperial', label: t['tools.bmiCalculator.imperial'] },
+          ]}
+        />
+      </div>
 
-    <div class="bmi-tool__inputs tool-grid-2">
-      <ToolInputField id="bmi-weight" label={`${t['tools.bmiCalculator.weight']} (${t['tools.bmiCalculator.kg']})`} placeholder="70" inputmode="decimal" inputClassName="tool-input--mono" />
-      <ToolInputField id="bmi-height" label={`${t['tools.bmiCalculator.height']} (${t['tools.bmiCalculator.cm']})`} placeholder="175" inputmode="decimal" inputClassName="tool-input--mono" />
-    </div>
+      <div class="bmi-tool__inputs tool-grid-2">
+        <ToolInputField id="bmi-weight" label={`${t['tools.bmiCalculator.weight']} (${t['tools.bmiCalculator.kg']})`} placeholder="70" inputmode="decimal" inputClassName="tool-input--mono" />
+        <ToolInputField id="bmi-height" label={`${t['tools.bmiCalculator.height']} (${t['tools.bmiCalculator.cm']})`} placeholder="175" inputmode="decimal" inputClassName="tool-input--mono" />
+      </div>
 
-    <div class="tool-toolbar">
-      <ToolActionButton id="bmi-calc">{t['tools.bmiCalculator.calculate']}</ToolActionButton>
+      <div class="tool-toolbar bmi-tool__toolbar">
+        <ToolActionButton id="bmi-calc">{t['tools.bmiCalculator.calculate']}</ToolActionButton>
+      </div>
     </div>
 
     <div id="bmi-error" class="tool-error" style="display: none;" role="alert"></div>
 
     <ToolResultCard id="bmi-result" className="bmi-tool__result" copyId="bmi-copy" copyLabel={t['tools.bmiCalculator.copyResult']}>
-      <div class="tool-result">
+      <div class="tool-result bmi-tool__result-surface">
         <div class="tool-result__value" id="bmi-value">0</div>
         <div class="tool-result__label">{t['tools.bmiCalculator.yourBmi']}</div>
       </div>
@@ -164,7 +166,14 @@ const dir = languages[lang].dir;
 
 <style>
   .bmi-tool{display:flex;flex-direction:column;gap:var(--space-5);}
+  .bmi-tool__controls{display:flex;flex-direction:column;gap:var(--space-5);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
   .bmi-tool__segment{flex:0 0 auto;}
+  .bmi-tool__unit-toolbar,.bmi-tool__toolbar{padding:0;}
+  .bmi-tool__toolbar{justify-content:flex-end;}
   .bmi-tool__inputs{max-width:480px;}
-  .bmi-tool__category{padding:var(--space-3) var(--space-4);border:1px solid;border-radius:var(--radius-md);font-size:var(--text-lg);font-weight:var(--weight-bold);text-align:center;background:var(--surface-primary);}
+  .bmi-tool__inputs :global(.tool-input){min-height:46px;border-radius:var(--radius-lg);background:color-mix(in srgb,var(--surface-primary) 82%,var(--surface-secondary));}
+  .bmi-tool__result-surface{padding:var(--space-5);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));border:1px solid var(--border-subtle);box-shadow:var(--shadow-sm);}
+  .bmi-tool__result-surface :global(.tool-result__value){font-size:clamp(1.8rem,4vw,2.5rem);}
+  .bmi-tool__category{padding:var(--space-3) var(--space-4);border:1px solid;border-radius:var(--radius-lg);font-size:var(--text-lg);font-weight:var(--weight-bold);text-align:center;background:var(--surface-primary);box-shadow:var(--shadow-sm);}
+  @media(max-width:640px){.bmi-tool__controls,.bmi-tool__result-surface{padding:var(--space-4);}.bmi-tool__inputs{max-width:none;}}
 </style>

@@ -11,6 +11,7 @@ export interface Tool {
   category: string;
   featured: boolean;
   icon: string;
+  lucideIcon?: string;
   iconPath?: string;
   url?: string;
   name: { en: string; fa: string };
@@ -442,6 +443,7 @@ export const tools: Tool[] = [
     category: 'general',
     featured: false,
     icon: '🎲',
+    lucideIcon: 'dices',
     name: { en: 'Random Number Generator', fa: 'تولید عدد تصادفی' },
     description: { en: 'Generate random numbers within a range. Choose your min, max, and count.', fa: 'تولید اعداد تصادفی در یک بازه. حداقل، حداکثر و تعداد را انتخاب کنید.' },
     longDescription: { en: 'Generate truly random numbers within any range. Set minimum and maximum values, choose how many numbers to generate, and decide whether to allow duplicates.', fa: 'تولید اعداد واقعاً تصادفی در هر بازه. مقادیر حداقل و حداکثر را تنظیم کنید، تعداد اعداد را انتخاب کنید و تصمیم بگیرید آیا اعداد تکراری مجاز هستند.' },
