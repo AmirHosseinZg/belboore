@@ -46,6 +46,12 @@ import MimeTypes from '../../../components/tools/MimeTypes.astro';
 import HttpStatusCodes from '../../../components/tools/HttpStatusCodes.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
 import PasswordGenerator from '../../../components/tools/PasswordGenerator.astro';
+import PasswordStrengthAnalyser from '../../../components/tools/PasswordStrengthAnalyser.astro';
+import BcryptTool from '../../../components/tools/BcryptTool.astro';
+import HmacGenerator from '../../../components/tools/HmacGenerator.astro';
+import RsaKeyPairGenerator from '../../../components/tools/RsaKeyPairGenerator.astro';
+import EncryptDecryptText from '../../../components/tools/EncryptDecryptText.astro';
+import OtpCodeGenerator from '../../../components/tools/OtpCodeGenerator.astro';
 import CaseConverter from '../../../components/tools/CaseConverter.astro';
 import WordCounter from '../../../components/tools/WordCounter.astro';
 import QrGenerator from '../../../components/tools/QrGenerator.astro';
@@ -122,6 +128,12 @@ const toolComponentMap: Record<string, any> = {
   'safelink-decoder': SafelinkDecoderTool,
   'uuid-generator': UuidGenerator,
   'password-generator': PasswordGenerator,
+  'password-strength-analyser': PasswordStrengthAnalyser,
+  'bcrypt': BcryptTool,
+  'hmac-generator': HmacGenerator,
+  'rsa-key-pair-generator': RsaKeyPairGenerator,
+  'encrypt-decrypt-text': EncryptDecryptText,
+  'otp-code-generator': OtpCodeGenerator,
   'case-converter': CaseConverter,
   'word-counter': WordCounter,
   'qr-code-generator': QrGenerator,

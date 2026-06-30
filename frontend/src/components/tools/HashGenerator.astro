@@ -1,15 +1,73 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolWorkspace from './ToolWorkspace.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Hash Generator',
+    modePlain: 'Plain Hash',
+    modeHmac: 'HMAC',
+    modeFile: 'File Hash',
+    algo: 'Algorithm',
+    textToHash: 'Text to hash',
+    textPlaceholder: 'Enter text to generate hash...',
+    hmacKey: 'Secret key',
+    hmacKeyPlaceholder: 'Enter HMAC secret key...',
+    filePick: 'Choose a file',
+    fileNone: 'No file selected',
+    fileHashing: 'Hashing file...',
+    copy: 'Copy',
+    empty: 'Enter text to generate hash',
+    hmacEmpty: 'Enter text and key to generate HMAC',
+    fileEmpty: 'Select a file to hash',
+    error: 'Error',
+    note: 'All hashing is performed client-side using the Web Crypto API. Your data never leaves your device.',
+  },
+  fa: {
+    title: 'تولید Hash',
+    modePlain: 'هش ساده',
+    modeHmac: 'HMAC',
+    modeFile: 'هش فایل',
+    algo: 'الگوریتم',
+    textToHash: 'متن برای هش',
+    textPlaceholder: 'متن را برای تولید hash وارد کنید...',
+    hmacKey: 'کلید مخفی',
+    hmacKeyPlaceholder: 'کلید مخفی HMAC را وارد کنید...',
+    filePick: 'انتخاب فایل',
+    fileNone: 'هیچ فایلی انتخاب نشده',
+    fileHashing: 'در حال هش کردن فایل...',
+    copy: 'کپی',
+    empty: 'متن را برای تولید hash وارد کنید',
+    hmacEmpty: 'متن و کلید را برای تولید HMAC وارد کنید',
+    fileEmpty: 'یک فایل برای هش انتخاب کنید',
+    error: 'خطا',
+    note: 'تمام عملیات هش در سمت کاربر با Web Crypto API انجام می‌شود. داده شما هرگز دستگاه را ترک نمی‌کند.',
+  },
+};
 ---
 
 <ToolPrimitives />
 <ToolUtils />
 
-<ToolWorkspace title="Hash Generator">
+<ToolWorkspace title={copy[lang].title}>
   <div class="tool-toolbar">
-    <label class="tool-field__label" for="hg-algo">Algorithm</label>
+    <button id="hg-mode-plain" type="button" class="tool-btn tool-btn--primary is-active">{copy[lang].modePlain}</button>
+    <button id="hg-mode-hmac" type="button" class="tool-btn">{copy[lang].modeHmac}</button>
+    <button id="hg-mode-file" type="button" class="tool-btn">{copy[lang].modeFile}</button>
+  </div>
+
+  <div class="tool-toolbar">
+    <label class="tool-field__label" for="hg-algo">{copy[lang].algo}</label>
     <select id="hg-algo" class="tool-select">
       <option value="MD5">MD5</option>
       <option value="SHA-1">SHA-1</option>
@@ -17,17 +75,46 @@ import ToolWorkspace from './ToolWorkspace.astro';
       <option value="SHA-384">SHA-384</option>
       <option value="SHA-512">SHA-512</option>
     </select>
-    <button id="hg-copy" type="button" class="tool-btn">Copy</button>
+    <button id="hg-copy" type="button" class="tool-btn">{copy[lang].copy}</button>
   </div>
-  <div class="tool-field">
-    <label class="tool-field__label" for="hg-input">Text to hash</label>
-    <textarea id="hg-input" class="tool-textarea" placeholder="Enter text to generate hash..."></textarea>
+
+  <div id="hg-plain-section">
+    <div class="tool-field">
+      <label class="tool-field__label" for="hg-input">{copy[lang].textToHash}</label>
+      <textarea id="hg-input" class="tool-textarea" placeholder={copy[lang].textPlaceholder}></textarea>
+    </div>
   </div>
+
+  <div id="hg-hmac-section" style="display:none">
+    <div class="tool-field">
+      <label class="tool-field__label" for="hg-hmac-key">{copy[lang].hmacKey}</label>
+      <input id="hg-hmac-key" class="tool-input" type="text" placeholder={copy[lang].hmacKeyPlaceholder} autocomplete="off" spellcheck="false" />
+    </div>
+    <div class="tool-field">
+      <label class="tool-field__label" for="hg-hmac-input">{copy[lang].textToHash}</label>
+      <textarea id="hg-hmac-input" class="tool-textarea" placeholder={copy[lang].textPlaceholder}></textarea>
+    </div>
+  </div>
+
+  <div id="hg-file-section" style="display:none">
+    <div class="tool-field">
+      <label class="tool-field__label" for="hg-file">{copy[lang].filePick}</label>
+      <input id="hg-file" class="tool-input" type="file" />
+      <div id="hg-file-status" class="hg-file-status">{copy[lang].fileNone}</div>
+    </div>
+  </div>
+
   <div id="hg-error" class="tool-error" style="display: none;"></div>
-  <div id="hg-output" class="tool-output tool-output--empty" style="margin-top: var(--space-4);" role="status" aria-live="polite">Enter text to generate hash</div>
+  <div id="hg-output" class="tool-output tool-output--empty" style="margin-top: var(--space-4);" role="status" aria-live="polite">{copy[lang].empty}</div>
+  <div id="hg-loading" class="hg-loading" style="display:none">
+    <div class="hg-spinner"></div>
+    <span>{copy[lang].fileHashing}</span>
+  </div>
 </ToolWorkspace>
 
 <script>
+  import { computeHmac, hashFile } from './Phase8Utils.ts';
+
   function md5(input) {
     function md5cycle(x, k) {
       var a = x[0], b = x[1], c = x[2], d = x[3];
@@ -130,47 +217,89 @@ import ToolWorkspace from './ToolWorkspace.astro';
     return hex(md51(input + ''));
   }
 
-  const hgInput = document.getElementById('hg-input');
-  const hgAlgo = document.getElementById('hg-algo');
-  const hgOutput = document.getElementById('hg-output');
-  const hgError = document.getElementById('hg-error');
-  const hgCopy = document.getElementById('hg-copy');
+  const hgInput = document.getElementById('hg-input') as HTMLTextAreaElement;
+  const hgAlgo = document.getElementById('hg-algo') as HTMLSelectElement;
+  const hgOutput = document.getElementById('hg-output')!;
+  const hgError = document.getElementById('hg-error')!;
+  const hgCopy = document.getElementById('hg-copy') as HTMLButtonElement;
+  const hgLoading = document.getElementById('hg-loading')!;
 
+  const modePlain = document.getElementById('hg-mode-plain')!;
+  const modeHmac = document.getElementById('hg-mode-hmac')!;
+  const modeFile = document.getElementById('hg-mode-file')!;
+  const plainSection = document.getElementById('hg-plain-section')!;
+  const hmacSection = document.getElementById('hg-hmac-section')!;
+  const fileSection = document.getElementById('hg-file-section')!;
+  const hmacKeyInput = document.getElementById('hg-hmac-key') as HTMLInputElement;
+  const hmacInput = document.getElementById('hg-hmac-input') as HTMLTextAreaElement;
+  const fileInput = document.getElementById('hg-file') as HTMLInputElement;
+  const fileStatus = document.getElementById('hg-file-status')!;
+
+  let currentMode: 'plain' | 'hmac' | 'file' = 'plain';
   let debounceTimer = null;
+  let hmacDebounceTimer = null;
 
-  function showHgEmpty() {
+  function showEmpty(msg) {
     window.__belbooreTools.clearErrorBox(hgError);
-    window.__belbooreTools.showEmpty(hgOutput, 'Enter text to generate hash');
+    window.__belbooreTools.showEmpty(hgOutput, msg);
   }
 
-  function showHgOutput(text) {
+  function showOutput(text) {
     window.__belbooreTools.clearErrorBox(hgError);
     window.__belbooreTools.showOutput(hgOutput, text);
   }
 
-  function showHgError(msg) {
+  function showError(msg) {
     window.__belbooreTools.setErrorBox(hgError, msg);
-    window.__belbooreTools.showError(hgOutput, 'Error generating hash');
+    window.__belbooreTools.showError(hgOutput, 'Error');
   }
 
   function bufToHex(buf) {
     return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
   }
 
+  function setMode(mode: 'plain' | 'hmac' | 'file') {
+    currentMode = mode;
+    modePlain.classList.toggle('tool-btn--primary', mode === 'plain');
+    modePlain.classList.toggle('is-active', mode === 'plain');
+    modeHmac.classList.toggle('tool-btn--primary', mode === 'hmac');
+    modeHmac.classList.toggle('is-active', mode === 'hmac');
+    modeFile.classList.toggle('tool-btn--primary', mode === 'file');
+    modeFile.classList.toggle('is-active', mode === 'file');
+    plainSection.style.display = mode === 'plain' ? '' : 'none';
+    hmacSection.style.display = mode === 'hmac' ? '' : 'none';
+    fileSection.style.display = mode === 'file' ? '' : 'none';
+    hgLoading.style.display = 'none';
+    hgError.style.display = 'none';
+
+    if (mode === 'plain') {
+      showEmpty('Enter text to generate hash');
+      if (hgInput.value) generateHash();
+    } else if (mode === 'hmac') {
+      showEmpty('Enter text and key to generate HMAC');
+    } else {
+      showEmpty('Select a file to hash');
+    }
+  }
+
+  modePlain.addEventListener('click', function () { setMode('plain'); });
+  modeHmac.addEventListener('click', function () { setMode('hmac'); });
+  modeFile.addEventListener('click', function () { setMode('file'); });
+
   function generateHash() {
     const text = hgInput.value;
     const algo = hgAlgo.value;
 
     if (!text) {
-      showHgEmpty();
+      showEmpty('Enter text to generate hash');
       return;
     }
 
     if (algo === 'MD5') {
       try {
-        showHgOutput(md5(text));
+        showOutput(md5(text));
       } catch (e) {
-        showHgError('Error: ' + (e.message || 'Failed to generate hash'));
+        showError('Error: ' + (e.message || 'Failed to generate hash'));
       }
       return;
     }
@@ -178,18 +307,92 @@ import ToolWorkspace from './ToolWorkspace.astro';
     const map = { 'SHA-1': 'SHA-1', 'SHA-256': 'SHA-256', 'SHA-384': 'SHA-384', 'SHA-512': 'SHA-512' };
     const enc = new TextEncoder();
     crypto.subtle.digest(map[algo], enc.encode(text)).then(function (buf) {
-      showHgOutput(bufToHex(buf));
+      showOutput(bufToHex(buf));
     }).catch(function (e) {
-      showHgError('Error: ' + (e.message || 'Failed to generate hash'));
+      showError('Error: ' + (e.message || 'Failed to generate hash'));
     });
   }
 
   hgInput.addEventListener('input', function () {
+    if (currentMode !== 'plain') return;
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(generateHash, 300);
   });
 
-  hgAlgo.addEventListener('change', generateHash);
+  hgAlgo.addEventListener('change', function () {
+    if (currentMode === 'plain') generateHash();
+    else if (currentMode === 'hmac') generateHmac();
+  });
+
+  async function generateHmac() {
+    const key = hmacKeyInput.value;
+    const data = hmacInput.value;
+    const algo = hgAlgo.value;
+
+    if (!key || !data) {
+      showEmpty('Enter text and key to generate HMAC');
+      return;
+    }
+
+    if (!crypto.subtle) {
+      showError('Web Crypto API not available');
+      return;
+    }
+
+    try {
+      const result = await computeHmac(algo as any, key, data);
+      showOutput(result);
+    } catch (e) {
+      showError('Error: ' + (e.message || 'HMAC failed'));
+    }
+  }
+
+  hmacKeyInput.addEventListener('input', function () {
+    if (currentMode !== 'hmac') return;
+    clearTimeout(hmacDebounceTimer);
+    hmacDebounceTimer = setTimeout(generateHmac, 400);
+  });
+
+  hmacInput.addEventListener('input', function () {
+    if (currentMode !== 'hmac') return;
+    clearTimeout(hmacDebounceTimer);
+    hmacDebounceTimer = setTimeout(generateHmac, 400);
+  });
+
+  fileInput.addEventListener('change', async function () {
+    const file = fileInput.files?.[0];
+    if (!file) {
+      fileStatus.textContent = 'No file selected';
+      showEmpty('Select a file to hash');
+      return;
+    }
+
+    fileStatus.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+    const algo = hgAlgo.value;
+
+    if (algo === 'MD5') {
+      showError('MD5 is not supported for file hashing. Use SHA-256 or higher.');
+      return;
+    }
+
+    if (!crypto.subtle) {
+      showError('Web Crypto API not available');
+      return;
+    }
+
+    hgOutput.style.display = 'none';
+    hgError.style.display = 'none';
+    hgLoading.style.display = 'flex';
+
+    try {
+      const hash = await hashFile(file, algo);
+      hgLoading.style.display = 'none';
+      showOutput(hash);
+    } catch (e) {
+      hgLoading.style.display = 'none';
+      showError('Error: ' + (e.message || 'Failed to hash file'));
+    }
+  });
 
   hgCopy.addEventListener('click', function () {
     const text = hgOutput.textContent || '';
@@ -197,3 +400,31 @@ import ToolWorkspace from './ToolWorkspace.astro';
     window.__belbooreTools.copyToClipboard(text, hgCopy, 1500);
   });
 </script>
+
+<style>
+  .hg-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+    margin-top: var(--space-4);
+  }
+  .hg-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-subtle);
+    border-top-color: var(--color-tech-blue);
+    border-radius: 50%;
+    animation: hg-spin 0.6s linear infinite;
+  }
+  @keyframes hg-spin {
+    to { transform: rotate(360deg); }
+  }
+  .hg-file-status {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-top: var(--space-2);
+  }
+</style>
