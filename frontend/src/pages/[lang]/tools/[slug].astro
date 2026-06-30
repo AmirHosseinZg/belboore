@@ -20,6 +20,12 @@ import TextNatoTool from '../../../components/tools/TextNatoTool.astro';
 import ListConverterTool from '../../../components/tools/ListConverterTool.astro';
 import Base64Encoder from '../../../components/tools/Base64Encoder.astro';
 import UrlEncoder from '../../../components/tools/UrlEncoder.astro';
+import UrlParserTool from '../../../components/tools/UrlParserTool.astro';
+import SlugifyTool from '../../../components/tools/SlugifyTool.astro';
+import JwtParserTool from '../../../components/tools/JwtParserTool.astro';
+import BasicAuthTool from '../../../components/tools/BasicAuthTool.astro';
+import MetaTagTool from '../../../components/tools/MetaTagTool.astro';
+import SafelinkDecoderTool from '../../../components/tools/SafelinkDecoderTool.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
 import PasswordGenerator from '../../../components/tools/PasswordGenerator.astro';
 import CaseConverter from '../../../components/tools/CaseConverter.astro';
@@ -90,6 +96,12 @@ const toolComponentMap: Record<string, any> = {
   'list-converter': ListConverterTool,
   'base64-encoder': Base64Encoder,
   'url-encoder': UrlEncoder,
+  'url-parser': UrlParserTool,
+  'slugify': SlugifyTool,
+  'jwt-parser': JwtParserTool,
+  'basic-auth-generator': BasicAuthTool,
+  'meta-tag-generator': MetaTagTool,
+  'safelink-decoder': SafelinkDecoderTool,
   'uuid-generator': UuidGenerator,
   'password-generator': PasswordGenerator,
   'case-converter': CaseConverter,

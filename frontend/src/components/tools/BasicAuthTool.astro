@@ -1,0 +1,210 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import Input from '../ui/Input.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Basic Auth Generator',
+    usernameLabel: 'Username',
+    passwordLabel: 'Password',
+    outputLabel: 'Authorization Header',
+    outputHint: 'The generated Authorization header value.',
+    generate: 'Generate',
+    copy: 'Copy header',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Generated header will appear here',
+    note: '⚠️ Use Basic Auth only over HTTPS. The credentials are Base64-encoded, not encrypted. This is equivalent to sending the username and password in plain text if used without HTTPS. All processing happens in your browser.',
+    copied: 'Copied!',
+    headerValue: 'Authorization: Basic ',
+    usernamePlaceholder: 'e.g. admin',
+    passwordPlaceholder: 'e.g. secret123',
+  },
+  fa: {
+    title: 'تولید Basic Auth',
+    usernameLabel: 'نام کاربری',
+    passwordLabel: 'رمز عبور',
+    outputLabel: 'هدر Authorization',
+    outputHint: 'مقدار هدر Authorization تولید شده.',
+    generate: 'تولید',
+    copy: 'کپی هدر',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'هدر تولید شده اینجا نمایش داده می‌شود',
+    note: '⚠️ Basic Auth را فقط از طریق HTTPS استفاده کنید. اطلاعات به صورت Base64 کدگذاری می‌شود، نه رمزگذاری. این معادل ارسال نام کاربری و رمز عبور به صورت متن ساده در صورت عدم استفاده از HTTPS است. تمام پردازش در مرورگر شما انجام می‌شود.',
+    copied: 'کپی شد!',
+    headerValue: 'Authorization: Basic ',
+    usernamePlaceholder: 'مثلاً admin',
+    passwordPlaceholder: 'مثلاً secret123',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="ba-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-username-placeholder={copy.usernamePlaceholder}
+    data-password-placeholder={copy.passwordPlaceholder}
+    data-header-value={copy.headerValue}
+  >
+    <div class="ba-tool__fields">
+      <div class="ba-tool__field-row">
+        <Input
+          id="ba-username"
+          label={copy.usernameLabel}
+          placeholder={copy.usernamePlaceholder}
+          autocomplete="off"
+          spellcheck={false}
+        />
+        <Input
+          id="ba-password"
+          label={copy.passwordLabel}
+          type="password"
+          placeholder={copy.passwordPlaceholder}
+          autocomplete="off"
+          spellcheck={false}
+        />
+      </div>
+    </div>
+
+    <div class="ba-tool__output-area">
+      <div class="ba-tool__panel">
+        <div class="ba-tool__panel-head">
+          <label class="ba-tool__label" for="ba-output">{copy.outputLabel}</label>
+          <p class="ba-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea
+          id="ba-output"
+          class="ba-tool__textarea ba-tool__textarea--output"
+          rows={4}
+          readonly
+          spellcheck="false"
+          placeholder={copy.empty}
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="ba-tool__toolbar">
+      <ToolActionButton id="ba-run">{copy.generate}</ToolActionButton>
+      <Button id="ba-copy" variant="outline" aria-label={copy.copy}>{copy.copy}</Button>
+      <Button id="ba-clear" variant="danger" aria-label={copy.clear}>{copy.clear}</Button>
+      <Button id="ba-example" variant="secondary" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+    </div>
+
+    <div id="ba-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note ba-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const usernameInput = document.getElementById('ba-username') as HTMLInputElement | null;
+  const passwordInput = document.getElementById('ba-password') as HTMLInputElement | null;
+  const output = document.getElementById('ba-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('ba-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('ba-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('ba-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('ba-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('ba-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.ba-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+  const HEADER_PREFIX = section?.dataset.headerValue || 'Authorization: Basic ';
+
+  const btoaUtf8 = (str: string): string => {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  };
+
+  const runGenerate = () => {
+    if (!usernameInput || !passwordInput || !output) return;
+    const username = usernameInput.value;
+    const password = passwordInput.value;
+    if (!username && !password) {
+      output.value = '';
+      output.placeholder = EMPTY;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+    try {
+      const encoded = btoaUtf8(`${username}:${password}`);
+      output.value = `${HEADER_PREFIX}${encoded}`;
+      output.placeholder = '';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = ''; output.placeholder = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Error'; errorDiv.style.display = ''; }
+    }
+  };
+
+  runBtn?.addEventListener('click', runGenerate);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (usernameInput) usernameInput.value = '';
+    if (passwordInput) passwordInput.value = '';
+    if (output) { output.value = ''; output.placeholder = EMPTY; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (usernameInput) usernameInput.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (usernameInput) usernameInput.value = 'admin';
+    if (passwordInput) passwordInput.value = 'secret123';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runGenerate();
+  });
+  usernameInput?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); passwordInput?.focus(); }
+  });
+  passwordInput?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runGenerate(); }
+  });
+</script>
+
+<style>
+  .ba-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .ba-tool__fields { display: flex; flex-direction: column; gap: var(--space-4); }
+  .ba-tool__field-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .ba-tool__output-area { display: flex; flex-direction: column; gap: var(--space-2); }
+  .ba-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ba-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .ba-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .ba-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ba-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .ba-tool__textarea { width: 100%; min-height: 100px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: none; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ba-tool__textarea:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .ba-tool__textarea::placeholder { color: var(--text-muted); }
+  .ba-tool__textarea--output { background: var(--surface-secondary); }
+  .ba-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .ba-tool .tool-action-button { min-width: 148px; }
+  .ba-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .ba-tool__field-row { grid-template-columns: 1fr; } .ba-tool .tool-action-button { width: 100%; min-width: 0; } }
+</style>

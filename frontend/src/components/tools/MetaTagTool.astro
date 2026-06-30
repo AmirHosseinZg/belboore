@@ -1,0 +1,408 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import Input from '../ui/Input.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Meta Tag Generator',
+    outputLabel: 'HTML Meta Tags',
+    outputHint: 'Generated meta tags ready to copy into your HTML.',
+    generate: 'Generate',
+    copy: 'Copy HTML',
+    clear: 'Clear all',
+    loadExample: 'Load example',
+    empty: 'Generated meta tags will appear here',
+    note: 'All processing happens in your browser. Your data never leaves your device.',
+    copied: 'Copied!',
+    sectionBasic: 'Basic SEO',
+    title: 'Page Title',
+    titlePlaceholder: 'My Amazing Page',
+    description: 'Meta Description',
+    descriptionPlaceholder: 'A brief description of your page',
+    keywords: 'Meta Keywords',
+    keywordsPlaceholder: 'keyword1, keyword2, keyword3',
+    author: 'Author',
+    authorPlaceholder: 'Your Name',
+    sectionCanonical: 'Canonical & Robots',
+    canonical: 'Canonical URL',
+    canonicalPlaceholder: 'https://example.com/page',
+    robots: 'Robots Directive',
+    robotsIndex: 'index, follow',
+    robotsNoIndex: 'noindex, nofollow',
+    sectionOg: 'Open Graph',
+    ogTitle: 'OG Title',
+    ogTitlePlaceholder: 'Title for social sharing',
+    ogDescription: 'OG Description',
+    ogDescriptionPlaceholder: 'Description for social sharing',
+    ogImage: 'OG Image URL',
+    ogImagePlaceholder: 'https://example.com/image.jpg',
+    ogType: 'OG Type',
+    ogTypeWebsite: 'website',
+    ogTypeArticle: 'article',
+    ogTypeProduct: 'product',
+    sectionTwitter: 'Twitter Card',
+    twitterCard: 'Twitter Card Type',
+    twitterCardSummary: 'summary',
+    twitterCardLarge: 'summary_large_image',
+    twitterSite: 'Twitter @username',
+    twitterSitePlaceholder: '@username',
+    twitterTitle: 'Twitter Title',
+    twitterTitlePlaceholder: 'Title for Twitter',
+    twitterDescription: 'Twitter Description',
+    twitterDescriptionPlaceholder: 'Description for Twitter',
+    twitterImage: 'Twitter Image URL',
+    twitterImagePlaceholder: 'https://example.com/image.jpg',
+  },
+  fa: {
+    title: 'تولید تگ‌های Meta',
+    outputLabel: 'تگ‌های HTML Meta',
+    outputHint: 'تگ‌های متای تولید شده آماده کپی در HTML شما.',
+    generate: 'تولید',
+    copy: 'کپی HTML',
+    clear: 'پاک کردن همه',
+    loadExample: 'نمونه',
+    empty: 'تگ‌های متای تولید شده اینجا نمایش داده می‌شود',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود. داده‌های شما هرگز از دستگاه شما خارج نمی‌شود.',
+    copied: 'کپی شد!',
+    sectionBasic: 'SEO پایه',
+    title: 'عنوان صفحه',
+    titlePlaceholder: 'صفحه فوق‌العاده من',
+    description: 'توضیحات متا',
+    descriptionPlaceholder: 'توضیح مختصری از صفحه شما',
+    keywords: 'کلمات کلیدی متا',
+    keywordsPlaceholder: 'کلمه1, کلمه2, کلمه3',
+    author: 'نویسنده',
+    authorPlaceholder: 'نام شما',
+    sectionCanonical: 'Canonical و Robots',
+    canonical: 'URL کنونیکال',
+    canonicalPlaceholder: 'https://example.com/page',
+    robots: 'دستور Robots',
+    robotsIndex: 'index, follow',
+    robotsNoIndex: 'noindex, nofollow',
+    sectionOg: 'Open Graph',
+    ogTitle: 'عنوان OG',
+    ogTitlePlaceholder: 'عنوان برای اشتراک اجتماعی',
+    ogDescription: 'توضیحات OG',
+    ogDescriptionPlaceholder: 'توضیحات برای اشتراک اجتماعی',
+    ogImage: 'URL تصویر OG',
+    ogImagePlaceholder: 'https://example.com/image.jpg',
+    ogType: 'نوع OG',
+    ogTypeWebsite: 'website',
+    ogTypeArticle: 'article',
+    ogTypeProduct: 'product',
+    sectionTwitter: 'Twitter Card',
+    twitterCard: 'نوع Twitter Card',
+    twitterCardSummary: 'summary',
+    twitterCardLarge: 'summary_large_image',
+    twitterSite: 'نام کاربری Twitter',
+    twitterSitePlaceholder: '@username',
+    twitterTitle: 'عنوان Twitter',
+    twitterTitlePlaceholder: 'عنوان برای Twitter',
+    twitterDescription: 'توضیحات Twitter',
+    twitterDescriptionPlaceholder: 'توضیحات برای Twitter',
+    twitterImage: 'URL تصویر Twitter',
+    twitterImagePlaceholder: 'https://example.com/image.jpg',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="mt-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+  >
+    <div class="mt-tool__layout">
+      <div class="mt-tool__form">
+        <fieldset class="mt-tool__fieldset">
+          <legend class="mt-tool__legend">{copy.sectionBasic}</legend>
+          <div class="mt-tool__field-row">
+            <Input id="mt-title" label={copy.title} placeholder={copy.titlePlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-description" label={copy.description} placeholder={copy.descriptionPlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-keywords" label={copy.keywords} placeholder={copy.keywordsPlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-author" label={copy.author} placeholder={copy.authorPlaceholder} spellcheck={false} />
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-tool__fieldset">
+          <legend class="mt-tool__legend">{copy.sectionCanonical}</legend>
+          <div class="mt-tool__field-row">
+            <Input id="mt-canonical" label={copy.canonical} placeholder={copy.canonicalPlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row mt-tool__radio-row">
+            <span class="mt-tool__radio-label">{copy.robots}:</span>
+            <label class="mt-tool__radio">
+              <input type="radio" name="mt-robots" value="index,follow" checked />
+              <span>{copy.robotsIndex}</span>
+            </label>
+            <label class="mt-tool__radio">
+              <input type="radio" name="mt-robots" value="noindex,nofollow" />
+              <span>{copy.robotsNoIndex}</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-tool__fieldset">
+          <legend class="mt-tool__legend">{copy.sectionOg}</legend>
+          <div class="mt-tool__field-row">
+            <Input id="mt-og-title" label={copy.ogTitle} placeholder={copy.ogTitlePlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-og-description" label={copy.ogDescription} placeholder={copy.ogDescriptionPlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-og-image" label={copy.ogImage} placeholder={copy.ogImagePlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <label class="mt-tool__select-label" for="mt-og-type">{copy.ogType}</label>
+            <select id="mt-og-type" class="mt-tool__select">
+              <option value="website">{copy.ogTypeWebsite}</option>
+              <option value="article">{copy.ogTypeArticle}</option>
+              <option value="product">{copy.ogTypeProduct}</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="mt-tool__fieldset">
+          <legend class="mt-tool__legend">{copy.sectionTwitter}</legend>
+          <div class="mt-tool__field-row">
+            <label class="mt-tool__select-label" for="mt-twitter-card">{copy.twitterCard}</label>
+            <select id="mt-twitter-card" class="mt-tool__select">
+              <option value="summary">{copy.twitterCardSummary}</option>
+              <option value="summary_large_image">{copy.twitterCardLarge}</option>
+            </select>
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-twitter-site" label={copy.twitterSite} placeholder={copy.twitterSitePlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-twitter-title" label={copy.twitterTitle} placeholder={copy.twitterTitlePlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-twitter-description" label={copy.twitterDescription} placeholder={copy.twitterDescriptionPlaceholder} spellcheck={false} />
+          </div>
+          <div class="mt-tool__field-row">
+            <Input id="mt-twitter-image" label={copy.twitterImage} placeholder={copy.twitterImagePlaceholder} spellcheck={false} />
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="mt-tool__output-panel">
+        <div class="mt-tool__panel-head">
+          <label class="mt-tool__label" for="mt-output">{copy.outputLabel}</label>
+          <p class="mt-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea
+          id="mt-output"
+          class="mt-tool__textarea"
+          rows={20}
+          readonly
+          spellcheck="false"
+          placeholder={copy.empty}
+        ></textarea>
+        <div class="mt-tool__toolbar">
+          <ToolActionButton id="mt-run">{copy.generate}</ToolActionButton>
+          <Button id="mt-copy" variant="outline" aria-label={copy.copy}>{copy.copy}</Button>
+          <Button id="mt-clear" variant="danger" aria-label={copy.clear}>{copy.clear}</Button>
+          <Button id="mt-example" variant="secondary" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mt-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note mt-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const output = document.getElementById('mt-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('mt-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('mt-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('mt-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('mt-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('mt-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.mt-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+
+  const htmlAttrEncode = (str: string): string => {
+    return str.replace(/[&<>"'\/]/g, (ch: string) => {
+      const m: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' };
+      return m[ch] || ch;
+    });
+  };
+
+  const getVal = (id: string): string => {
+    const el = document.getElementById(id) as HTMLInputElement | null;
+    return el?.value?.trim() || '';
+  };
+
+  const runGenerate = () => {
+    if (!output) return;
+
+    const title = getVal('mt-title');
+    const description = getVal('mt-description');
+    const keywords = getVal('mt-keywords');
+    const author = getVal('mt-author');
+    const canonical = getVal('mt-canonical');
+    const robots = (document.querySelector('input[name="mt-robots"]:checked') as HTMLInputElement)?.value || 'index,follow';
+    const ogTitle = getVal('mt-og-title');
+    const ogDescription = getVal('mt-og-description');
+    const ogImage = getVal('mt-og-image');
+    const ogType = (document.getElementById('mt-og-type') as HTMLSelectElement)?.value || 'website';
+    const twitterCard = (document.getElementById('mt-twitter-card') as HTMLSelectElement)?.value || 'summary';
+    const twitterSite = getVal('mt-twitter-site');
+    const twitterTitle = getVal('mt-twitter-title');
+    const twitterDescription = getVal('mt-twitter-description');
+    const twitterImage = getVal('mt-twitter-image');
+
+    let html = '';
+
+    if (title) {
+      html += `  <title>${htmlAttrEncode(title)}</title>\n`;
+    }
+    if (description) {
+      html += `  <meta name="description" content="${htmlAttrEncode(description)}">\n`;
+    }
+    if (keywords) {
+      html += `  <meta name="keywords" content="${htmlAttrEncode(keywords)}">\n`;
+    }
+    if (author) {
+      html += `  <meta name="author" content="${htmlAttrEncode(author)}">\n`;
+    }
+    if (robots) {
+      html += `  <meta name="robots" content="${htmlAttrEncode(robots)}">\n`;
+    }
+    if (canonical) {
+      html += `  <link rel="canonical" href="${htmlAttrEncode(canonical)}">\n`;
+    }
+    if (ogTitle || ogDescription || ogImage || ogType) {
+      if (ogTitle) html += `  <meta property="og:title" content="${htmlAttrEncode(ogTitle)}">\n`;
+      if (ogDescription) html += `  <meta property="og:description" content="${htmlAttrEncode(ogDescription)}">\n`;
+      if (ogImage) html += `  <meta property="og:image" content="${htmlAttrEncode(ogImage)}">\n`;
+      html += `  <meta property="og:type" content="${htmlAttrEncode(ogType)}">\n`;
+    }
+    if (twitterCard) {
+      html += `  <meta name="twitter:card" content="${htmlAttrEncode(twitterCard)}">\n`;
+    }
+    if (twitterSite) {
+      html += `  <meta name="twitter:site" content="${htmlAttrEncode(twitterSite)}">\n`;
+    }
+    if (twitterTitle) {
+      html += `  <meta name="twitter:title" content="${htmlAttrEncode(twitterTitle)}">\n`;
+    }
+    if (twitterDescription) {
+      html += `  <meta name="twitter:description" content="${htmlAttrEncode(twitterDescription)}">\n`;
+    }
+    if (twitterImage) {
+      html += `  <meta name="twitter:image" content="${htmlAttrEncode(twitterImage)}">\n`;
+    }
+
+    if (!html) {
+      output.value = '';
+      output.placeholder = EMPTY;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+
+    output.value = html.trimStart();
+    output.placeholder = '';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  };
+
+  runBtn?.addEventListener('click', runGenerate);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    const inputs = document.querySelectorAll('.mt-tool__form input[type="text"], .mt-tool__form input[type="url"]');
+    inputs.forEach(el => (el as HTMLInputElement).value = '');
+    const radios = document.querySelectorAll('input[name="mt-robots"]');
+    (radios[0] as HTMLInputElement).checked = true;
+    const selects = document.querySelectorAll('.mt-tool__select');
+    (selects[0] as HTMLSelectElement).value = 'website';
+    (selects[1] as HTMLSelectElement).value = 'summary';
+    if (output) { output.value = ''; output.placeholder = EMPTY; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    const firstInput = document.getElementById('mt-title') as HTMLInputElement | null;
+    firstInput?.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    (document.getElementById('mt-title') as HTMLInputElement).value = 'My Amazing Website - Home';
+    (document.getElementById('mt-description') as HTMLInputElement).value = 'Discover amazing content, tutorials, and resources for web developers and designers.';
+    (document.getElementById('mt-keywords') as HTMLInputElement).value = 'web development, design, tutorials, programming';
+    (document.getElementById('mt-author') as HTMLInputElement).value = 'John Doe';
+    (document.getElementById('mt-canonical') as HTMLInputElement).value = 'https://example.com/';
+    (document.querySelector('input[name="mt-robots"][value="index,follow"]') as HTMLInputElement).checked = true;
+    (document.getElementById('mt-og-title') as HTMLInputElement).value = 'My Amazing Website';
+    (document.getElementById('mt-og-description') as HTMLInputElement).value = 'Discover amazing content for web developers.';
+    (document.getElementById('mt-og-image') as HTMLInputElement).value = 'https://example.com/og-image.jpg';
+    (document.getElementById('mt-og-type') as HTMLSelectElement).value = 'website';
+    (document.getElementById('mt-twitter-card') as HTMLSelectElement).value = 'summary_large_image';
+    (document.getElementById('mt-twitter-site') as HTMLInputElement).value = '@mywebsite';
+    (document.getElementById('mt-twitter-title') as HTMLInputElement).value = 'My Amazing Website';
+    (document.getElementById('mt-twitter-description') as HTMLInputElement).value = 'Discover amazing content for web developers.';
+    (document.getElementById('mt-twitter-image') as HTMLInputElement).value = 'https://example.com/twitter-image.jpg';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runGenerate();
+  });
+</script>
+
+<style>
+  .mt-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .mt-tool__layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: start; }
+  .mt-tool__form { display: flex; flex-direction: column; gap: var(--space-4); }
+  .mt-tool__fieldset { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-4); margin: 0; display: flex; flex-direction: column; gap: var(--space-3); }
+  .mt-tool__legend { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--color-tech-blue); padding: 0 var(--space-2); }
+  .mt-tool__field-row { display: flex; flex-direction: column; gap: var(--space-1); }
+  .mt-tool__radio-row { display: flex; flex-direction: row; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+  .mt-tool__radio-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .mt-tool__radio { display: inline-flex; align-items: center; gap: var(--space-1); font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }
+  .mt-tool__radio input { accent-color: var(--color-tech-blue); }
+  .mt-tool__select-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .mt-tool__select { width: 100%; min-height: 46px; padding: var(--space-2) var(--space-3); border: 1.5px solid color-mix(in srgb, var(--color-tech-blue) 75%, white 25%); border-radius: var(--radius-md); background: var(--surface-primary); color: var(--text-primary); font: inherit; font-size: var(--text-sm); outline: none; cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .mt-tool__select:hover { border-color: var(--color-tech-blue); }
+  .mt-tool__select:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 4px var(--color-tech-blue-subtle); }
+  .mt-tool__output-panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); }
+  .mt-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .mt-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .mt-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .mt-tool__textarea { width: 100%; min-height: 400px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .mt-tool__textarea:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .mt-tool__textarea::placeholder { color: var(--text-muted); }
+  .mt-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; margin-top: var(--space-3); }
+  .mt-tool .tool-action-button { min-width: 148px; }
+  .mt-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .mt-tool__layout { grid-template-columns: 1fr; } .mt-tool .tool-action-button { width: 100%; min-width: 0; } }
+</style>

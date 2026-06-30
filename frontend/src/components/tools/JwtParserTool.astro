@@ -1,0 +1,269 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'JWT Parser',
+    inputLabel: 'JWT Token',
+    outputLabel: 'Decoded Token',
+    inputHint: 'Paste a JWT token to decode its header and payload.',
+    outputHint: 'The decoded header and payload appear here.',
+    decode: 'Decode',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Decoded JWT data will appear here',
+    note: 'This tool only decodes the JWT. It does NOT verify the signature. JWTs are not encrypted — sensitive data should never be stored in them. All processing happens in your browser.',
+    copied: 'Copied!',
+    header: 'Header',
+    payload: 'Payload',
+    signature: 'Signature',
+    notVerified: 'Signature not verified',
+  },
+  fa: {
+    title: 'تجزیه JWT',
+    inputLabel: 'Token JWT',
+    outputLabel: 'Token رمزگشایی شده',
+    inputHint: 'یک JWT token را برای رمزگشایی header و payload وارد کنید.',
+    outputHint: 'header و payload رمزگشایی شده اینجا نمایش داده می‌شود.',
+    decode: 'رمزگشایی',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'داده‌های JWT رمزگشایی شده اینجا نمایش داده می‌شود',
+    note: 'این ابزار فقط JWT را رمزگشایی می‌کند. امضا را تأیید نمی‌کند. JWT ها رمزگذاری نمی‌شوند — داده‌های حساس هرگز نباید در آنها ذخیره شوند. تمام پردازش در مرورگر شما انجام می‌شود.',
+    copied: 'کپی شد!',
+    header: 'Header',
+    payload: 'Payload',
+    signature: 'امضا',
+    notVerified: 'امضا تأیید نشده است',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="jwt-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjk5OTk5OTk5OTl9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  >
+    <div class="jwt-tool__controls">
+      <div class="jwt-tool__actions">
+        <Button id="jwt-copy" variant="outline" className="jwt-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="jwt-clear" variant="danger" className="jwt-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="jwt-example" variant="secondary" className="jwt-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="jwt-tool__grid">
+      <div class="jwt-tool__panel">
+        <div class="jwt-tool__panel-head">
+          <label class="jwt-tool__label" for="jwt-input">{copy.inputLabel}</label>
+          <p class="jwt-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea
+          id="jwt-input"
+          className="jwt-tool__textarea"
+          placeholder="eyJhbGciOiJIUzI1NiIs..."
+          rows={6}
+          spellcheck="false"
+        />
+      </div>
+      <div class="jwt-tool__panel">
+        <div class="jwt-tool__panel-head">
+          <label class="jwt-tool__label" for="jwt-output">{copy.outputLabel}</label>
+          <p class="jwt-tool__hint">{copy.outputHint}</p>
+        </div>
+        <div id="jwt-output" class="jwt-tool__output" role="region" aria-live="polite">
+          <p class="jwt-tool__empty-state">{copy.empty}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="jwt-tool__toolbar">
+      <ToolActionButton id="jwt-run">{copy.decode}</ToolActionButton>
+    </div>
+
+    <div id="jwt-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note jwt-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('jwt-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('jwt-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('jwt-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('jwt-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('jwt-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('jwt-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('jwt-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.jwt-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+
+  const decodeBase64Url = (str: string): string => {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) base64 += '=';
+    try {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    } catch { return ''; }
+  };
+
+  const jwtDecode = (token: string): {
+    header: Record<string, unknown> | null;
+    payload: Record<string, unknown> | null;
+    signature: string;
+    error?: string;
+  } => {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { header: null, payload: null, signature: '', error: 'Invalid JWT format. Expected 3 dot-separated parts.' };
+    }
+    try {
+      const headerRaw = decodeBase64Url(parts[0]);
+      const payloadRaw = decodeBase64Url(parts[1]);
+      const header = JSON.parse(headerRaw) as Record<string, unknown>;
+      const payload = JSON.parse(payloadRaw) as Record<string, unknown>;
+
+      if (payload.exp) payload.exp_human = new Date(Number(payload.exp) * 1000).toISOString();
+      if (payload.iat) payload.iat_human = new Date(Number(payload.iat) * 1000).toISOString();
+      if (payload.nbf) payload.nbf_human = new Date(Number(payload.nbf) * 1000).toISOString();
+
+      return { header, payload, signature: parts[2] };
+    } catch (e) {
+      return { header: null, payload: null, signature: '', error: `Failed to decode: ${(e as Error).message}` };
+    }
+  };
+
+  const jsonToTable = (obj: Record<string, unknown>): string => {
+    let html = '<table class="jwt-tool__table"><tbody>';
+    for (const [key, val] of Object.entries(obj)) {
+      if (key.endsWith('_human')) continue;
+      const display = typeof val === 'object' ? JSON.stringify(val) : String(val);
+      const humanKey = key + (obj[key + '_human'] ? `_human` : '');
+      const humanVal = obj[key + '_human'] as string | undefined;
+      html += `<tr><td class="jwt-tool__table-key"><code>${key}</code></td><td class="jwt-tool__table-val"><code>${display}</code>${humanVal ? `<span class="jwt-tool__table-date">${humanVal}</span>` : ''}</td></tr>`;
+    }
+    html += '</tbody></table>';
+    return html;
+  };
+
+  const runDecode = () => {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    if (!val) {
+      output.innerHTML = `<p class="jwt-tool__empty-state">${EMPTY}</p>`;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+    try {
+      const result = jwtDecode(val);
+      if (result.error) {
+        output.innerHTML = `<div class="jwt-tool__result-error">${result.error}</div>`;
+        if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+        return;
+      }
+      const headerLbl = section?.querySelector('[data-i18n-header]')?.textContent || 'Header';
+      const payloadLbl = section?.querySelector('[data-i18n-payload]')?.textContent || 'Payload';
+      const sigLbl = section?.querySelector('[data-i18n-signature]')?.textContent || 'Signature';
+      const notVerifiedLbl = section?.querySelector('[data-i18n-notverified]')?.textContent || 'Signature not verified';const sections = section as HTMLElement;
+
+      let html = '<div class="jwt-tool__result">';
+      html += `<h4 class="jwt-tool__result-heading">${headerLbl}</h4>${jsonToTable(result.header || {})}`;
+      html += `<h4 class="jwt-tool__result-heading">${payloadLbl}</h4>${jsonToTable(result.payload || {})}`;
+      html += `<h4 class="jwt-tool__result-heading">${sigLbl}</h4>`;
+      html += `<p class="jwt-tool__sig"><code>${result.signature}</code></p>`;
+      html += `<p class="jwt-tool__not-verified">⚠ ${notVerifiedLbl}</p>`;
+      html += '</div>';
+      output.innerHTML = html;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.innerHTML = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Error'; errorDiv.style.display = ''; }
+    }
+  };
+
+  runBtn?.addEventListener('click', runDecode);
+  copyBtn?.addEventListener('click', () => {
+    if (!output) return;
+    const text = output.textContent || '';
+    if (!text || text === EMPTY) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.innerHTML = `<p class="jwt-tool__empty-state">${EMPTY}</p>`;
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = section?.dataset.placeholder || ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runDecode();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runDecode(); }
+  });
+</script>
+
+<style>
+  .jwt-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .jwt-tool__controls { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+  .jwt-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .jwt-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .jwt-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .jwt-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .jwt-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .jwt-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .jwt-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .jwt-tool__textarea { width: 100%; min-height: 140px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .jwt-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .jwt-tool__textarea::placeholder { color: var(--text-muted); }
+  .jwt-tool__output { width: 100%; min-height: 140px; max-height: 500px; overflow-y: auto; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .jwt-tool__empty-state { color: var(--text-muted); font-style: italic; margin: 0; }
+  .jwt-tool__result { display: flex; flex-direction: column; gap: var(--space-3); }
+  .jwt-tool__result-heading { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .jwt-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .jwt-tool__table td { padding: var(--space-1) var(--space-2); border-bottom: 1px solid var(--border-subtle); text-align: start; }
+  .jwt-tool__table-key { color: var(--color-tech-blue); font-weight: var(--weight-medium); white-space: nowrap; vertical-align: top; }
+  .jwt-tool__table-key code { font-family: var(--font-mono); font-size: var(--text-xs); }
+  .jwt-tool__table-val { color: var(--text-primary); word-break: break-all; vertical-align: top; }
+  .jwt-tool__table-val code { font-family: var(--font-mono); font-size: var(--text-xs); }
+  .jwt-tool__table-date { display: block; font-size: var(--text-xs); color: var(--text-muted); margin-top: 2px; }
+  .jwt-tool__result-error { color: var(--color-danger); font-size: var(--text-sm); }
+  .jwt-tool__sig { margin: 0; }
+  .jwt-tool__sig code { font-family: var(--font-mono); font-size: var(--text-xs); word-break: break-all; color: var(--text-tertiary); }
+  .jwt-tool__not-verified { margin: 0; font-size: var(--text-xs); color: var(--color-warning); }
+  .jwt-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .jwt-tool .tool-action-button { min-width: 148px; }
+  .jwt-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .jwt-tool__grid { grid-template-columns: 1fr; } .jwt-tool .tool-action-button { width: 100%; min-width: 0; } .jwt-tool__controls { flex-direction: column; align-items: stretch; } .jwt-tool__actions { justify-content: center; } }
+</style>
