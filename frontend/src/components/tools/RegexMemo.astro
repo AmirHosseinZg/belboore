@@ -1,0 +1,289 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Input from '../ui/Input.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Regex Memo / یادداشت Regex',
+    patternLabel: 'Pattern',
+    flagsLabel: 'Flags',
+    flagsHint: 'g i m s u y',
+    titleLabel: 'Title',
+    descLabel: 'Description',
+    tagsLabel: 'Tags (comma separated)',
+    testLabel: 'Test string',
+    save: 'Save',
+    search: 'Search memos...',
+    noMemos: 'No regex memos saved yet.',
+    emptyState: 'Regex memos are saved only in this browser using localStorage.',
+    copyPattern: 'Copy pattern',
+    copyRegex: 'Copy /pattern/flags',
+    copyTest: 'Copy test string',
+    delete: 'Delete',
+    copied: 'Copied!',
+    note: 'All data is stored in localStorage. Nothing is uploaded.',
+    error: 'Pattern is required',
+  },
+  fa: {
+    title: 'یادداشت Regex',
+    patternLabel: 'الگو',
+    flagsLabel: 'پرچم‌ها',
+    flagsHint: 'g i m s u y',
+    titleLabel: 'عنوان',
+    descLabel: 'توضیحات',
+    tagsLabel: 'برچسب‌ها (با کاما جدا کنید)',
+    testLabel: 'رشته تست',
+    save: 'ذخیره',
+    search: 'جستجوی یادداشت‌ها...',
+    noMemos: 'هنوز یادداشتی ذخیره نشده است.',
+    emptyState: 'یادداشت‌های Regex فقط در این مرورگر و با localStorage ذخیره می‌شوند.',
+    copyPattern: 'کپی الگو',
+    copyRegex: 'کپی /pattern/flags',
+    copyTest: 'کپی رشته تست',
+    delete: 'حذف',
+    copied: 'کپی شد!',
+    note: 'تمام داده‌ها در localStorage ذخیره می‌شوند. هیچ داده‌ای آپلود نمی‌شود.',
+    error: 'الگو الزامی است',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="rm-tool" dir={dir} data-copied={copy.copied} data-error={copy.error}>
+    <div class="rm-tool__form">
+      <div class="rm-tool__form-grid">
+        <div class="rm-tool__form-row">
+          <Input id="rm-pattern" label={copy.patternLabel} className="rm-tool__input" placeholder="\\d+" />
+          <Input id="rm-flags" label={copy.flagsLabel} className="rm-tool__input rm-tool__input--sm" placeholder={copy.flagsHint} />
+        </div>
+        <Input id="rm-title" label={copy.titleLabel} className="rm-tool__input" placeholder="My regex" />
+        <Input id="rm-desc" label={copy.descLabel} className="rm-tool__input" placeholder="Description of the regex" />
+        <Input id="rm-tags" label={copy.tagsLabel} className="rm-tool__input" placeholder="email, validation, form" />
+        <TextArea id="rm-test" label={copy.testLabel} className="rm-tool__textarea" placeholder="user@example.com" rows={3} />
+      </div>
+      <Button id="rm-save" variant="primary">{copy.save}</Button>
+    </div>
+
+    <Input id="rm-search" className="rm-tool__search" placeholder={copy.search} />
+
+    <div id="rm-list" class="rm-tool__list">
+      <div class="rm-tool__empty-state">{copy.emptyState}</div>
+    </div>
+
+    <div id="rm-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note rm-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  interface RegexMemo {
+    id: string;
+    pattern: string;
+    flags: string;
+    title: string;
+    description: string;
+    tags: string;
+    test: string;
+    createdAt: number;
+  }
+
+  const STORAGE_KEY = 'belboore_regex_memos';
+
+  const patternInput = document.getElementById('rm-pattern') as HTMLInputElement | null;
+  const flagsInput = document.getElementById('rm-flags') as HTMLInputElement | null;
+  const titleInput = document.getElementById('rm-title') as HTMLInputElement | null;
+  const descInput = document.getElementById('rm-desc') as HTMLInputElement | null;
+  const tagsInput = document.getElementById('rm-tags') as HTMLInputElement | null;
+  const testTextarea = document.getElementById('rm-test') as HTMLTextAreaElement | null;
+  const saveBtn = document.getElementById('rm-save') as HTMLButtonElement | null;
+  const searchInput = document.getElementById('rm-search') as HTMLInputElement | null;
+  const listEl = document.getElementById('rm-list')!;
+  const errorDiv = document.getElementById('rm-error') as HTMLDivElement | null;
+
+  const root = document.querySelector('.rm-tool') as HTMLElement | null;
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function loadMemos(): RegexMemo[] {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  function saveMemos(memos: RegexMemo[]) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(memos));
+  }
+
+  function renderList() {
+    const memos = loadMemos();
+    const query = (searchInput?.value || '').toLowerCase().trim();
+
+    const filtered = query
+      ? memos.filter(m =>
+          m.title.toLowerCase().includes(query) ||
+          m.pattern.toLowerCase().includes(query) ||
+          m.description.toLowerCase().includes(query) ||
+          m.tags.toLowerCase().includes(query)
+        )
+      : memos;
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<div class="rm-tool__empty-state">${copy.noMemos}</div>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(m => {
+      const regexStr = `/${m.pattern}/${m.flags}`;
+      return `<div class="rm-tool__memo" data-id="${m.id}">
+        <div class="rm-tool__memo-head">
+          <span class="rm-tool__memo-title">${escapeHtml(m.title || regexStr)}</span>
+          <span class="rm-tool__memo-date">${new Date(m.createdAt).toLocaleString()}</span>
+        </div>
+        <div class="rm-tool__memo-pattern">${escapeHtml(regexStr)}</div>
+        ${m.description ? `<div class="rm-tool__memo-desc">${escapeHtml(m.description)}</div>` : ''}
+        ${m.tags ? `<div class="rm-tool__memo-tags">${escapeHtml(m.tags)}</div>` : ''}
+        ${m.test ? `<div class="rm-tool__memo-test">Test: ${escapeHtml(m.test)}</div>` : ''}
+        <div class="rm-tool__memo-actions">
+          <button type="button" class="rm-tool__memo-btn" data-action="copy-pattern" data-value="${escapeAttr(m.pattern)}">${copy.copyPattern}</button>
+          <button type="button" class="rm-tool__memo-btn" data-action="copy-regex" data-value="${escapeAttr(regexStr)}">${copy.copyRegex}</button>
+          ${m.test ? `<button type="button" class="rm-tool__memo-btn" data-action="copy-test" data-value="${escapeAttr(m.test)}">${copy.copyTest}</button>` : ''}
+          <button type="button" class="rm-tool__memo-btn rm-tool__memo-btn--danger" data-action="delete" data-id="${m.id}">${copy.delete}</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    listEl.querySelectorAll('.rm-tool__memo-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = (btn as HTMLElement).dataset.action;
+        const value = (btn as HTMLElement).dataset.value;
+        const id = (btn as HTMLElement).dataset.id;
+
+        if (action === 'delete' && id) {
+          const memos = loadMemos().filter(m => m.id !== id);
+          saveMemos(memos);
+          renderList();
+          return;
+        }
+
+        if (value && (action === 'copy-pattern' || action === 'copy-regex' || action === 'copy-test')) {
+          navigator.clipboard.writeText(value).then(() => {
+            const orig = btn.innerHTML;
+            btn.innerHTML = copy.copied;
+            setTimeout(() => { btn.innerHTML = orig; }, 1200);
+          }).catch(() => {});
+        }
+      });
+    });
+  }
+
+  function escapeHtml(str: string): string {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  function escapeAttr(str: string): string {
+    return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function saveMemo() {
+    const pattern = patternInput?.value.trim() || '';
+    if (!pattern) {
+      if (errorDiv) { errorDiv.textContent = getData('error', 'Pattern is required'); errorDiv.style.display = ''; }
+      patternInput?.focus();
+      return;
+    }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+    const memo: RegexMemo = {
+      id: Date.now().toString(36),
+      pattern,
+      flags: flagsInput?.value.trim() || '',
+      title: titleInput?.value.trim() || '',
+      description: descInput?.value.trim() || '',
+      tags: tagsInput?.value.trim() || '',
+      test: testTextarea?.value || '',
+      createdAt: Date.now(),
+    };
+
+    const memos = loadMemos();
+    memos.unshift(memo);
+    saveMemos(memos);
+    renderList();
+
+    if (patternInput) patternInput.value = '';
+    if (flagsInput) flagsInput.value = '';
+    if (titleInput) titleInput.value = '';
+    if (descInput) descInput.value = '';
+    if (tagsInput) tagsInput.value = '';
+    if (testTextarea) testTextarea.value = '';
+    patternInput?.focus();
+  }
+
+  saveBtn?.addEventListener('click', saveMemo);
+
+  [patternInput, flagsInput, titleInput, descInput, tagsInput, testTextarea].forEach(el => {
+    el?.addEventListener('keydown', (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        saveMemo();
+      }
+    });
+  });
+
+  searchInput?.addEventListener('input', renderList);
+
+  renderList();
+</script>
+
+<style>
+  .rm-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .rm-tool__form { display: flex; flex-direction: column; gap: var(--space-4); padding: var(--space-5); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 35%), linear-gradient(180deg, var(--surface-primary), var(--surface-secondary)); box-shadow: var(--shadow-sm); }
+  .rm-tool__form-grid { display: flex; flex-direction: column; gap: var(--space-3); }
+  .rm-tool__form-row { display: flex; gap: var(--space-3); align-items: flex-end; }
+  .rm-tool__input { width: 100%; }
+  .rm-tool__input--sm { max-width: 160px; }
+  .rm-tool__textarea { width: 100%; }
+  .rm-tool__textarea :global(.ui-textarea) { min-height: 80px; font-family: var(--font-mono); font-size: var(--text-sm); }
+  .rm-tool__search { width: 100%; }
+  .rm-tool__list { display: flex; flex-direction: column; gap: var(--space-3); }
+  .rm-tool__empty-state { padding: var(--space-8) var(--space-4); text-align: center; color: var(--text-muted); font-size: var(--text-sm); border: 1px dashed var(--border-subtle); border-radius: var(--radius-lg); }
+  .rm-tool__memo { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out); }
+  .rm-tool__memo:hover { border-color: var(--border-strong); }
+  .rm-tool__memo-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); flex-wrap: wrap; }
+  .rm-tool__memo-title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-primary); }
+  .rm-tool__memo-date { font-size: var(--text-xs); color: var(--text-muted); }
+  .rm-tool__memo-pattern { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-tech-blue); padding: var(--space-2) var(--space-3); background: var(--surface-primary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); overflow-x: auto; }
+  .rm-tool__memo-desc { font-size: var(--text-sm); color: var(--text-secondary); }
+  .rm-tool__memo-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); font-size: var(--text-xs); color: var(--text-tertiary); }
+  .rm-tool__memo-test { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-tertiary); padding: var(--space-2); background: var(--surface-primary); border-radius: var(--radius-sm); border: 1px solid var(--border-subtle); overflow-x: auto; }
+  .rm-tool__memo-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-1); }
+  .rm-tool__memo-btn { display: inline-flex; align-items: center; padding: var(--space-1) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-primary); color: var(--text-tertiary); font-size: var(--text-xs); cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .rm-tool__memo-btn:hover { border-color: var(--color-tech-blue); color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  .rm-tool__memo-btn--danger { color: var(--color-error); border-color: var(--color-error-border); }
+  .rm-tool__memo-btn--danger:hover { color: white; background: var(--color-error); border-color: var(--color-error); }
+  .rm-tool__memo-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .rm-tool .ui-button--primary { min-width: 140px; align-self: flex-start; }
+  .rm-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .rm-tool__form-row { flex-direction: column; } .rm-tool__input--sm { max-width: none; } .rm-tool .ui-button--primary { width: 100%; } .rm-tool__memo-head { flex-direction: column; align-items: flex-start; } }
+</style>

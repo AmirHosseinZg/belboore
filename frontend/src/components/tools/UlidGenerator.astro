@@ -1,0 +1,182 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import Input from '../ui/Input.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'ULID Generator',
+    countLabel: 'Count',
+    generate: 'Generate',
+    copyAll: 'Copy All',
+    clear: 'Clear',
+    empty: 'Click Generate to create ULIDs',
+    copied: 'Copied!',
+    note: 'ULIDs are generated in your browser using crypto.getRandomValues. No data is ever sent anywhere.',
+  },
+  fa: {
+    title: 'تولید ULID',
+    countLabel: 'تعداد',
+    generate: 'تولید',
+    copyAll: 'کپی همه',
+    clear: 'پاک کردن',
+    empty: 'برای تولید ULID کلیک کنید',
+    copied: 'کپی شد!',
+    note: 'ULIDها در مرورگر شما با استفاده از crypto.getRandomValues تولید می‌شوند. هیچ داده‌ای ارسال نمی‌شود.',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="ug-tool" dir={dir} data-empty={copy.empty} data-copied={copy.copied}>
+    <div class="ug-tool__controls">
+      <div class="ug-tool__field-row">
+        <Input id="ug-count" label={copy.countLabel} type="number" className="ug-tool__count-input" value="1" inputClassName="ug-tool__count-field" />
+      </div>
+      <div class="ug-tool__actions">
+        <Button id="ug-copy-all" variant="outline">{copy.copyAll}</Button>
+        <Button id="ug-clear" variant="danger">{copy.clear}</Button>
+      </div>
+    </div>
+
+    <div class="ug-tool__output-shell">
+      <div id="ug-output" class="tool-output tool-output--empty ug-tool__output" role="status" aria-live="polite">{copy.empty}</div>
+    </div>
+
+    <div class="ug-tool__toolbar">
+      <ToolActionButton id="ug-generate">{copy.generate}</ToolActionButton>
+    </div>
+
+    <div id="ug-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note ug-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const countInput = document.getElementById('ug-count') as HTMLInputElement | null;
+  const output = document.getElementById('ug-output')!;
+  const errorDiv = document.getElementById('ug-error') as HTMLDivElement | null;
+  const generateBtn = document.getElementById('ug-generate') as HTMLButtonElement | null;
+  const copyAllBtn = document.getElementById('ug-copy-all') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('ug-clear') as HTMLButtonElement | null;
+  const root = document.querySelector('.ug-tool') as HTMLElement | null;
+  const emptyText = root?.dataset.empty || 'Click Generate to create ULIDs';
+  const copiedText = root?.dataset.copied || 'Copied!';
+
+  function encodeULID(time: number, rand: Uint8Array): string {
+    const crockford = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+    let ulid = '';
+    let t = time;
+    for (let i = 0; i < 10; i++) {
+      ulid = crockford[t & 0x1f] + ulid;
+      t >>>= 5;
+    }
+    for (let i = 0; i < 16; i++) {
+      ulid += crockford[rand[i] & 0x1f];
+    }
+    return ulid;
+  }
+
+  function generateULID(): string {
+    const now = Date.now();
+    const rand = new Uint8Array(16);
+    crypto.getRandomValues(rand);
+    return encodeULID(now, rand);
+  }
+
+  function generateULIDs(count: number): string[] {
+    const result: string[] = [];
+    for (let i = 0; i < count; i++) {
+      result.push(generateULID());
+    }
+    return result;
+  }
+
+  function renderResult(ulids: string[]) {
+    output.textContent = ulids.join('\n');
+    output.classList.remove('tool-output--empty', 'tool-output--error');
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  }
+
+  function showEmpty() {
+    window.__belbooreTools.showEmpty(output, emptyText);
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  }
+
+  function showError(msg: string) {
+    if (errorDiv) { errorDiv.textContent = msg; errorDiv.style.display = ''; }
+    window.__belbooreTools.showError(output, msg);
+  }
+
+  function getCount(): number {
+    let c = parseInt(countInput?.value || '1', 10);
+    if (isNaN(c) || c < 1) c = 1;
+    if (c > 100) c = 100;
+    if (countInput) countInput.value = String(c);
+    return c;
+  }
+
+  generateBtn?.addEventListener('click', () => {
+    try {
+      const count = getCount();
+      const ulids = generateULIDs(count);
+      renderResult(ulids);
+    } catch (e: any) {
+      showError(e?.message || 'Generation failed');
+    }
+  });
+
+  copyAllBtn?.addEventListener('click', () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, copyAllBtn!, 1500);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (countInput) countInput.value = '1';
+    showEmpty();
+    countInput?.focus();
+  });
+
+  countInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      generateBtn?.click();
+    }
+  });
+
+  countInput?.addEventListener('blur', () => {
+    getCount();
+  });
+</script>
+
+<style>
+  .ug-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .ug-tool__controls { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+  .ug-tool__field-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: flex-end; }
+  .ug-tool__count-input { max-width: 120px; }
+  .ug-tool__count-field { text-align: center; }
+  .ug-tool__actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .ug-tool__output-shell { min-height: 0; }
+  .ug-tool__output { min-height: 160px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.8; white-space: pre-wrap; word-break: break-all; overflow-x: auto; max-height: 400px; overflow-y: auto; }
+  .ug-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .ug-tool .tool-action-button { min-width: 148px; }
+  .ug-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .ug-tool__controls { flex-direction: column; align-items: stretch; } .ug-tool__actions { justify-content: center; } .ug-tool .tool-action-button { width: 100%; min-width: 0; } .ug-tool__count-input { max-width: none; } }
+</style>

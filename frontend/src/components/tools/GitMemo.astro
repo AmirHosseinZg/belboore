@@ -1,0 +1,281 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Git Memo / یادداشت Git',
+    commitType: 'Commit type',
+    scope: 'Scope (optional)',
+    subject: 'Subject',
+    body: 'Body (optional)',
+    breaking: 'Breaking changes (optional)',
+    issues: 'Issue reference (optional)',
+    generate: 'Generate commit message',
+    copy: 'Copy commit message',
+    clear: 'Clear',
+    copied: 'Copied!',
+    empty: 'Fill in the fields and generate a commit message',
+    commands: 'Useful Git Commands',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    error: 'Subject is required',
+    types: [
+      { value: 'feat', label: 'feat - A new feature' },
+      { value: 'fix', label: 'fix - A bug fix' },
+      { value: 'docs', label: 'docs - Documentation changes' },
+      { value: 'style', label: 'style - Code style changes' },
+      { value: 'refactor', label: 'refactor - Code refactoring' },
+      { value: 'perf', label: 'perf - Performance improvements' },
+      { value: 'test', label: 'test - Adding tests' },
+      { value: 'build', label: 'build - Build system changes' },
+      { value: 'ci', label: 'ci - CI configuration' },
+      { value: 'chore', label: 'chore - Chores' },
+      { value: 'revert', label: 'revert - Revert a previous commit' },
+    ],
+    commandsList: [
+      'git status',
+      'git add .',
+      'git commit -m "message"',
+      'git log --oneline',
+      'git log --oneline --graph',
+      'git diff',
+      'git diff --staged',
+      'git branch',
+      'git checkout -b <branch>',
+      'git push origin <branch>',
+      'git pull origin <branch>',
+      'git stash',
+      'git stash pop',
+      'git reset HEAD~1',
+      'git revert <commit>',
+      'git merge <branch>',
+    ],
+  },
+  fa: {
+    title: 'یادداشت Git',
+    commitType: 'نوع commit',
+    scope: 'حوزه (اختیاری)',
+    subject: 'موضوع',
+    body: 'متن توضیحات (اختیاری)',
+    breaking: 'تغییرات بنیادین (اختیاری)',
+    issues: 'ارجاع به Issue (اختیاری)',
+    generate: 'ساخت پیام commit',
+    copy: 'کپی پیام commit',
+    clear: 'پاک کردن',
+    copied: 'کپی شد!',
+    empty: 'فیلدها را پر کنید و پیام commit را بسازید',
+    commands: 'دستورات مفید Git',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    error: 'موضوع الزامی است',
+    types: [
+      { value: 'feat', label: 'feat - قابلیت جدید' },
+      { value: 'fix', label: 'fix - رفع باگ' },
+      { value: 'docs', label: 'docs - مستندات' },
+      { value: 'style', label: 'style - تغییرات ظاهری' },
+      { value: 'refactor', label: 'refactor - بازنویسی کد' },
+      { value: 'perf', label: 'perf - بهبود عملکرد' },
+      { value: 'test', label: 'test - اضافه کردن تست' },
+      { value: 'build', label: 'build - تغییرات build' },
+      { value: 'ci', label: 'ci - تنظیمات CI' },
+      { value: 'chore', label: 'chore - کارهای متفرقه' },
+      { value: 'revert', label: 'revert - بازگردانی commit قبلی' },
+    ],
+    commandsList: [
+      'git status',
+      'git add .',
+      'git commit -m "message"',
+      'git log --oneline',
+      'git log --oneline --graph',
+      'git diff',
+      'git diff --staged',
+      'git branch',
+      'git checkout -b <branch>',
+      'git push origin <branch>',
+      'git pull origin <branch>',
+      'git stash',
+      'git stash pop',
+      'git reset HEAD~1',
+      'git revert <commit>',
+      'git merge <branch>',
+    ],
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="gm-tool" dir={dir} data-empty={copy.empty} data-copied={copy.copied} data-error={copy.error}>
+    <div class="gm-tool__grid">
+      <div class="gm-tool__form">
+        <Select id="gm-type" label={copy.commitType} options={copy.types} selectedValue="feat" className="gm-tool__select" />
+        <Input id="gm-scope" label={copy.scope} className="gm-tool__input" placeholder="component, api, etc." />
+        <Input id="gm-subject" label={copy.subject} className="gm-tool__input" placeholder="Brief description of the change" />
+        <TextArea id="gm-body" label={copy.body} className="gm-tool__textarea" placeholder="Detailed explanation of the changes" rows={4} />
+        <Input id="gm-breaking" label={copy.breaking} className="gm-tool__input" placeholder="Describe breaking changes" />
+        <Input id="gm-issues" label={copy.issues} className="gm-tool__input" placeholder="Closes #123, Ref #456" />
+      </div>
+
+      <div class="gm-tool__output-section">
+        <div class="gm-tool__output-head">
+          <span class="gm-tool__label">{copy.generate}</span>
+          <div class="gm-tool__actions">
+            <Button id="gm-copy" variant="outline">{copy.copy}</Button>
+            <Button id="gm-clear" variant="danger">{copy.clear}</Button>
+          </div>
+        </div>
+        <div id="gm-output" class="gm-tool__output tool-output tool-output--empty" role="status" aria-live="polite">{copy.empty}</div>
+        <ToolActionButton id="gm-run">{copy.generate}</ToolActionButton>
+      </div>
+    </div>
+
+    <div class="gm-tool__commands">
+      <h3 class="gm-tool__commands-title">{copy.commands}</h3>
+      <div class="gm-tool__commands-grid" id="gm-commands-grid">
+        {copy.commandsList.map(cmd => (
+          <button type="button" class="gm-tool__cmd-btn" data-cmd={cmd}>{cmd}</button>
+        ))}
+      </div>
+    </div>
+
+    <div id="gm-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note gm-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const typeSelect = document.getElementById('gm-type') as HTMLSelectElement | null;
+  const scopeInput = document.getElementById('gm-scope') as HTMLInputElement | null;
+  const subjectInput = document.getElementById('gm-subject') as HTMLInputElement | null;
+  const bodyTextarea = document.getElementById('gm-body') as HTMLTextAreaElement | null;
+  const breakingInput = document.getElementById('gm-breaking') as HTMLInputElement | null;
+  const issuesInput = document.getElementById('gm-issues') as HTMLInputElement | null;
+  const output = document.getElementById('gm-output')!;
+  const errorDiv = document.getElementById('gm-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('gm-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('gm-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('gm-clear') as HTMLButtonElement | null;
+
+  const root = document.querySelector('.gm-tool') as HTMLElement | null;
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function generate() {
+    const type = typeSelect?.value || 'feat';
+    const scope = scopeInput?.value.trim() || '';
+    const subject = subjectInput?.value.trim() || '';
+    const body = bodyTextarea?.value.trim() || '';
+    const breaking = breakingInput?.value.trim() || '';
+    const issues = issuesInput?.value.trim() || '';
+
+    if (!subject) {
+      if (errorDiv) { errorDiv.textContent = getData('error', 'Subject is required'); errorDiv.style.display = ''; }
+      if (output) { output.textContent = getData('empty', ''); output.classList.add('tool-output--empty'); }
+      return;
+    }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+
+    let msg = `${type}`;
+    if (scope) msg += `(${scope})`;
+    msg += `: ${subject}`;
+    if (body) msg += `\n\n${body}`;
+    if (breaking) msg += `\n\nBREAKING CHANGE: ${breaking}`;
+    if (issues) msg += `\n\n${issues}`;
+
+    if (output) { output.textContent = msg; output.classList.remove('tool-output--empty'); }
+  }
+
+  function runAndOutput() {
+    generate();
+  }
+
+  runBtn?.addEventListener('click', runAndOutput);
+
+  [typeSelect, scopeInput, subjectInput, bodyTextarea, breakingInput, issuesInput].forEach(el => {
+    el?.addEventListener('keydown', (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        runAndOutput();
+      }
+    });
+  });
+
+  copyBtn?.addEventListener('click', () => {
+    const text = output?.textContent || '';
+    if (!text || output?.classList.contains('tool-output--empty')) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = copy.copied;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (typeSelect) typeSelect.value = 'feat';
+    if (scopeInput) scopeInput.value = '';
+    if (subjectInput) subjectInput.value = '';
+    if (bodyTextarea) bodyTextarea.value = '';
+    if (breakingInput) breakingInput.value = '';
+    if (issuesInput) issuesInput.value = '';
+    if (output) { output.textContent = getData('empty', ''); output.classList.add('tool-output--empty'); }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (scopeInput) scopeInput.focus();
+  });
+
+  document.querySelectorAll('.gm-tool__cmd-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cmd = (btn as HTMLElement).dataset.cmd || '';
+      navigator.clipboard.writeText(cmd).then(() => {
+        btn.classList.add('is-copied');
+        const orig = btn.innerHTML;
+        btn.innerHTML = copy.copied;
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('is-copied'); }, 1200);
+      }).catch(() => {});
+    });
+  });
+</script>
+
+<style>
+  .gm-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .gm-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); align-items: start; }
+  .gm-tool__form { display: flex; flex-direction: column; gap: var(--space-4); }
+  .gm-tool__select { width: 100%; }
+  .gm-tool__input { width: 100%; }
+  .gm-tool__textarea { width: 100%; }
+  .gm-tool__textarea :global(.ui-textarea) { min-height: 100px; }
+  .gm-tool__output-section { display: flex; flex-direction: column; gap: var(--space-3); }
+  .gm-tool__output-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .gm-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .gm-tool__actions { display: flex; gap: var(--space-2); }
+  .gm-tool__output { min-height: 180px; padding: var(--space-5); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; white-space: pre-wrap; word-break: break-word; border-radius: var(--radius-lg); background: color-mix(in srgb, var(--surface-primary) 60%, var(--surface-secondary)); }
+  .gm-tool__commands { display: flex; flex-direction: column; gap: var(--space-3); }
+  .gm-tool__commands-title { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .gm-tool__commands-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .gm-tool__cmd-btn { display: inline-flex; align-items: center; padding: var(--space-1) var(--space-3); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-tertiary); color: var(--text-secondary); font-family: var(--font-mono); font-size: var(--text-xs); cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .gm-tool__cmd-btn:hover { border-color: var(--color-tech-blue); color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  .gm-tool__cmd-btn.is-copied { border-color: var(--color-success); color: var(--color-success); }
+  .gm-tool__cmd-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .gm-tool .tool-action-button { align-self: flex-start; }
+  .gm-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .gm-tool__grid { grid-template-columns: 1fr; } .gm-tool__actions { width: 100%; } .gm-tool__actions .ui-button { flex: 1; } .gm-tool .tool-action-button { width: 100%; } }
+</style>
