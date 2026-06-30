@@ -1,0 +1,204 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Text ↔ Binary Converter',
+    inputLabel: 'Input',
+    outputLabel: 'Output',
+    inputHint: 'Paste text or binary depending on selected direction.',
+    outputHint: 'Converted output appears here.',
+    convert: 'Convert',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Converted output will appear here',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+    textToBinary: 'Text → Binary',
+    binaryToText: 'Binary → Text',
+  },
+  fa: {
+    title: 'مبدل متن ↔ باینری',
+    inputLabel: 'ورودی',
+    outputLabel: 'خروجی',
+    inputHint: 'بسته به جهت انتخاب شده، متن یا باینری را وارد کنید.',
+    outputHint: 'خروجی تبدیل شده اینجا نمایش داده می‌شود.',
+    convert: 'تبدیل',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'خروجی تبدیل شده اینجا نمایش داده می‌شود',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+    textToBinary: 'متن ← باینری',
+    binaryToText: 'باینری ← متن',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="tb-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+  >
+    <div class="tb-tool__controls">
+      <div class="tb-tool__toggle-row">
+        <button id="tb-mode-tb" class="tb-tool__mode-btn is-active" type="button" data-mode="tb">{copy.textToBinary}</button>
+        <button id="tb-mode-bt" class="tb-tool__mode-btn" type="button" data-mode="bt">{copy.binaryToText}</button>
+      </div>
+      <div class="tb-tool__actions">
+        <Button id="tb-copy" variant="outline" className="tb-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="tb-clear" variant="danger" className="tb-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="tb-example" variant="secondary" className="tb-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="tb-tool__grid">
+      <div class="tb-tool__panel">
+        <div class="tb-tool__panel-head">
+          <label class="tb-tool__label" for="tb-input">{copy.inputLabel}</label>
+          <p class="tb-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea id="tb-input" className="tb-tool__textarea" placeholder="Enter text or binary..." rows={12} spellcheck="false" />
+      </div>
+      <div class="tb-tool__panel">
+        <div class="tb-tool__panel-head">
+          <label class="tb-tool__label" for="tb-output">{copy.outputLabel}</label>
+          <p class="tb-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea id="tb-output" class="tb-tool__textarea tb-tool__textarea--output" rows={12} readonly spellcheck="false" placeholder={copy.empty}></textarea>
+      </div>
+    </div>
+
+    <div class="tb-tool__toolbar">
+      <ToolActionButton id="tb-run">{copy.convert}</ToolActionButton>
+    </div>
+
+    <div id="tb-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note tb-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  let activeMode = 'tb';
+
+  const input = document.getElementById('tb-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('tb-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('tb-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('tb-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('tb-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('tb-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('tb-example') as HTMLButtonElement | null;
+  const modeBtns = document.querySelectorAll('.tb-tool__mode-btn');
+
+  const EXAMPLES = { tb: 'Hello World', bt: '01001000 01101001' };
+
+  function setMode(mode: string) {
+    activeMode = mode;
+    modeBtns.forEach(btn => btn.classList.toggle('is-active', btn.dataset.mode === mode));
+    if (input) input.placeholder = mode === 'tb' ? 'Enter text...' : 'Enter binary (e.g. 01001000 01101001)...';
+    if (output) { output.value = ''; output.placeholder = ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  }
+
+  function runConvert() {
+    if (!input || !output) return;
+    const val = input.value;
+    if (!val) { output.value = ''; if (errorDiv) errorDiv.style.display = 'none'; return; }
+    try {
+      let result: string;
+      if (activeMode === 'tb') {
+        const bytes = new TextEncoder().encode(val);
+        result = Array.from(bytes).map(b => b.toString(2).padStart(8, '0')).join(' ');
+      } else {
+        const cleaned = val.replace(/\s+/g, ' ').trim();
+        if (!cleaned) { output.value = ''; return; }
+        if (!/^[01\s]+$/.test(cleaned)) throw new Error('Invalid binary input. Use only 0, 1, and spaces.');
+        const groups = cleaned.split(' ');
+        const bytes = new Uint8Array(groups.length);
+        for (let i = 0; i < groups.length; i++) {
+          if (groups[i].length !== 8) throw new Error(`Invalid binary group at position ${i + 1}: "${groups[i]}" is not 8 bits.`);
+          bytes[i] = parseInt(groups[i], 2);
+        }
+        result = new TextDecoder().decode(bytes);
+      }
+      output.value = result;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Conversion error'; errorDiv.style.display = ''; }
+    }
+  }
+
+  modeBtns.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode || 'tb')));
+  runBtn?.addEventListener('click', runConvert);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = 'Copied!';
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.value = '';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    input?.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) input.value = EXAMPLES[activeMode as 'tb' | 'bt'];
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runConvert();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runConvert(); }
+  });
+</script>
+
+<style>
+  .tb-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .tb-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .tb-tool__toggle-row { display: inline-flex; gap: var(--space-1); padding: var(--space-1); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); }
+  .tb-tool__mode-btn { border: 0; border-radius: var(--radius-lg); padding: var(--space-2) var(--space-4); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-tertiary); background: transparent; cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .tb-tool__mode-btn.is-active { color: var(--color-tech-blue); background: var(--surface-primary); box-shadow: var(--shadow-sm); }
+  .tb-tool__mode-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .tb-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .tb-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .tb-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .tb-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .tb-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .tb-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .tb-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .tb-tool__textarea { width: 100%; min-height: 240px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .tb-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .tb-tool__textarea::placeholder { color: var(--text-muted); }
+  .tb-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .tb-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .tb-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .tb-tool .tool-action-button { min-width: 148px; }
+  .tb-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .tb-tool__grid { grid-template-columns: 1fr; } .tb-tool .tool-action-button { width: 100%; min-width: 0; } .tb-tool__controls { flex-direction: column; align-items: stretch; } .tb-tool__actions { justify-content: center; } }
+</style>

@@ -34,7 +34,14 @@ const copy = {
     camel: 'camelCase',
     pascal: 'PascalCase',
     snake: 'snake_case',
+    constant: 'CONSTANT_CASE',
     kebab: 'kebab-case',
+    dot: 'dot.case',
+    path: 'path/case',
+    train: 'Train-Case',
+    alternating: 'aLtErNaTiNg',
+    inverse: 'iNVERSE',
+    slug: 'slug-case',
   },
   fa: {
     title: 'تبدیل حروف',
@@ -54,7 +61,14 @@ const copy = {
     camel: 'camelCase',
     pascal: 'PascalCase',
     snake: 'snake_case',
+    constant: 'CONSTANT_CASE',
     kebab: 'kebab-case',
+    dot: 'dot.case',
+    path: 'path/case',
+    train: 'Train-Case',
+    alternating: 'aLtErNaTiNg',
+    inverse: 'معکوس',
+    slug: 'slug-case',
   },
 }[lang];
 ---
@@ -84,7 +98,14 @@ const copy = {
             { value: 'camel', label: copy.camel },
             { value: 'pascal', label: copy.pascal },
             { value: 'snake', label: copy.snake },
+            { value: 'constant', label: copy.constant },
             { value: 'kebab', label: copy.kebab },
+            { value: 'dot', label: copy.dot },
+            { value: 'path', label: copy.path },
+            { value: 'train', label: copy.train },
+            { value: 'alternating', label: copy.alternating },
+            { value: 'inverse', label: copy.inverse },
+            { value: 'slug', label: copy.slug },
           ]}
         />
       </div>
@@ -180,6 +201,46 @@ const copy = {
       .toLowerCase();
   }
 
+  function toDotCase(s) {
+    return s.trim().replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[^a-zA-Z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').toLowerCase();
+  }
+
+  function toPathCase(s) {
+    return s.trim().replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[^a-zA-Z0-9]+/g, '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+  }
+
+  function toTrainCase(s) {
+    return toKebabCase(s).replace(/(^|-)(.)/g, function(_, sep, c) { return sep + c.toUpperCase(); });
+  }
+
+  function toAlternating(s) {
+    var result = '';
+    var upper = true;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (/[a-zA-Z]/.test(ch)) {
+        result += upper ? ch.toUpperCase() : ch.toLowerCase();
+        upper = !upper;
+      } else { result += ch; }
+    }
+    return result;
+  }
+
+  function toInverse(s) {
+    var result = '';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (ch >= 'a' && ch <= 'z') result += ch.toUpperCase();
+      else if (ch >= 'A' && ch <= 'Z') result += ch.toLowerCase();
+      else result += ch;
+    }
+    return result;
+  }
+
+  function toSlug(s) {
+    return s.trim().toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
   function convertText(value, mode) {
     switch(mode){
       case 'upper': return value.toUpperCase();
@@ -189,7 +250,14 @@ const copy = {
       case 'camel': return toCamelCase(value);
       case 'pascal': return toPascalCase(value);
       case 'snake': return toSnakeCase(value);
+      case 'constant': return toSnakeCase(value).toUpperCase();
       case 'kebab': return toKebabCase(value);
+      case 'dot': return toDotCase(value);
+      case 'path': return toPathCase(value);
+      case 'train': return toTrainCase(value);
+      case 'alternating': return toAlternating(value);
+      case 'inverse': return toInverse(value);
+      case 'slug': return toSlug(value);
       default: return value;
     }
   }

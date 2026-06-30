@@ -1,0 +1,243 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import ConverterDirectionToggle from './ConverterDirectionToggle.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'HTML Entities Encoder / Decoder',
+    inputLabel: 'Input',
+    outputLabel: 'Output',
+    inputHint: 'Paste text or HTML entities depending on selected direction.',
+    outputHint: 'Converted output appears here.',
+    convert: 'Convert',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Converted output will appear here',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+    encodeLabel: 'Text → Entities',
+    decodeLabel: 'Entities → Text',
+    error: 'Conversion error',
+  },
+  fa: {
+    title: 'کدگذاری / رمزگشایی موجودیت‌های HTML',
+    inputLabel: 'ورودی',
+    outputLabel: 'خروجی',
+    inputHint: 'بسته به جهت انتخاب شده، متن یا موجودیت‌های HTML را وارد کنید.',
+    outputHint: 'خروجی تبدیل شده اینجا نمایش داده می‌شود.',
+    convert: 'تبدیل',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'خروجی تبدیل شده اینجا نمایش داده می‌شود',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+    encodeLabel: 'متن ← موجودیت',
+    decodeLabel: 'موجودیت ← متن',
+    error: 'خطا در تبدیل',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="he-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-error={copy.error}
+    data-placeholder-encode="<div class=\"hello\">Hello &amp; welcome</div>"
+    data-placeholder-decode="&lt;div class=&quot;hello&quot;&gt;Hello &amp;amp; welcome&lt;/div&gt;"
+  >
+    <div class="he-tool__controls">
+      <div class="he-tool__toggle-row">
+        <button
+          id="he-mode-encode"
+          class="he-tool__mode-btn is-active"
+          type="button"
+          data-mode="encode"
+        >{copy.encodeLabel}</button>
+        <button
+          id="he-mode-decode"
+          class="he-tool__mode-btn"
+          type="button"
+          data-mode="decode"
+        >{copy.decodeLabel}</button>
+      </div>
+      <div class="he-tool__actions">
+        <Button id="he-copy" variant="outline" className="he-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="he-clear" variant="danger" className="he-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="he-example" variant="secondary" className="he-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="he-tool__grid">
+      <div class="he-tool__panel">
+        <div class="he-tool__panel-head">
+          <label class="he-tool__label" for="he-input">{copy.inputLabel}</label>
+          <p class="he-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea
+          id="he-input"
+          className="he-tool__textarea"
+          placeholder={copy.encodeLabel}
+          rows={12}
+          spellcheck="false"
+        />
+      </div>
+      <div class="he-tool__panel">
+        <div class="he-tool__panel-head">
+          <label class="he-tool__label" for="he-output">{copy.outputLabel}</label>
+          <p class="he-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea
+          id="he-output"
+          class="he-tool__textarea he-tool__textarea--output"
+          rows={12}
+          readonly
+          spellcheck="false"
+          placeholder={copy.empty}
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="he-tool__toolbar">
+      <ToolActionButton id="he-run">{copy.convert}</ToolActionButton>
+    </div>
+
+    <div id="he-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note he-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  let activeMode = 'encode';
+
+  const input = document.getElementById('he-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('he-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('he-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('he-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('he-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('he-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('he-example') as HTMLButtonElement | null;
+
+  const modeBtns = document.querySelectorAll('.he-tool__mode-btn');
+
+  const EXAMPLE = {
+    encode: '<div class="hello">Hello & welcome</div>',
+    decode: '&lt;div class=&quot;hello&quot;&gt;Hello &amp;amp; welcome&lt;/div&gt;',
+  };
+
+  function setMode(mode: string) {
+    activeMode = mode;
+    modeBtns.forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.mode === mode);
+    });
+    if (input) {
+      const ph = mode === 'encode'
+        ? '<div class="hello">Hello & welcome</div>'
+        : '&lt;div class=&quot;hello&quot;&gt;Hello &amp;amp; welcome&lt;/div&gt;';
+      input.placeholder = ph;
+    }
+    if (output) { output.value = ''; output.placeholder = ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  }
+
+  function runConvert() {
+    if (!input || !output) return;
+    const val = input.value;
+    if (!val) { output.value = ''; output.placeholder = ''; if (errorDiv) errorDiv.style.display = 'none'; return; }
+    try {
+      let result: string;
+      if (activeMode === 'encode') {
+        result = val.replace(/[&<>"'`]/g, (ch: string) => {
+          const m: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' };
+          return m[ch] || ch;
+        });
+      } else {
+        result = val.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (_: string, entity: string) => {
+          if (entity.startsWith('#x')) { const c = parseInt(entity.slice(2), 16); return isNaN(c) ? _ : String.fromCodePoint(c); }
+          if (entity.startsWith('#')) { const c = parseInt(entity.slice(1), 10); return isNaN(c) ? _ : String.fromCodePoint(c); }
+          const named: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00A0', copy: '\u00A9', reg: '\u00AE', trade: '\u2122', euro: '\u20AC', mdash: '\u2014', ndash: '\u2013', lsquo: '\u2018', rsquo: '\u2019', ldquo: '\u201C', rdquo: '\u201D', hellip: '\u2026' };
+          return named[entity] || _;
+        });
+      }
+      output.value = result;
+      output.placeholder = '';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = ''; output.placeholder = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Conversion error'; errorDiv.style.display = ''; }
+    }
+  }
+
+  modeBtns.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode || 'encode')));
+  runBtn?.addEventListener('click', runConvert);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = 'Copied!';
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) { output.value = ''; output.placeholder = ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = EXAMPLE[activeMode as 'encode' | 'decode']; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runConvert();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runConvert(); }
+  });
+</script>
+
+<style>
+  .he-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .he-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .he-tool__toggle-row { display: inline-flex; gap: var(--space-1); padding: var(--space-1); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); }
+  .he-tool__mode-btn { border: 0; border-radius: var(--radius-lg); padding: var(--space-2) var(--space-4); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-tertiary); background: transparent; cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .he-tool__mode-btn.is-active { color: var(--color-tech-blue); background: var(--surface-primary); box-shadow: var(--shadow-sm); }
+  .he-tool__mode-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .he-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .he-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .he-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .he-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .he-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .he-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .he-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .he-tool__textarea { width: 100%; min-height: 240px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .he-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .he-tool__textarea::placeholder { color: var(--text-muted); }
+  .he-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .he-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .he-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .he-tool .tool-action-button { min-width: 148px; }
+  .he-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .he-tool__grid { grid-template-columns: 1fr; } .he-tool .tool-action-button { width: 100%; min-width: 0; } .he-tool__controls { flex-direction: column; align-items: stretch; } .he-tool__actions { justify-content: center; } }
+</style>
