@@ -1,0 +1,105 @@
+---
+import { ArrowLeftRight, ArrowRight } from '@lucide/astro';
+import type { ConverterDirection } from './formatConverterUtils';
+
+interface Props {
+  id: string;
+  labelA: string;
+  labelB: string;
+  direction: ConverterDirection;
+  disabled?: boolean;
+}
+
+const { id, labelA, labelB, direction, disabled = false } = Astro.props;
+---
+
+<div class="converter-direction-toggle" role="group" aria-label="Conversion direction">
+  <div class="converter-direction-toggle__labels">
+    <span class="converter-direction-toggle__label" id={`${id}-from`} aria-current={direction === 'a-to-b' ? 'true' : undefined}>
+      {direction === 'a-to-b' ? labelA : labelB}
+    </span>
+    <span class="converter-direction-toggle__arrow" aria-hidden="true">
+      <ArrowRight size={16} />
+    </span>
+    <span class="converter-direction-toggle__label" id={`${id}-to`} aria-current={direction === 'b-to-a' ? 'true' : undefined}>
+      {direction === 'a-to-b' ? labelB : labelA}
+    </span>
+  </div>
+  <button
+    id={id}
+    class="converter-direction-toggle__swap"
+    type="button"
+    aria-label="Swap conversion direction"
+    title="Swap direction"
+    disabled={disabled}
+  >
+    <ArrowLeftRight size={16} />
+  </button>
+</div>
+
+<style>
+  .converter-direction-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .converter-direction-toggle__labels {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-full);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+  }
+
+  .converter-direction-toggle__label {
+    color: var(--text-tertiary);
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .converter-direction-toggle__label[aria-current="true"] {
+    color: var(--color-tech-blue);
+    font-weight: var(--weight-semibold);
+  }
+
+  .converter-direction-toggle__arrow {
+    color: var(--text-muted);
+    display: flex;
+  }
+
+  .converter-direction-toggle__swap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+
+  .converter-direction-toggle__swap:hover:not(:disabled) {
+    border-color: var(--color-tech-blue);
+    color: var(--color-tech-blue);
+    background: var(--color-tech-blue-subtle);
+  }
+
+  .converter-direction-toggle__swap:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 2px;
+  }
+
+  .converter-direction-toggle__swap:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+</style>

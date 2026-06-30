@@ -9,6 +9,15 @@ import JsonMinifyTool from '../../../components/tools/JsonMinifyTool.astro';
 import JsonToCsvTool from '../../../components/tools/JsonToCsvTool.astro';
 import JsonTreeViewerTool from '../../../components/tools/JsonTreeViewerTool.astro';
 import JsonDiffTool from '../../../components/tools/JsonDiffTool.astro';
+import YamlJsonConverter from '../../../components/tools/YamlJsonConverter.astro';
+import JsonTomlConverter from '../../../components/tools/JsonTomlConverter.astro';
+import YamlTomlConverter from '../../../components/tools/YamlTomlConverter.astro';
+import XmlJsonConverter from '../../../components/tools/XmlJsonConverter.astro';
+import HtmlEntitiesTool from '../../../components/tools/HtmlEntitiesTool.astro';
+import TextBinaryTool from '../../../components/tools/TextBinaryTool.astro';
+import TextUnicodeTool from '../../../components/tools/TextUnicodeTool.astro';
+import TextNatoTool from '../../../components/tools/TextNatoTool.astro';
+import ListConverterTool from '../../../components/tools/ListConverterTool.astro';
 import Base64Encoder from '../../../components/tools/Base64Encoder.astro';
 import UrlEncoder from '../../../components/tools/UrlEncoder.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
@@ -70,6 +79,15 @@ const toolComponentMap: Record<string, any> = {
   'json-to-csv': JsonToCsvTool,
   'json-tree-viewer': JsonTreeViewerTool,
   'json-diff': JsonDiffTool,
+  'yaml-json-converter': YamlJsonConverter,
+  'json-toml-converter': JsonTomlConverter,
+  'yaml-toml-converter': YamlTomlConverter,
+  'xml-json-converter': XmlJsonConverter,
+  'html-entities': HtmlEntitiesTool,
+  'text-binary-converter': TextBinaryTool,
+  'text-unicode-converter': TextUnicodeTool,
+  'text-nato-alphabet': TextNatoTool,
+  'list-converter': ListConverterTool,
   'base64-encoder': Base64Encoder,
   'url-encoder': UrlEncoder,
   'uuid-generator': UuidGenerator,
