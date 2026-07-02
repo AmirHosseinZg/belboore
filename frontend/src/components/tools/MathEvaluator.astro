@@ -1,0 +1,184 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Math Evaluator',
+    exprLabel: 'Expression',
+    exprPlaceholder: 'Type a math expression...',
+    result: 'Result',
+    evaluate: 'Evaluate',
+    clear: 'Clear',
+    copy: 'Copy',
+    emptyState: 'Enter an expression and click Evaluate',
+    note: 'Supports +, -, *, /, %, ^, sin, cos, tan, log, ln, sqrt, abs, round, floor, ceil, min, max, pow, pi, e',
+    angleMode: 'Angle mode',
+    deg: 'Degrees',
+    rad: 'Radians',
+  },
+  fa: {
+    title: 'محاسبه‌گر ریاضی',
+    exprLabel: 'عبارت',
+    exprPlaceholder: 'یک عبارت ریاضی تایپ کنید...',
+    result: 'نتیجه',
+    evaluate: 'محاسبه',
+    clear: 'پاک کردن',
+    copy: 'کپی',
+    emptyState: 'یک عبارت وارد کنید و روی Evaluate کلیک کنید',
+    note: 'پشتیبانی از +, -, *, /, %, ^, sin, cos, tan, log, ln, sqrt, abs, round, floor, ceil, min, max, pow, pi, e',
+    angleMode: 'حالت زاویه',
+    deg: 'درجه',
+    rad: 'رادیان',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="me-tool">
+    <Input id="me-input" label={copy[lang].exprLabel} placeholder={copy[lang].exprPlaceholder} inputClassName="me-input" spellcheck={false} />
+    <Select id="me-angle" label={copy[lang].angleMode} options={[
+      { value: 'rad', label: copy[lang].rad },
+      { value: 'deg', label: copy[lang].deg },
+    ]} />
+    <div class="tool-toolbar me-fn-row">
+      <Button className="me-btn" data-insert="sin(">sin</Button>
+      <Button className="me-btn" data-insert="cos(">cos</Button>
+      <Button className="me-btn" data-insert="tan(">tan</Button>
+      <Button className="me-btn" data-insert="sqrt(">sqrt</Button>
+      <Button className="me-btn" data-insert="log(">log</Button>
+      <Button className="me-btn" data-insert="ln(">ln</Button>
+      <Button className="me-btn" data-insert="abs(">abs</Button>
+      <Button className="me-btn" data-insert="pow(">pow(</Button>
+      <Button className="me-btn" data-insert="pi">π</Button>
+      <Button className="me-btn" data-insert="e">e</Button>
+      <Button className="me-btn" data-insert="**">x^y</Button>
+      <Button className="me-btn" data-insert="(">(</Button>
+      <Button className="me-btn" data-insert=")">)</Button>
+    </div>
+    <div class="tool-toolbar">
+      <ToolActionButton id="me-evaluate">{copy[lang].evaluate}</ToolActionButton>
+      <Button id="me-clear" variant="secondary">{copy[lang].clear}</Button>
+      <Button id="me-copy" variant="outline">{copy[lang].copy}</Button>
+    </div>
+    <div id="me-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="me-result" class="tool-output me-result-value" style="display:none" role="status" aria-live="polite"></div>
+    <div id="me-detail" class="me-detail" style="display:none"></div>
+    <div id="me-error" class="tool-error" style="display:none"></div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { evaluate, formatNumber } from './Phase9Utils.ts';
+
+  const input = document.getElementById('me-input') as HTMLInputElement;
+  const angleSelect = document.getElementById('me-angle') as HTMLSelectElement;
+  const evalBtn = document.getElementById('me-evaluate') as HTMLButtonElement;
+  const clearBtn = document.getElementById('me-clear') as HTMLButtonElement;
+  const copyBtn = document.getElementById('me-copy') as HTMLButtonElement;
+  const emptyEl = document.getElementById('me-empty')!;
+  const resultEl = document.getElementById('me-result')!;
+  const detailEl = document.getElementById('me-detail')!;
+  const errorEl = document.getElementById('me-error')!;
+
+  const insertBtns = document.querySelectorAll('.me-btn');
+  insertBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const insert = (btn as HTMLElement).dataset.insert || '';
+      const start = input.selectionStart || input.value.length;
+      const end = input.selectionEnd || input.value.length;
+      input.value = input.value.substring(0, start) + insert + input.value.substring(end);
+      input.focus();
+      input.selectionStart = input.selectionEnd = start + insert.length;
+    });
+  });
+
+  function doEvaluate() {
+    const expr = input.value.trim();
+    if (!expr) {
+      errorEl.textContent = 'Please enter an expression';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      detailEl.style.display = 'none';
+      return;
+    }
+    errorEl.style.display = 'none';
+    try {
+      const angleMode = angleSelect.value as 'deg' | 'rad';
+      const result = evaluate(expr, angleMode);
+      const formatted = formatNumber(result);
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+      resultEl.textContent = formatted;
+      detailEl.style.display = '';
+      detailEl.textContent = `${expr} = ${formatted}  (${angleMode === 'deg' ? 'degrees' : 'radians'})`;
+    } catch (e: any) {
+      errorEl.textContent = 'Error: ' + (e.message || String(e));
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+      detailEl.style.display = 'none';
+    }
+  }
+
+  evalBtn.addEventListener('click', doEvaluate);
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    detailEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    input.focus();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = resultEl.textContent || '';
+    if (!text || resultEl.style.display === 'none') return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doEvaluate(); });
+</script>
+
+<style>
+  .me-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .me-tool .tool-note { margin-top: 0; }
+  .me-input { font-family: var(--font-mono); font-size: var(--text-base); }
+  .me-fn-row { flex-wrap: wrap; }
+  .me-btn {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs) !important;
+    padding: var(--space-1) var(--space-2) !important;
+  }
+  .me-result-value {
+    font-size: var(--text-2xl);
+    text-align: center;
+    padding: var(--space-6);
+  }
+  .me-detail {
+    display: none;
+    margin-top: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    text-align: center;
+  }
+</style>

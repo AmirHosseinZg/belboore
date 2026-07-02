@@ -1,0 +1,210 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'ETA Calculator',
+    modeLabel: 'Mode',
+    calculate: 'Calculate',
+    clear: 'Clear',
+    emptyState: 'Fill in the fields and click Calculate',
+    note: 'Calculate travel time, speed, distance, or task progress ETA.',
+    distance: 'Distance',
+    speed: 'Speed',
+    time: 'Time',
+    total: 'Total items',
+    completed: 'Completed',
+    elapsed: 'Elapsed (minutes)',
+    unit: 'Unit',
+    km: 'km',
+    mi: 'miles',
+    m: 'meters',
+    travelTime: 'Travel Time',
+    speedResult: 'Speed',
+    distanceResult: 'Distance',
+    progress: 'Progress ETA',
+    remaining: 'Remaining',
+    remainingItems: 'Remaining items',
+    completionTime: 'Completion time',
+    totalTime: 'Total time',
+    distanceSpeedTime: 'Distance/Speed \u2192 Time',
+    distanceTimeSpeed: 'Distance/Time \u2192 Speed',
+    speedTimeDistance: 'Speed/Time \u2192 Distance',
+    progressMode: 'Task Progress ETA',
+  },
+  fa: {
+    title: 'محاسبه زمان تخمینی',
+    modeLabel: 'حالت',
+    calculate: 'محاسبه',
+    clear: 'پاک کردن',
+    emptyState: 'فیلدها را پر کنید و روی Calculate کلیک کنید',
+    note: 'محاسبه زمان سفر، سرعت، مسافت یا زمان تخمینی پیشرفت کار.',
+    distance: 'مسافت',
+    speed: 'سرعت',
+    time: 'زمان',
+    total: 'کل آیتم‌ها',
+    completed: 'تکمیل شده',
+    elapsed: 'زمان سپری شده (دقیقه)',
+    unit: 'واحد',
+    km: 'کیلومتر',
+    mi: 'مایل',
+    m: 'متر',
+    travelTime: 'زمان سفر',
+    speedResult: 'سرعت',
+    distanceResult: 'مسافت',
+    progress: 'زمان تخمینی پیشرفت',
+    remaining: 'باقی مانده',
+    remainingItems: 'آیتم‌های باقی مانده',
+    completionTime: 'زمان تکمیل',
+    totalTime: 'زمان کل',
+    distanceSpeedTime: 'مسافت/سرعت \u2192 زمان',
+    distanceTimeSpeed: 'مسافت/زمان \u2192 سرعت',
+    speedTimeDistance: 'سرعت/زمان \u2192 مسافت',
+    progressMode: 'زمان تخمینی پیشرفت کار',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="eta-tool">
+    <Select id="eta-mode" label={copy[lang].modeLabel} options={[
+      { value: 'distance-speed-time', label: copy[lang].distanceSpeedTime },
+      { value: 'distance-time-speed', label: copy[lang].distanceTimeSpeed },
+      { value: 'speed-time-distance', label: copy[lang].speedTimeDistance },
+      { value: 'progress', label: copy[lang].progressMode },
+    ]} />
+
+    <div id="eta-travel-fields" class="eta-travel-fields">
+      <Input id="eta-distance" label={copy[lang].distance} type="number" placeholder="0" inputClassName="eta-num-input" />
+      <Input id="eta-speed" label={copy[lang].speed} type="number" placeholder="0" inputClassName="eta-num-input" />
+      <Input id="eta-time" label={copy[lang].time} type="number" placeholder="0" inputClassName="eta-num-input" />
+      <Select id="eta-unit" label={copy[lang].unit} options={[
+        { value: 'km', label: copy[lang].km },
+        { value: 'mi', label: copy[lang].mi },
+        { value: 'm', label: copy[lang].m },
+      ]} />
+    </div>
+
+    <div id="eta-progress-fields" class="eta-progress-fields" style="display:none">
+      <Input id="eta-total" label={copy[lang].total} type="number" placeholder="100" inputClassName="eta-num-input" />
+      <Input id="eta-completed" label={copy[lang].completed} type="number" placeholder="0" inputClassName="eta-num-input" />
+      <Input id="eta-elapsed" label={copy[lang].elapsed} type="number" placeholder="0" inputClassName="eta-num-input" />
+    </div>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="eta-calc">{copy[lang].calculate}</ToolActionButton>
+      <Button id="eta-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+    <div id="eta-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="eta-result-card" style="display:none" class="workspace__result-card"></div>
+    <div id="eta-error" class="tool-error" style="display:none"></div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { calculateEta } from './Phase9Utils.ts';
+
+  const modeSelect = document.getElementById('eta-mode') as HTMLSelectElement;
+  const travelFields = document.getElementById('eta-travel-fields')!;
+  const progressFields = document.getElementById('eta-progress-fields')!;
+  const distInput = document.getElementById('eta-distance') as HTMLInputElement;
+  const speedInput = document.getElementById('eta-speed') as HTMLInputElement;
+  const timeInput = document.getElementById('eta-time') as HTMLInputElement;
+  const unitSelect = document.getElementById('eta-unit') as HTMLSelectElement;
+  const totalInput = document.getElementById('eta-total') as HTMLInputElement;
+  const completedInput = document.getElementById('eta-completed') as HTMLInputElement;
+  const elapsedInput = document.getElementById('eta-elapsed') as HTMLInputElement;
+  const calcBtn = document.getElementById('eta-calc') as HTMLButtonElement;
+  const clearBtn = document.getElementById('eta-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('eta-empty')!;
+  const resultCard = document.getElementById('eta-result-card')!;
+  const errorEl = document.getElementById('eta-error')!;
+
+  modeSelect.addEventListener('change', () => {
+    const mode = modeSelect.value;
+    travelFields.style.display = mode === 'progress' ? 'none' : '';
+    progressFields.style.display = mode === 'progress' ? '' : 'none';
+  });
+
+  function makeLabel(text: string, value: string): string {
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle)"><span style="color:var(--text-tertiary);font-size:var(--text-sm)">${text}</span><span style="font-family:var(--font-mono);font-size:var(--text-lg);font-weight:var(--weight-bold)">${value}</span></div>`;
+  }
+
+  calcBtn.addEventListener('click', () => {
+    const mode = modeSelect.value;
+    errorEl.style.display = 'none';
+    try {
+      let result: any;
+      const units: Record<string, string> = { distance: unitSelect.value };
+      if (mode === 'distance-speed-time') {
+        result = calculateEta(mode, {
+          distance: parseFloat(distInput.value) || 0,
+          speed: parseFloat(speedInput.value) || 0,
+        }, units);
+      } else if (mode === 'distance-time-speed') {
+        result = calculateEta(mode, {
+          distance: parseFloat(distInput.value) || 0,
+          time: parseFloat(timeInput.value) || 0,
+        }, units);
+      } else if (mode === 'speed-time-distance') {
+        result = calculateEta(mode, {
+          speed: parseFloat(speedInput.value) || 0,
+          time: parseFloat(timeInput.value) || 0,
+        }, units);
+      } else if (mode === 'progress') {
+        result = calculateEta(mode, {
+          total: parseInt(totalInput.value, 10) || 0,
+          completed: parseInt(completedInput.value, 10) || 0,
+          elapsed: parseFloat(elapsedInput.value) || 0,
+        }, units);
+      }
+      emptyEl.style.display = 'none';
+      resultCard.style.display = '';
+      let html = '';
+      if (result.time) html += makeLabel('Time', `${result.time.value} ${result.time.unit}`);
+      if (result.speed) html += makeLabel('Speed', `${result.speed.value} ${result.speed.unit}`);
+      if (result.distance) html += makeLabel('Distance', `${result.distance.value} ${result.distance.unit}`);
+      if (result.remaining) html += makeLabel('Remaining time', `${result.remaining.value} ${result.remaining.unit}`);
+      if (result.remainingItems !== undefined) html += makeLabel('Remaining items', String(result.remainingItems));
+      if (result.completionTime) html += makeLabel('Completion time', result.completionTime);
+      if (result.totalTime) html += makeLabel('Total time', `${result.totalTime.value} ${result.totalTime.unit}`);
+      resultCard.innerHTML = html;
+    } catch (e: any) {
+      errorEl.textContent = 'Error: ' + (e.message || String(e));
+      errorEl.style.display = '';
+      resultCard.style.display = 'none';
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    [distInput, speedInput, timeInput, totalInput, completedInput, elapsedInput].forEach(i => i.value = '');
+    emptyEl.style.display = '';
+    resultCard.style.display = 'none';
+    errorEl.style.display = 'none';
+  });
+</script>
+
+<style>
+  .eta-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .eta-tool .tool-note { margin-top: 0; }
+  .eta-travel-fields, .eta-progress-fields { display: flex; flex-direction: column; gap: var(--space-4); }
+</style>
