@@ -4,6 +4,11 @@ import { languages } from '../../i18n/utils';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Switch from '../ui/Switch.astro';
 
 interface Props {
   lang?: Lang;
@@ -60,61 +65,57 @@ const copy = {
   <ToolPrimitives />
   <ToolUtils />
 
-  <div class="tool-toolbar">
-    <button id="ed-mode-encrypt" type="button" class="tool-btn tool-btn--primary is-active">{copy[lang].modeEncrypt}</button>
-    <button id="ed-mode-decrypt" type="button" class="tool-btn">{copy[lang].modeDecrypt}</button>
-  </div>
+  <div class="ed-tool">
+    <Switch
+      name={copy[lang].title}
+      items={[
+        { id: 'ed-mode-encrypt', value: 'encrypt', label: copy[lang].modeEncrypt },
+        { id: 'ed-mode-decrypt', value: 'decrypt', label: copy[lang].modeDecrypt },
+      ]}
+      activeValue="encrypt"
+    />
 
-  <div class="tool-field">
-    <label class="tool-field__label" for="ed-password">{copy[lang].password}</label>
-    <div class="tool-password-wrap">
-      <input id="ed-password" class="tool-input" type="password" autocomplete="off" spellcheck="false" />
-      <button id="ed-toggle" class="tool-btn--icon" type="button" aria-label="Toggle visibility" tabindex="-1">
+    <div class="ed-password-wrap">
+      <Input id="ed-password" label={copy[lang].password} type="password" autocomplete="off" spellcheck={false} />
+      <button id="ed-toggle" class="ed-password-wrap__toggle" type="button" aria-label="Toggle visibility" tabindex="-1">
         <svg class="ed-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         <svg class="ed-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
       </button>
     </div>
-  </div>
 
-  <div id="ed-encrypt-section">
-    <div class="tool-field">
-      <label class="tool-field__label" for="ed-plaintext">{copy[lang].plaintext}</label>
-      <textarea id="ed-plaintext" class="tool-textarea" rows="5" placeholder="Enter text to encrypt..."></textarea>
+    <div id="ed-encrypt-section">
+      <TextArea id="ed-plaintext" label={copy[lang].plaintext} placeholder="Enter text to encrypt..." rows={5} />
     </div>
-  </div>
 
-  <div id="ed-decrypt-section" style="display:none">
-    <div class="tool-field">
-      <label class="tool-field__label" for="ed-ciphertext">{copy[lang].ciphertext}</label>
-      <textarea id="ed-ciphertext" class="tool-textarea" rows="5" placeholder={copy[lang].ciphertextPlaceholder}></textarea>
+    <div id="ed-decrypt-section" style="display:none">
+      <TextArea id="ed-ciphertext" label={copy[lang].ciphertext} placeholder={copy[lang].ciphertextPlaceholder} rows={5} />
     </div>
-  </div>
 
-  <div class="tool-toolbar">
-    <button id="ed-action" type="button" class="tool-btn tool-btn--primary">{copy[lang].encrypt}</button>
-    <button id="ed-clear" type="button" class="tool-btn">{copy[lang].clear}</button>
-  </div>
+    <div class="tool-toolbar">
+      <ToolActionButton id="ed-action">{copy[lang].encrypt}</ToolActionButton>
+      <Button id="ed-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
 
-  <div id="ed-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
-  <div id="ed-result" class="tool-output" style="display:none; font-size: var(--text-sm); word-break: break-all;" role="status" aria-live="polite"></div>
-  <div id="ed-error" class="tool-error" style="display:none"></div>
+    <div id="ed-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
+    <div id="ed-result" class="tool-output ed-result" style="display:none" role="status" aria-live="polite"></div>
+    <div id="ed-error" class="tool-error" style="display:none"></div>
 
-  <div class="ed-warning">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    {copy[lang].warning}
-  </div>
+    <div class="ed-warning">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      {copy[lang].warning}
+    </div>
 
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    {copy[lang].note}
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
   </div>
 </ToolWorkspace>
 
 <script>
   import { encryptAesGcm, decryptAesGcm } from './Phase8Utils.ts';
 
-  const modeEncrypt = document.getElementById('ed-mode-encrypt')!;
-  const modeDecrypt = document.getElementById('ed-mode-decrypt')!;
+  const modeBtns = document.querySelectorAll('.ed-tool .ui-switch__btn');
   const encryptSection = document.getElementById('ed-encrypt-section')!;
   const decryptSection = document.getElementById('ed-decrypt-section')!;
   const pwInput = document.getElementById('ed-password') as HTMLInputElement;
@@ -143,13 +144,12 @@ const copy = {
     }
   });
 
-  function setMode(mode: 'encrypt' | 'decrypt') {
-    currentMode = mode;
+  function setMode(mode: string) {
+    currentMode = mode as 'encrypt' | 'decrypt';
+    modeBtns.forEach(function (btn) {
+      btn.classList.toggle('is-active', btn.getAttribute('data-value') === mode);
+    });
     const isEncrypt = mode === 'encrypt';
-    modeEncrypt.classList.toggle('tool-btn--primary', isEncrypt);
-    modeEncrypt.classList.toggle('is-active', isEncrypt);
-    modeDecrypt.classList.toggle('tool-btn--primary', !isEncrypt);
-    modeDecrypt.classList.toggle('is-active', !isEncrypt);
     encryptSection.style.display = isEncrypt ? '' : 'none';
     decryptSection.style.display = isEncrypt ? 'none' : '';
     actionBtn.textContent = isEncrypt ? 'Encrypt' : 'Decrypt';
@@ -158,8 +158,11 @@ const copy = {
     errorEl.style.display = 'none';
   }
 
-  modeEncrypt.addEventListener('click', function () { setMode('encrypt'); });
-  modeDecrypt.addEventListener('click', function () { setMode('decrypt'); });
+  modeBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setMode(btn.getAttribute('data-value') || 'encrypt');
+    });
+  });
 
   actionBtn.addEventListener('click', async function () {
     const password = pwInput.value;
@@ -243,18 +246,27 @@ const copy = {
 </script>
 
 <style>
-  .tool-password-wrap {
-    position: relative;
+  .ed-tool {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    gap: var(--space-5);
   }
-  .tool-password-wrap .tool-input {
-    flex: 1;
-    padding-inline-end: 44px;
+  .ed-tool .tool-note {
+    margin-top: 0;
   }
-  .tool-btn--icon {
+  .ed-result {
+    font-size: var(--text-sm);
+    word-break: break-all;
+  }
+  .ed-password-wrap {
+    position: relative;
+  }
+  .ed-password-wrap__toggle {
     position: absolute;
     inset-inline-end: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
     background: transparent;
     border: 0;
     cursor: pointer;
@@ -265,7 +277,7 @@ const copy = {
     justify-content: center;
     border-radius: var(--radius-sm);
   }
-  .tool-btn--icon:hover {
+  .ed-password-wrap__toggle:hover {
     color: var(--text-primary);
     background: var(--surface-tertiary);
   }

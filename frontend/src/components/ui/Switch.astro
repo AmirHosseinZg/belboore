@@ -1,0 +1,65 @@
+---
+interface SwitchItem {
+  value: string;
+  label: string;
+  id?: string;
+}
+
+interface Props {
+  items: SwitchItem[];
+  activeValue?: string;
+  name?: string;
+  className?: string;
+}
+
+const { items = [], activeValue, name, className = '' } = Astro.props;
+---
+
+<div class:list={['ui-switch', className]} role="radiogroup" aria-label={name}>
+  {items.map((item) => (
+    <button
+      id={item.id}
+      type="button"
+      class:list={['ui-switch__btn', item.value === activeValue && 'is-active']}
+      role="radio"
+      aria-checked={item.value === activeValue ? 'true' : 'false'}
+      data-value={item.value}
+    >
+      {item.label}
+    </button>
+  ))}
+</div>
+
+<style>
+  .ui-switch {
+    display: inline-flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    background: var(--surface-tertiary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    width: fit-content;
+  }
+  .ui-switch__btn {
+    border: 0;
+    border-radius: var(--radius-lg);
+    padding: var(--space-2) var(--space-4);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    white-space: nowrap;
+  }
+  .ui-switch__btn.is-active {
+    color: var(--color-tech-blue);
+    background: var(--surface-primary);
+    box-shadow: var(--shadow-sm);
+  }
+  .ui-switch__btn:focus-visible {
+    outline: 2px solid var(--color-tech-blue);
+    outline-offset: 2px;
+  }
+</style>
