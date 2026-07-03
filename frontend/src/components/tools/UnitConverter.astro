@@ -1,199 +1,264 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import { UNIT_DATA, convertUnit, formatUnitNum } from './Phase10Utils.ts';
+
+const CATEGORIES = Object.keys(UNIT_DATA).map(k => ({ value: k, label: k.charAt(0).toUpperCase() + k.slice(1) }));
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Unit Converter',
+    categoryLabel: 'Category',
+    fromLabel: 'From',
+    toLabel: 'To',
+    convert: 'Convert',
+    swap: 'Swap',
+    clear: 'Clear',
+    copy: 'Copy',
+    result: 'Result',
+    selectUnit: 'Select unit',
+    emptyState: 'Enter a value and select units',
+    note: 'Convert between units of length, weight, temperature, area, volume, speed, time, data, pressure, energy, power, and angle.',
+  },
+  fa: {
+    title: 'مبدل واحد',
+    categoryLabel: 'دسته',
+    fromLabel: 'از',
+    toLabel: 'به',
+    convert: 'تبدیل',
+    swap: 'جابجایی',
+    clear: 'پاک کردن',
+    copy: 'کپی',
+    result: 'نتیجه',
+    selectUnit: 'واحد را انتخاب کنید',
+    emptyState: 'مقدار را وارد کنید و واحدها را انتخاب کنید',
+    note: 'تبدیل بین واحدهای طول، وزن، دما، مساحت، حجم، سرعت، زمان، داده، فشار، انرژی، قدرت و زاویه.',
+  },
+};
 ---
 
-<ToolWorkspace title="Unit Converter">
+<ToolWorkspace title={copy[lang].title}>
   <ToolPrimitives />
   <ToolUtils />
 
-  <div class="tool-toolbar">
-    <label class="tool-field__label" for="uc-category">Category</label>
-    <select id="uc-category" class="tool-select">
-      <option value="length" selected>Length</option>
-      <option value="weight">Weight</option>
-      <option value="temperature">Temperature</option>
-      <option value="area">Area</option>
-      <option value="volume">Volume</option>
-      <option value="speed">Speed</option>
-      <option value="time">Time</option>
-    </select>
-  </div>
-  <div class="tool-grid-2">
-    <div class="tool-field">
-      <label class="tool-field__label" for="uc-from-val">From</label>
-      <input id="uc-from-val" class="tool-input" type="number" value="1" step="any" />
-      <select id="uc-from-unit" class="tool-select" style="margin-top: var(--space-2);"></select>
+  <div class="uc-tool">
+    <Select id="uc-category" label={copy[lang].categoryLabel} options={CATEGORIES} />
+
+    <div class="uc-convert-row">
+      <div class="uc-side">
+        <Select id="uc-from-unit" label={copy[lang].fromLabel} options={[{ value: '', label: copy[lang].selectUnit }]} selectClassName="uc-unit-select" />
+        <Input id="uc-from-val" label={copy[lang].fromLabel} type="number" placeholder="1" inputClassName="uc-val-input" />
+      </div>
+      <Button id="uc-swap" variant="outline" className="uc-swap-btn" title={copy[lang].swap}>&harr;</Button>
+      <div class="uc-side">
+        <Select id="uc-to-unit" label={copy[lang].toLabel} options={[{ value: '', label: copy[lang].selectUnit }]} selectClassName="uc-unit-select" />
+        <div class="uc-to-val-shell">
+          <label class="uc-to-label">{copy[lang].toLabel}</label>
+          <div id="uc-to-result" class="uc-to-val" role="status" aria-live="polite">&mdash;</div>
+        </div>
+      </div>
     </div>
-    <div class="tool-field">
-      <label class="tool-field__label" for="uc-to-unit">To</label>
-      <div id="uc-to-result" class="tool-result__value" role="status" aria-live="polite" style="padding: var(--space-2) 0; min-height: 2em;">—</div>
-      <select id="uc-to-unit" class="tool-select" style="margin-top: var(--space-2);"></select>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="uc-convert">{copy[lang].convert}</ToolActionButton>
+      <Button id="uc-clear" variant="secondary">{copy[lang].clear}</Button>
     </div>
-  </div>
-  <div id="uc-empty" class="tool-output tool-output--empty" style="margin-top: var(--space-4);">Enter a value to convert</div>
-  <div class="tool-toolbar" style="margin-top: var(--space-3);">
-    <button id="uc-copy" type="button" class="tool-btn">Copy</button>
-    <button id="uc-clear" type="button" class="tool-btn">Clear</button>
+
+    <div id="uc-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+
+    <div id="uc-result-card" class="uc-result-card" style="display:none">
+      <div class="uc-result-header">
+        <span class="uc-result-label">{copy[lang].result}</span>
+        <span id="uc-result-badge" class="uc-result-badge"></span>
+      </div>
+      <div id="uc-result-body" class="uc-result-body">
+        <div class="uc-result-row">
+          <span id="uc-result-from" class="uc-result-from"></span>
+          <span class="uc-result-arrow">&rarr;</span>
+          <span id="uc-result-to" class="uc-result-to"></span>
+        </div>
+      </div>
+      <div class="uc-result-actions">
+        <Button id="uc-copy" variant="outline">{copy[lang].copy}</Button>
+      </div>
+    </div>
+
+    <div id="uc-error" class="tool-error" style="display:none"></div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      {copy[lang].note}
+    </div>
   </div>
 </ToolWorkspace>
 
 <script>
-  const units: Record<string, { name: string; key: string; toBase: number | ((v: number) => number); fromBase?: (v: number) => number }[]> = {
-    length: [
-      { name: 'Millimeter', key: 'mm', toBase: 0.001 },
-      { name: 'Centimeter', key: 'cm', toBase: 0.01 },
-      { name: 'Meter', key: 'm', toBase: 1 },
-      { name: 'Kilometer', key: 'km', toBase: 1000 },
-      { name: 'Inch', key: 'inch', toBase: 0.0254 },
-      { name: 'Foot', key: 'foot', toBase: 0.3048 },
-      { name: 'Yard', key: 'yard', toBase: 0.9144 },
-      { name: 'Mile', key: 'mile', toBase: 1609.344 },
-    ],
-    weight: [
-      { name: 'Milligram', key: 'mg', toBase: 0.000001 },
-      { name: 'Gram', key: 'g', toBase: 0.001 },
-      { name: 'Kilogram', key: 'kg', toBase: 1 },
-      { name: 'Ton', key: 'ton', toBase: 1000 },
-      { name: 'Ounce', key: 'oz', toBase: 0.0283495 },
-      { name: 'Pound', key: 'lb', toBase: 0.453592 },
-    ],
-    temperature: [
-      {
-        name: 'Celsius', key: 'celsius',
-        toBase: function (v: number) { return v; },
-        fromBase: function (v: number) { return v; },
-      },
-      {
-        name: 'Fahrenheit', key: 'fahrenheit',
-        toBase: function (v: number) { return (v - 32) * 5 / 9; },
-        fromBase: function (v: number) { return v * 9 / 5 + 32; },
-      },
-      {
-        name: 'Kelvin', key: 'kelvin',
-        toBase: function (v: number) { return v - 273.15; },
-        fromBase: function (v: number) { return v + 273.15; },
-      },
-    ],
-    area: [
-      { name: 'Square Meter', key: 'm2', toBase: 1 },
-      { name: 'Square Kilometer', key: 'km2', toBase: 1000000 },
-      { name: 'Hectare', key: 'ha', toBase: 10000 },
-      { name: 'Acre', key: 'acre', toBase: 4046.86 },
-      { name: 'Square Foot', key: 'ft2', toBase: 0.092903 },
-    ],
-    volume: [
-      { name: 'Milliliter', key: 'ml', toBase: 0.000001 },
-      { name: 'Liter', key: 'l', toBase: 0.001 },
-      { name: 'Cubic Meter', key: 'm3', toBase: 1 },
-      { name: 'Gallon', key: 'gallon', toBase: 0.00378541 },
-      { name: 'Cubic Foot', key: 'ft3', toBase: 0.0283168 },
-    ],
-    speed: [
-      { name: 'Meter per second', key: 'ms', toBase: 1 },
-      { name: 'Kilometer per hour', key: 'kmh', toBase: 0.277778 },
-      { name: 'Mile per hour', key: 'mph', toBase: 0.44704 },
-      { name: 'Knot', key: 'knot', toBase: 0.514444 },
-    ],
-    time: [
-      { name: 'Millisecond', key: 'ms', toBase: 0.001 },
-      { name: 'Second', key: 'sec', toBase: 1 },
-      { name: 'Minute', key: 'min', toBase: 60 },
-      { name: 'Hour', key: 'hour', toBase: 3600 },
-      { name: 'Day', key: 'day', toBase: 86400 },
-      { name: 'Week', key: 'week', toBase: 604800 },
-      { name: 'Month (30d)', key: 'month', toBase: 2592000 },
-      { name: 'Year (365d)', key: 'year', toBase: 31536000 },
-    ],
-  };
+  import { UNIT_DATA, convertUnit, formatUnitNum } from './Phase10Utils.ts';
 
-  const ucCategory = document.getElementById('uc-category') as HTMLSelectElement;
-  const ucFromVal = document.getElementById('uc-from-val') as HTMLInputElement;
-  const ucFromUnit = document.getElementById('uc-from-unit') as HTMLSelectElement;
-  const ucToResult = document.getElementById('uc-to-result')!;
-  const ucToUnit = document.getElementById('uc-to-unit') as HTMLSelectElement;
-  const ucEmpty = document.getElementById('uc-empty')!;
-  const ucCopy = document.getElementById('uc-copy')!;
-  const ucClear = document.getElementById('uc-clear')!;
+  const catSelect = document.getElementById('uc-category') as HTMLSelectElement;
+  const fromUnit = document.getElementById('uc-from-unit') as HTMLSelectElement;
+  const toUnit = document.getElementById('uc-to-unit') as HTMLSelectElement;
+  const fromVal = document.getElementById('uc-from-val') as HTMLInputElement;
+  const toResult = document.getElementById('uc-to-result')!;
+  const swapBtn = document.getElementById('uc-swap') as HTMLButtonElement;
+  const convertBtn = document.getElementById('uc-convert') as HTMLButtonElement;
+  const clearBtn = document.getElementById('uc-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('uc-empty')!;
+  const resultCard = document.getElementById('uc-result-card')!;
+  const resultBadge = document.getElementById('uc-result-badge')!;
+  const resultFrom = document.getElementById('uc-result-from')!;
+  const resultTo = document.getElementById('uc-result-to')!;
+  const copyBtn = document.getElementById('uc-copy') as HTMLButtonElement;
+  const errorEl = document.getElementById('uc-error')!;
 
   function populateUnits(cat: string) {
-    const list = units[cat];
+    const list = UNIT_DATA[cat];
+    if (!list) return;
+    const fromIdx = Math.min(fromUnit.selectedIndex, list.length - 1);
+    const toIdx = Math.min(toUnit.selectedIndex > 0 ? toUnit.selectedIndex : 1, list.length - 1);
     let html = '';
-    for (let i = 0; i < list.length; i++) {
-      html += '<option value="' + list[i].key + '">' + list[i].name + '</option>';
+    for (const u of list) {
+      html += `<option value="${u.key}">${u.name}</option>`;
     }
-    ucFromUnit.innerHTML = html;
-    ucToUnit.innerHTML = html;
-    if (cat === 'temperature') {
-      ucToUnit.selectedIndex = 1;
-    } else if (list.length > 1) {
-      ucToUnit.selectedIndex = 1;
-    }
+    fromUnit.innerHTML = html;
+    toUnit.innerHTML = html;
+    if (fromIdx < list.length) fromUnit.selectedIndex = fromIdx;
+    if (toIdx < list.length) toUnit.selectedIndex = toIdx;
+    fromVal.placeholder = list[0]?.name || '';
   }
 
-  function convert() {
-    const cat = ucCategory.value;
-    const val = parseFloat(ucFromVal.value);
+  catSelect.addEventListener('change', () => {
+    populateUnits(catSelect.value);
+    doConvert();
+  });
 
-    if (isNaN(val)) {
-      ucToResult.textContent = '—';
-      ucEmpty.style.display = '';
+  function doConvert() {
+    const val = parseFloat(fromVal.value);
+    const fromKey = fromUnit.value;
+    const toKey = toUnit.value;
+    const cat = catSelect.value;
+
+    if (isNaN(val) || !fromKey || !toKey) {
+      toResult.textContent = '\u2014';
+      resultCard.style.display = 'none';
+      emptyEl.style.display = '';
       return;
     }
-    ucEmpty.style.display = 'none';
+    emptyEl.style.display = 'none';
+    errorEl.style.display = 'none';
 
-    const list = units[cat];
-    let fromUnit: typeof list[0] | null = null, toUnit: typeof list[0] | null = null;
-    for (let i = 0; i < list.length; i++) {
-      if (list[i].key === ucFromUnit.value) fromUnit = list[i];
-      if (list[i].key === ucToUnit.value) toUnit = list[i];
-    }
-    if (!fromUnit || !toUnit) {
-      ucToResult.textContent = '—';
-      return;
-    }
+    try {
+      const result = convertUnit(val, fromKey, toKey, cat);
+      toResult.textContent = formatUnitNum(result);
 
-    let result: number;
-    if (typeof fromUnit.toBase === 'function') {
-      const base = (fromUnit.toBase as (v: number) => number)(val);
-      result = (toUnit.fromBase as (v: number) => number)(base);
-    } else {
-      const base = val * (fromUnit.toBase as number);
-      result = base / (toUnit.toBase as number);
+      const fromName = fromUnit.options[fromUnit.selectedIndex]?.text || fromKey;
+      const toName = toUnit.options[toUnit.selectedIndex]?.text || toKey;
+      resultFrom.textContent = `${formatUnitNum(val)} ${fromName}`;
+      resultTo.textContent = `${formatUnitNum(result)} ${toName}`;
+      resultBadge.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+      resultCard.style.display = '';
+    } catch (e: any) {
+      errorEl.textContent = e.message || 'Conversion error';
+      errorEl.style.display = '';
+      resultCard.style.display = 'none';
     }
-
-    ucToResult.textContent = formatNum(result);
   }
 
-  function formatNum(n: number) {
-    if (Math.abs(n) < 1e-10) return '0';
-    if (Math.abs(n) >= 1e6 || (Math.abs(n) < 0.000001 && n !== 0)) return n.toExponential(6);
-    return parseFloat(n.toPrecision(12)).toString();
-  }
+  convertBtn.addEventListener('click', doConvert);
+  fromVal.addEventListener('input', doConvert);
+  fromUnit.addEventListener('change', doConvert);
+  toUnit.addEventListener('change', doConvert);
 
-  populateUnits(ucCategory.value);
-
-  ucCategory.addEventListener('change', function () {
-    populateUnits(ucCategory.value);
-    convert();
+  swapBtn.addEventListener('click', () => {
+    const tmp = fromUnit.value;
+    const tmpIdx = fromUnit.selectedIndex;
+    fromUnit.value = toUnit.value;
+    fromUnit.selectedIndex = toUnit.selectedIndex;
+    toUnit.value = tmp;
+    toUnit.selectedIndex = tmpIdx;
+    if (fromVal.value.trim()) doConvert();
   });
 
-  ucFromVal.addEventListener('input', convert);
-  ucFromUnit.addEventListener('change', convert);
-  ucToUnit.addEventListener('change', convert);
-
-  ucCopy.addEventListener('click', function () {
-    const text = ucToResult.textContent || '';
-    if (!text || text === '—') return;
-    window.__belbooreTools.copyToClipboard(text, ucCopy as HTMLElement, 1500);
+  clearBtn.addEventListener('click', () => {
+    fromVal.value = '';
+    toResult.textContent = '\u2014';
+    emptyEl.style.display = '';
+    resultCard.style.display = 'none';
+    errorEl.style.display = 'none';
+    fromVal.focus();
   });
 
-  ucClear.addEventListener('click', function () {
-    ucFromVal.value = '';
-    ucToResult.textContent = '—';
-    ucEmpty.style.display = '';
+  copyBtn.addEventListener('click', () => {
+    const text = `${resultFrom.textContent} = ${resultTo.textContent}`;
+    if (!text || resultCard.style.display === 'none') return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
   });
 
-  convert();
+  populateUnits(catSelect.value);
 </script>
+
+<style>
+  .uc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .uc-tool .tool-note { margin-top: 0; }
+  .uc-convert-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--space-3); align-items: start; }
+  .uc-side { display: flex; flex-direction: column; gap: var(--space-3); }
+  .uc-swap-btn { margin-top: 28px; flex-shrink: 0; min-width: 40px; padding: var(--space-2) !important; }
+  .uc-to-val-shell { position: relative; }
+  .uc-to-label {
+    position: absolute; inset-inline-start: var(--space-4); top: 0;
+    transform: translateY(-50%); z-index: 1;
+    padding-inline: var(--space-2); background: var(--surface-primary);
+    font-size: var(--text-xs); font-weight: var(--weight-medium);
+    line-height: 1; color: var(--color-tech-blue); pointer-events: none;
+  }
+  .uc-to-val {
+    width: 100%; min-height: 46px; display: flex; align-items: center;
+    padding: var(--space-3) var(--space-4);
+    border: 1.5px solid color-mix(in srgb, var(--color-tech-blue) 75%, white 25%);
+    border-radius: var(--radius-md); background: var(--surface-primary);
+    color: var(--text-primary); font: inherit; font-size: var(--text-base);
+    line-height: var(--leading-snug); word-break: break-all;
+  }
+  [data-theme='dark'] .uc-to-label { background: var(--surface-primary); }
+  [data-theme='dark'] .uc-to-val { background: var(--surface-elevated); border-color: color-mix(in srgb, var(--color-tech-blue) 78%, rgba(255,255,255,0.14)); }
+
+  .uc-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .uc-result-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .uc-result-label {
+    font-size: var(--text-xs); font-weight: var(--weight-semibold);
+    color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .uc-result-badge { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-tech-blue); }
+  .uc-result-body { padding: var(--space-4); }
+  .uc-result-row { display: flex; align-items: center; gap: var(--space-3); justify-content: center; flex-wrap: wrap; }
+  .uc-result-from { font-size: var(--text-sm); color: var(--text-secondary); font-family: var(--font-mono); }
+  .uc-result-arrow { color: var(--text-muted); font-size: var(--text-lg); }
+  .uc-result-to { font-size: var(--text-lg); font-weight: var(--weight-bold); color: var(--color-tech-blue); font-family: var(--font-mono); }
+  .uc-result-actions { display: flex; justify-content: center; padding: 0 var(--space-4) var(--space-3); }
+
+  @media (max-width: 640px) {
+    .uc-convert-row { grid-template-columns: 1fr; }
+    .uc-swap-btn { margin-top: 0; justify-self: center; transform: rotate(90deg); }
+  }
+</style>

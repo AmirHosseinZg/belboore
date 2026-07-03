@@ -8,6 +8,8 @@ import Input from '../ui/Input.astro';
 import Select from '../ui/Select.astro';
 import Button from '../ui/Button.astro';
 import ToolActionButton from './ToolActionButton.astro';
+import { getTimezoneList } from './Phase10Utils.ts';
+const timezoneOptions = getTimezoneList();
 
 interface Props { lang?: Lang; }
 const { lang = 'en' } = Astro.props;
@@ -90,23 +92,27 @@ const copy = {
       </div>
     </div>
     <Input id="dc-input" label={copy[lang].inputLabel} placeholder={copy[lang].inputTsPlaceholder} inputClassName="dc-input" spellcheck={false} />
-    <div class="dc-tz-row">
-      <select id="dc-tz" class="tool-select dc-tz-select"></select>
-    </div>
+    <Select id="dc-tz" label={copy[lang].timezoneLabel} options={timezoneOptions} selectClassName="dc-tz-select" />
     <div class="tool-toolbar">
       <ToolActionButton id="dc-convert">{copy[lang].convert}</ToolActionButton>
       <Button id="dc-now" variant="secondary">{copy[lang].now}</Button>
       <Button id="dc-clear" variant="secondary">{copy[lang].clear}</Button>
     </div>
     <div id="dc-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
-    <div id="dc-output" class="dc-output" style="display:none">
-      <div class="dc-row"><span class="dc-label">{copy[lang].iso8601}</span><span id="dc-iso" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-iso">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].unixSeconds}</span><span id="dc-ts-s" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-ts-s">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].unixMs}</span><span id="dc-ts-ms" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-ts-ms">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].utc}</span><span id="dc-utc" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-utc">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].local}</span><span id="dc-local" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-local">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].tz}</span><span id="dc-tz-val" class="dc-value"></span><Button className="dc-copy-btn" data-target="dc-tz-val">{copy[lang].copy}</Button></div>
-      <div class="dc-row"><span class="dc-label">{copy[lang].relative}</span><span id="dc-relative" class="dc-value"></span></div>
+    <div id="dc-output-card" class="dc-output-card" style="display:none">
+      <div class="dc-output-header">
+        <span class="dc-output-label">Output</span>
+        <button id="dc-copy-all" class="dc-copy-all-btn" type="button">Copy All</button>
+      </div>
+      <div class="dc-output-rows">
+        <div class="dc-row"><span class="dc-label">{copy[lang].iso8601}</span><span id="dc-iso" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-iso">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].unixSeconds}</span><span id="dc-ts-s" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-ts-s">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].unixMs}</span><span id="dc-ts-ms" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-ts-ms">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].utc}</span><span id="dc-utc" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-utc">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].local}</span><span id="dc-local" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-local">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].tz}</span><span id="dc-tz-val" class="dc-value"></span><Button className="dc-row-copy" data-target="dc-tz-val">{copy[lang].copy}</Button></div>
+        <div class="dc-row"><span class="dc-label">{copy[lang].relative}</span><span id="dc-relative" class="dc-value"></span></div>
+      </div>
     </div>
     <div id="dc-error" class="tool-error" style="display:none"></div>
     <div class="tool-note">
@@ -117,7 +123,7 @@ const copy = {
 </ToolWorkspace>
 
 <script>
-  import { pad, toLocalISO, formatRelativeTime, getTimezoneList, formatInTimezone } from './Phase10Utils.ts';
+  import { formatRelativeTime, formatInTimezone } from './Phase10Utils.ts';
 
   const modeSelect = document.getElementById('dc-mode') as HTMLSelectElement;
   const unitSelect = document.getElementById('dc-ts-unit') as HTMLSelectElement;
@@ -128,7 +134,7 @@ const copy = {
   const nowBtn = document.getElementById('dc-now') as HTMLButtonElement;
   const clearBtn = document.getElementById('dc-clear') as HTMLButtonElement;
   const emptyEl = document.getElementById('dc-empty')!;
-  const outputEl = document.getElementById('dc-output')!;
+  const outputCard = document.getElementById('dc-output-card')!;
   const errorEl = document.getElementById('dc-error')!;
   const isoEl = document.getElementById('dc-iso')!;
   const tsSEl = document.getElementById('dc-ts-s')!;
@@ -138,12 +144,7 @@ const copy = {
   const tzValEl = document.getElementById('dc-tz-val')!;
   const relativeEl = document.getElementById('dc-relative')!;
 
-  const timezones = getTimezoneList();
-  let tzHtml = '';
-  for (const tz of timezones) {
-    tzHtml += `<option value="${tz.value}"${tz.value === Intl.DateTimeFormat().resolvedOptions().timeZone ? ' selected' : ''}>${tz.label}</option>`;
-  }
-  tzSelect.innerHTML = tzHtml;
+  tzSelect.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
   modeSelect.addEventListener('change', () => {
     const mode = modeSelect.value;
@@ -164,7 +165,7 @@ const copy = {
     tzValEl.textContent = formatInTimezone(date, tz);
     relativeEl.textContent = formatRelativeTime(date);
     emptyEl.style.display = 'none';
-    outputEl.style.display = '';
+    outputCard.style.display = '';
     errorEl.style.display = 'none';
   }
 
@@ -174,7 +175,7 @@ const copy = {
     if (!val) {
       errorEl.textContent = 'Please enter a value';
       errorEl.style.display = '';
-      outputEl.style.display = 'none';
+      outputCard.style.display = 'none';
       return;
     }
     try {
@@ -194,7 +195,7 @@ const copy = {
     } catch (e: any) {
       errorEl.textContent = e.message || 'Invalid input';
       errorEl.style.display = '';
-      outputEl.style.display = 'none';
+      outputCard.style.display = 'none';
     }
   }
 
@@ -211,11 +212,11 @@ const copy = {
   clearBtn.addEventListener('click', () => {
     input.value = '';
     emptyEl.style.display = '';
-    outputEl.style.display = 'none';
+    outputCard.style.display = 'none';
     errorEl.style.display = 'none';
   });
 
-  document.querySelectorAll('.dc-copy-btn').forEach(btn => {
+  document.querySelectorAll('.dc-row-copy').forEach(btn => {
     btn.addEventListener('click', function() {
       const targetId = (this as HTMLElement).dataset.target;
       if (!targetId) return;
@@ -227,6 +228,17 @@ const copy = {
     });
   });
 
+  document.getElementById('dc-copy-all')!.addEventListener('click', () => {
+    const parts: string[] = [];
+    document.querySelectorAll('.dc-row').forEach(row => {
+      const label = row.querySelector('.dc-label')?.textContent || '';
+      const val = row.querySelector('.dc-value')?.textContent || '';
+      if (label && val) parts.push(`${label}: ${val}`);
+    });
+    if (parts.length === 0) return;
+    window.__belbooreTools.copyToClipboard(parts.join('\n'), document.getElementById('dc-copy-all') as HTMLElement, 1500);
+  });
+
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doConvert(); });
 </script>
 
@@ -234,11 +246,46 @@ const copy = {
   .dc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
   .dc-tool .tool-note { margin-top: 0; }
   .dc-mode-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
-  .dc-mode-row .ui-select:first-child { flex: 1; }
-  .dc-tz-row { display: flex; flex-direction: column; gap: var(--space-1); }
-  .dc-tz-select { flex: 1; max-width: 300px; }
+  .dc-mode-row .ui-select:first-child { flex: 1; min-width: 200px; }
+  .dc-tz-select { flex: 1; }
   .dc-input { width: 100%; font-family: var(--font-mono); }
-  .dc-output { display: none; margin-top: var(--space-4); }
+
+  .dc-output-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-4);
+  }
+  .dc-output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .dc-output-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .dc-copy-all-btn {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .dc-copy-all-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+  .dc-output-rows { padding: var(--space-2) var(--space-4); }
   .dc-row {
     display: flex;
     align-items: center;
@@ -263,13 +310,16 @@ const copy = {
     word-break: break-all;
     flex: 1;
   }
-  .dc-copy-btn {
+  .dc-row-copy {
     flex-shrink: 0;
     font-size: var(--text-xs) !important;
     padding: var(--space-1) var(--space-2) !important;
   }
   @media (max-width: 640px) {
-    .dc-row { flex-wrap: wrap; }
-    .dc-label { min-width: 100%; }
+    .dc-mode-row { flex-direction: column; }
+    .dc-mode-row .ui-select:first-child { min-width: 100%; }
+    .dc-row { flex-wrap: wrap; gap: var(--space-1); }
+    .dc-label { min-width: 100%; margin-bottom: var(--space-1); }
+    .dc-output-rows { padding: var(--space-2) var(--space-3); }
   }
 </style>

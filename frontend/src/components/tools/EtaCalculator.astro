@@ -90,9 +90,20 @@ const copy = {
     ]} />
 
     <div id="eta-travel-fields" class="eta-travel-fields">
-      <Input id="eta-distance" label={copy[lang].distance} type="number" placeholder="0" inputClassName="eta-num-input" />
-      <Input id="eta-speed" label={copy[lang].speed} type="number" placeholder="0" inputClassName="eta-num-input" />
-      <Input id="eta-time" label={copy[lang].time} type="number" placeholder="0" inputClassName="eta-num-input" />
+      <div class="eta-field-row">
+        <div class="eta-field-group">
+          <Input id="eta-distance" label={copy[lang].distance} type="number" placeholder="0" inputClassName="eta-num-input" />
+          <span class="eta-unit-badge" id="eta-dist-unit">km</span>
+        </div>
+        <div class="eta-field-group">
+          <Input id="eta-speed" label={copy[lang].speed} type="number" placeholder="0" inputClassName="eta-num-input" />
+          <span class="eta-unit-badge" id="eta-speed-unit">km/h</span>
+        </div>
+        <div class="eta-field-group">
+          <Input id="eta-time" label={copy[lang].time} type="number" placeholder="0" inputClassName="eta-num-input" />
+          <span class="eta-unit-badge" id="eta-time-unit">hours</span>
+        </div>
+      </div>
       <Select id="eta-unit" label={copy[lang].unit} options={[
         { value: 'km', label: copy[lang].km },
         { value: 'mi', label: copy[lang].mi },
@@ -139,14 +150,24 @@ const copy = {
   const resultCard = document.getElementById('eta-result-card')!;
   const errorEl = document.getElementById('eta-error')!;
 
+  function updateUnitBadges() {
+    const unit = unitSelect.value;
+    const speedUnit = unit === 'km' ? 'km/h' : unit === 'mi' ? 'mph' : 'm/s';
+    document.getElementById('eta-dist-unit')!.textContent = unit;
+    document.getElementById('eta-speed-unit')!.textContent = speedUnit;
+  }
+
   modeSelect.addEventListener('change', () => {
     const mode = modeSelect.value;
     travelFields.style.display = mode === 'progress' ? 'none' : '';
     progressFields.style.display = mode === 'progress' ? '' : 'none';
+    if (mode !== 'progress') updateUnitBadges();
   });
 
+  unitSelect.addEventListener('change', updateUnitBadges);
+
   function makeLabel(text: string, value: string): string {
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) 0;border-bottom:1px solid var(--border-subtle)"><span style="color:var(--text-tertiary);font-size:var(--text-sm)">${text}</span><span style="font-family:var(--font-mono);font-size:var(--text-lg);font-weight:var(--weight-bold)">${value}</span></div>`;
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle)"><span style="color:var(--text-secondary);font-size:var(--text-sm);font-weight:var(--weight-medium)">${text}</span><span style="font-family:var(--font-mono);font-size:var(--text-lg);font-weight:var(--weight-bold);color:var(--color-tech-blue)">${value}</span></div>`;
   }
 
   calcBtn.addEventListener('click', () => {
@@ -201,10 +222,31 @@ const copy = {
     resultCard.style.display = 'none';
     errorEl.style.display = 'none';
   });
+
+  updateUnitBadges();
 </script>
 
 <style>
   .eta-tool { display: flex; flex-direction: column; gap: var(--space-5); }
   .eta-tool .tool-note { margin-top: 0; }
   .eta-travel-fields, .eta-progress-fields { display: flex; flex-direction: column; gap: var(--space-4); }
+  .eta-field-row { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+  .eta-field-group { position: relative; flex: 1; min-width: 140px; }
+  .eta-unit-badge {
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    bottom: var(--space-3);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-tech-blue);
+    background: var(--surface-tertiary);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    z-index: 1;
+  }
+  @media (max-width: 640px) {
+    .eta-field-row { flex-direction: column; }
+    .eta-field-group { min-width: 100%; }
+  }
 </style>

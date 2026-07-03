@@ -5,6 +5,7 @@ import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import Input from '../ui/Input.astro';
+import PasswordInput from '../ui/PasswordInput.astro';
 import Select from '../ui/Select.astro';
 import Button from '../ui/Button.astro';
 import ToolActionButton from './ToolActionButton.astro';
@@ -70,11 +71,7 @@ const copy = {
   <div class="wq-layout">
     <div class="wq-form">
       <Input id="wq-ssid" label={copy[lang].ssidLabel} placeholder={copy[lang].ssidPlaceholder} />
-      <label class="tool-field__label" for="wq-password">{copy[lang].passwordLabel}</label>
-      <div class="wq-pw-group">
-        <input id="wq-password" class="tool-input wq-pw-input" type="password" placeholder={copy[lang].passwordPlaceholder} autocomplete="off" />
-        <Button id="wq-toggle-pw" variant="outline" className="wq-pw-toggle">{copy[lang].showPassword}</Button>
-      </div>
+      <PasswordInput id="wq-password" label={copy[lang].passwordLabel} placeholder={copy[lang].passwordPlaceholder} />
       <Select id="wq-security" label={copy[lang].securityLabel} options={[
         { value: 'WPA', label: copy[lang].wpa },
         { value: 'WEP', label: copy[lang].wep },
@@ -121,7 +118,6 @@ const copy = {
   const pwInput = document.getElementById('wq-password') as HTMLInputElement;
   const securitySelect = document.getElementById('wq-security') as HTMLSelectElement;
   const hiddenCb = document.getElementById('wq-hidden') as HTMLInputElement;
-  const togglePwBtn = document.getElementById('wq-toggle-pw') as HTMLButtonElement;
   const genBtn = document.getElementById('wq-generate') as HTMLButtonElement;
   const clearBtn = document.getElementById('wq-clear') as HTMLButtonElement;
   const emptyEl = document.getElementById('wq-empty')!;
@@ -155,12 +151,6 @@ const copy = {
     pwInput.disabled = isOpen;
     pwInput.placeholder = isOpen ? 'No password needed' : 'Enter WiFi password...';
     if (isOpen) pwInput.value = '';
-  });
-
-  togglePwBtn.addEventListener('click', function() {
-    const isPw = pwInput.type === 'password';
-    pwInput.type = isPw ? 'text' : 'password';
-    togglePwBtn.textContent = isPw ? 'Hide' : 'Show';
   });
 
   genBtn.addEventListener('click', async function() {
@@ -211,9 +201,6 @@ const copy = {
 </script>
 
 <style>
-  .wq-pw-group { display: flex; gap: var(--space-2); align-items: flex-start; }
-  .wq-pw-group .tool-input.wq-pw-input { flex: 1; }
-  .wq-pw-toggle { flex-shrink: 0; }
   .wq-hidden-cb { margin-top: var(--space-1); }
   .wq-result-inner { text-align: center; }
   .wq-payload-actions { justify-content: center; margin-top: var(--space-3); }

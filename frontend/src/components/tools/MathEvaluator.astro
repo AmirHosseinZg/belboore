@@ -76,8 +76,13 @@ const copy = {
       <Button id="me-copy" variant="outline">{copy[lang].copy}</Button>
     </div>
     <div id="me-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
-    <div id="me-result" class="tool-output me-result-value" style="display:none" role="status" aria-live="polite"></div>
-    <div id="me-detail" class="me-detail" style="display:none"></div>
+    <div id="me-result-card" class="me-result-card" style="display:none">
+      <div class="me-result-header">
+        <span class="me-result-label">Result</span>
+        <span id="me-angle-label" class="me-angle-label"></span>
+      </div>
+      <div id="me-result" class="me-result-value" role="status" aria-live="polite"></div>
+    </div>
     <div id="me-error" class="tool-error" style="display:none"></div>
     <div class="tool-note">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -95,8 +100,9 @@ const copy = {
   const clearBtn = document.getElementById('me-clear') as HTMLButtonElement;
   const copyBtn = document.getElementById('me-copy') as HTMLButtonElement;
   const emptyEl = document.getElementById('me-empty')!;
+  const resultCard = document.getElementById('me-result-card')!;
   const resultEl = document.getElementById('me-result')!;
-  const detailEl = document.getElementById('me-detail')!;
+  const angleLabel = document.getElementById('me-angle-label')!;
   const errorEl = document.getElementById('me-error')!;
 
   const insertBtns = document.querySelectorAll('.me-btn');
@@ -117,8 +123,7 @@ const copy = {
       errorEl.textContent = 'Please enter an expression';
       errorEl.style.display = '';
       emptyEl.style.display = 'none';
-      resultEl.style.display = 'none';
-      detailEl.style.display = 'none';
+      resultCard.style.display = 'none';
       return;
     }
     errorEl.style.display = 'none';
@@ -127,15 +132,13 @@ const copy = {
       const result = evaluate(expr, angleMode);
       const formatted = formatNumber(result);
       emptyEl.style.display = 'none';
-      resultEl.style.display = '';
+      resultCard.style.display = '';
       resultEl.textContent = formatted;
-      detailEl.style.display = '';
-      detailEl.textContent = `${expr} = ${formatted}  (${angleMode === 'deg' ? 'degrees' : 'radians'})`;
+      angleLabel.textContent = angleMode === 'deg' ? 'Degrees' : 'Radians';
     } catch (e: any) {
       errorEl.textContent = 'Error: ' + (e.message || String(e));
       errorEl.style.display = '';
-      resultEl.style.display = 'none';
-      detailEl.style.display = 'none';
+      resultCard.style.display = 'none';
     }
   }
 
@@ -144,15 +147,14 @@ const copy = {
   clearBtn.addEventListener('click', () => {
     input.value = '';
     emptyEl.style.display = '';
-    resultEl.style.display = 'none';
-    detailEl.style.display = 'none';
+    resultCard.style.display = 'none';
     errorEl.style.display = 'none';
     input.focus();
   });
 
   copyBtn.addEventListener('click', () => {
     const text = resultEl.textContent || '';
-    if (!text || resultEl.style.display === 'none') return;
+    if (!text || resultCard.style.display === 'none') return;
     window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
   });
 
@@ -169,16 +171,37 @@ const copy = {
     font-size: var(--text-xs) !important;
     padding: var(--space-1) var(--space-2) !important;
   }
+  .me-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .me-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .me-result-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .me-angle-label {
+    font-size: var(--text-xs);
+    color: var(--color-tech-blue);
+    font-weight: var(--weight-medium);
+  }
   .me-result-value {
+    padding: var(--space-6);
     font-size: var(--text-2xl);
     text-align: center;
-    padding: var(--space-6);
-  }
-  .me-detail {
-    display: none;
-    margin-top: var(--space-2);
-    font-size: var(--text-xs);
-    color: var(--text-tertiary);
-    text-align: center;
+    font-family: var(--font-mono);
+    font-weight: var(--weight-bold);
   }
 </style>

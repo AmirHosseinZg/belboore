@@ -398,6 +398,17 @@
     .tool-grid-4 {
       grid-template-columns: repeat(2, 1fr);
     }
+
+    .tool-toolbar {
+      gap: var(--space-3);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tool-toolbar {
+      flex-direction: column;
+      gap: var(--space-3);
+    }
   }
 
   /* ── Tool Checkbox ── */

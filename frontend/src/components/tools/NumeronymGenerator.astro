@@ -59,8 +59,14 @@ const copy = {
       <Button id="ng-copy" variant="outline">{copy[lang].copy}</Button>
     </div>
     <div id="ng-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
-    <div id="ng-result" class="tool-output" style="display:none" role="status" aria-live="polite"></div>
+    <div id="ng-result-card" class="ng-result-card" style="display:none">
+      <div class="ng-result-header">
+        <span class="ng-result-label">Numeronym Result</span>
+      </div>
+      <div id="ng-result" class="ng-result-value" role="status" aria-live="polite"></div>
+    </div>
     <div id="ng-breakdown" class="ng-breakdown" style="display:none">
+      <div class="ng-breakdown-header">Breakdown</div>
       <table class="ng-table">
         <thead><tr><th>{copy[lang].original}</th><th>{copy[lang].numeronym}</th></tr></thead>
         <tbody id="ng-tbody"></tbody>
@@ -83,6 +89,7 @@ const copy = {
   const clearBtn = document.getElementById('ng-clear') as HTMLButtonElement;
   const copyBtn = document.getElementById('ng-copy') as HTMLButtonElement;
   const emptyEl = document.getElementById('ng-empty')!;
+  const resultCard = document.getElementById('ng-result-card')!;
   const resultEl = document.getElementById('ng-result')!;
   const breakdownEl = document.getElementById('ng-breakdown')!;
   const tbodyEl = document.getElementById('ng-tbody')!;
@@ -95,7 +102,7 @@ const copy = {
       errorEl.textContent = 'Please enter some text';
       errorEl.style.display = '';
       emptyEl.style.display = 'none';
-      resultEl.style.display = 'none';
+      resultCard.style.display = 'none';
       breakdownEl.style.display = 'none';
       return;
     }
@@ -103,7 +110,7 @@ const copy = {
     try {
       const { result, breakdown } = generateNumeronyms(text, min);
       emptyEl.style.display = 'none';
-      resultEl.style.display = '';
+      resultCard.style.display = '';
       resultEl.textContent = result;
       tbodyEl.innerHTML = '';
       let hasRows = false;
@@ -123,7 +130,7 @@ const copy = {
     } catch (e: any) {
       errorEl.textContent = 'Error: ' + (e.message || String(e));
       errorEl.style.display = '';
-      resultEl.style.display = 'none';
+      resultCard.style.display = 'none';
       breakdownEl.style.display = 'none';
     }
   });
@@ -131,7 +138,7 @@ const copy = {
   clearBtn.addEventListener('click', () => {
     input.value = '';
     emptyEl.style.display = '';
-    resultEl.style.display = 'none';
+    resultCard.style.display = 'none';
     breakdownEl.style.display = 'none';
     errorEl.style.display = 'none';
     input.focus();
@@ -139,7 +146,7 @@ const copy = {
 
   copyBtn.addEventListener('click', () => {
     const text = resultEl.textContent || '';
-    if (!text || resultEl.style.display === 'none') return;
+    if (!text || resultCard.style.display === 'none') return;
     window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
   });
 </script>
@@ -148,7 +155,41 @@ const copy = {
   .ng-tool { display: flex; flex-direction: column; gap: var(--space-5); }
   .ng-tool .tool-note { margin-top: 0; }
   .ng-minlen-input { width: 80px; }
+  .ng-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .ng-result-header {
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .ng-result-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ng-result-value {
+    padding: var(--space-4);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    word-break: break-all;
+    line-height: 1.6;
+  }
   .ng-breakdown { margin-top: var(--space-4); }
+  .ng-breakdown-header {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: var(--space-2);
+    padding-inline: var(--space-1);
+  }
   .ng-table {
     width: 100%;
     border-collapse: collapse;
