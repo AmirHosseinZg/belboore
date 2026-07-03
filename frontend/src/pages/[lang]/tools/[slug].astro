@@ -69,6 +69,22 @@ import DateDifference from '../../../components/tools/DateDifference.astro';
 import PercentageCalculator from '../../../components/tools/PercentageCalculator.astro';
 import RandomNumber from '../../../components/tools/RandomNumber.astro';
 import BmiCalculator from '../../../components/tools/BmiCalculator.astro';
+import AsciiArtGenerator from '../../../components/tools/AsciiArtGenerator.astro';
+import BaseConverter from '../../../components/tools/BaseConverter.astro';
+import CalendarConverter from '../../../components/tools/CalendarConverter.astro';
+import Chronometer from '../../../components/tools/Chronometer.astro';
+import DateTimeConverter from '../../../components/tools/DateTimeConverter.astro';
+import EmojiSearch from '../../../components/tools/EmojiSearch.astro';
+import EtaCalculator from '../../../components/tools/EtaCalculator.astro';
+import HtmlEditor from '../../../components/tools/HtmlEditor.astro';
+import MathEvaluator from '../../../components/tools/MathEvaluator.astro';
+import NumeronymGenerator from '../../../components/tools/NumeronymGenerator.astro';
+import PhoneParser from '../../../components/tools/PhoneParser.astro';
+import QrCodeScanner from '../../../components/tools/QrCodeScanner.astro';
+import RandomGenerator from '../../../components/tools/RandomGenerator.astro';
+import RomanNumeralConverter from '../../../components/tools/RomanNumeralConverter.astro';
+import TextObfuscator from '../../../components/tools/TextObfuscator.astro';
+import WifiQrCodeMaker from '../../../components/tools/WifiQrCodeMaker.astro';
 import LucideIcon from '../../../components/ui/LucideIcon.astro';
 
 export function getStaticPaths() {
@@ -151,6 +167,22 @@ const toolComponentMap: Record<string, any> = {
   'percentage-calculator': PercentageCalculator,
   'random-number': RandomNumber,
   'bmi-calculator': BmiCalculator,
+  'ascii-art-generator': AsciiArtGenerator,
+  'base-converter': BaseConverter,
+  'calendar-converter': CalendarConverter,
+  'chronometer': Chronometer,
+  'date-time-converter': DateTimeConverter,
+  'emoji-search': EmojiSearch,
+  'eta-calculator': EtaCalculator,
+  'html-editor': HtmlEditor,
+  'math-evaluator': MathEvaluator,
+  'numeronym-generator': NumeronymGenerator,
+  'phone-parser': PhoneParser,
+  'qr-code-scanner': QrCodeScanner,
+  'random-generator': RandomGenerator,
+  'roman-numeral-converter': RomanNumeralConverter,
+  'text-obfuscator': TextObfuscator,
+  'wifi-qr-code-maker': WifiQrCodeMaker,
   'ulid-generator': UlidGenerator,
   'bip39-passphrase-generator': Bip39PassphraseGenerator,
   'random-port-generator': RandomPortGenerator,
