@@ -85,6 +85,11 @@ import RandomGenerator from '../../../components/tools/RandomGenerator.astro';
 import RomanNumeralConverter from '../../../components/tools/RomanNumeralConverter.astro';
 import TextObfuscator from '../../../components/tools/TextObfuscator.astro';
 import WifiQrCodeMaker from '../../../components/tools/WifiQrCodeMaker.astro';
+import Ipv4AddressConverter from '../../../components/tools/Ipv4AddressConverter.astro';
+import Ipv4SubnetCalculator from '../../../components/tools/Ipv4SubnetCalculator.astro';
+import Ipv4RangeExpander from '../../../components/tools/Ipv4RangeExpander.astro';
+import Ipv6UlaGenerator from '../../../components/tools/Ipv6UlaGenerator.astro';
+import MacAddressGenerator from '../../../components/tools/MacAddressGenerator.astro';
 import LucideIcon from '../../../components/ui/LucideIcon.astro';
 
 export function getStaticPaths() {
@@ -183,6 +188,11 @@ const toolComponentMap: Record<string, any> = {
   'roman-numeral-converter': RomanNumeralConverter,
   'text-obfuscator': TextObfuscator,
   'wifi-qr-code-maker': WifiQrCodeMaker,
+  'ipv4-address-converter': Ipv4AddressConverter,
+  'ipv4-subnet-calculator': Ipv4SubnetCalculator,
+  'ipv4-range-expander': Ipv4RangeExpander,
+  'ipv6-ula-generator': Ipv6UlaGenerator,
+  'mac-address-generator': MacAddressGenerator,
   'ulid-generator': UlidGenerator,
   'bip39-passphrase-generator': Bip39PassphraseGenerator,
   'random-port-generator': RandomPortGenerator,

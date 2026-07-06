@@ -1,0 +1,200 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'IPv4 Subnet Calculator',
+    cidrLabel: 'CIDR Notation',
+    cidrPlaceholder: 'e.g. 192.168.1.0/24',
+    calculate: 'Calculate',
+    clear: 'Clear',
+    copy: 'Copy',
+    emptyState: 'Enter a CIDR notation and click Calculate',
+    note: 'All processing happens in your browser. No data is sent anywhere.',
+    networkAddress: 'Network Address',
+    broadcastAddress: 'Broadcast Address',
+    subnetMask: 'Subnet Mask',
+    wildcardMask: 'Wildcard Mask',
+    firstHost: 'First Usable Host',
+    lastHost: 'Last Usable Host',
+    totalHosts: 'Total Hosts',
+    usableHosts: 'Usable Hosts',
+    ipClass: 'IP Class',
+    prefix: 'Prefix Length',
+  },
+  fa: {
+    title: 'محاسبه زیرشبکه IPv4',
+    cidrLabel: 'نوشتار CIDR',
+    cidrPlaceholder: 'مثال 192.168.1.0/24',
+    calculate: 'محاسبه',
+    clear: 'پاک کردن',
+    copy: 'کپی',
+    emptyState: 'یک نوشتار CIDR وارد کنید و روی Calculate کلیک کنید',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود. هیچ داده‌ای ارسال نمی‌شود.',
+    networkAddress: 'آدرس شبکه',
+    broadcastAddress: 'آدرس Broadcast',
+    subnetMask: 'ماسک زیرشبکه',
+    wildcardMask: 'ماسک Wildcard',
+    firstHost: 'اولین میزبان قابل استفاده',
+    lastHost: 'آخرین میزبان قابل استفاده',
+    totalHosts: 'مجموع میزبان‌ها',
+    usableHosts: 'میزبان‌های قابل استفاده',
+    ipClass: 'کلاس IP',
+    prefix: 'طول پیشوند',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="subnet-tool">
+    <Input id="subnet-input" label={copy[lang].cidrLabel} placeholder={copy[lang].cidrPlaceholder} spellcheck={false} inputClassName="subnet-input" />
+    <div class="tool-toolbar">
+      <ToolActionButton id="subnet-calc">{copy[lang].calculate}</ToolActionButton>
+      <Button id="subnet-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+    <div id="subnet-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="subnet-result-card" style="display:none">
+      <div class="subnet-grid">
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].networkAddress}</span>
+          <span id="subnet-network" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].broadcastAddress}</span>
+          <span id="subnet-broadcast" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].subnetMask}</span>
+          <span id="subnet-mask" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].wildcardMask}</span>
+          <span id="subnet-wildcard" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].firstHost}</span>
+          <span id="subnet-first" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].lastHost}</span>
+          <span id="subnet-last" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].totalHosts}</span>
+          <span id="subnet-total" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].usableHosts}</span>
+          <span id="subnet-usable" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].prefix}</span>
+          <span id="subnet-prefix" class="subnet-item-value"></span>
+        </div>
+        <div class="subnet-item">
+          <span class="subnet-item-label">{copy[lang].ipClass}</span>
+          <span id="subnet-class" class="subnet-item-value"></span>
+        </div>
+      </div>
+    </div>
+    <div id="subnet-error" class="tool-error" style="display:none"></div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { parseCidr, calculateIpv4Subnet, integerToIpv4, classifyIpv4Address } from './networkUtils.ts';
+
+  const input = document.getElementById('subnet-input') as HTMLInputElement;
+  const calcBtn = document.getElementById('subnet-calc') as HTMLButtonElement;
+  const clearBtn = document.getElementById('subnet-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('subnet-empty')!;
+  const resultCard = document.getElementById('subnet-result-card')!;
+  const errorEl = document.getElementById('subnet-error')!;
+  const networkEl = document.getElementById('subnet-network')!;
+  const broadcastEl = document.getElementById('subnet-broadcast')!;
+  const maskEl = document.getElementById('subnet-mask')!;
+  const wildcardEl = document.getElementById('subnet-wildcard')!;
+  const firstEl = document.getElementById('subnet-first')!;
+  const lastEl = document.getElementById('subnet-last')!;
+  const totalEl = document.getElementById('subnet-total')!;
+  const usableEl = document.getElementById('subnet-usable')!;
+  const prefixEl = document.getElementById('subnet-prefix')!;
+  const classEl = document.getElementById('subnet-class')!;
+
+  function doCalc() {
+    const val = input.value.trim();
+    if (!val) {
+      errorEl.textContent = 'Please enter a CIDR notation';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultCard.style.display = 'none';
+      return;
+    }
+    const parsed = parseCidr(val);
+    if (parsed === null) {
+      errorEl.textContent = 'Invalid CIDR notation. Expected format: x.x.x.x/y (prefix 0-32)';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultCard.style.display = 'none';
+      return;
+    }
+    errorEl.style.display = 'none';
+    emptyEl.style.display = 'none';
+    resultCard.style.display = '';
+    const subnet = calculateIpv4Subnet(parsed.ip, parsed.prefix);
+    networkEl.textContent = integerToIpv4(subnet.networkAddress);
+    broadcastEl.textContent = integerToIpv4(subnet.broadcastAddress);
+    maskEl.textContent = integerToIpv4(subnet.subnetMask);
+    wildcardEl.textContent = integerToIpv4(subnet.wildcardMask);
+    firstEl.textContent = integerToIpv4(subnet.firstHost);
+    lastEl.textContent = integerToIpv4(subnet.lastHost);
+    totalEl.textContent = subnet.totalHosts.toLocaleString();
+    usableEl.textContent = subnet.usableHosts.toLocaleString();
+    prefixEl.textContent = '/' + parsed.prefix;
+    classEl.textContent = classifyIpv4Address(parsed.ip);
+  }
+
+  calcBtn.addEventListener('click', doCalc);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doCalc(); });
+
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    emptyEl.style.display = '';
+    resultCard.style.display = 'none';
+    errorEl.style.display = 'none';
+    input.focus();
+  });
+</script>
+
+<style>
+  .subnet-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .subnet-tool .tool-note { margin-top: 0; }
+  .subnet-input { font-family: var(--font-mono); }
+  .subnet-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .subnet-item {
+    display: flex; flex-direction: column; gap: var(--space-1);
+    background: var(--surface-secondary); border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+  }
+  .subnet-item-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .subnet-item-value { font-family: var(--font-mono); font-size: var(--text-sm); word-break: break-all; color: var(--text-primary); line-height: 1.4; }
+  @media (max-width: 640px) { .subnet-grid { grid-template-columns: 1fr; } }
+</style>
