@@ -79,6 +79,31 @@ export const tools: Tool[] = [
     tags: { en: ['drawing', 'diagram', 'whiteboard', 'sketch', 'collaboration'], fa: ['نقاشی', 'نمودار', 'تخته‌سفید', 'طرح', 'مشارکتی'] },
   },
 
+  {
+    slug: 'image-converter',
+    type: 'builtin',
+    category: 'image',
+    featured: false,
+    icon: '🔄',
+    name: { en: 'Image Converter', fa: 'مبدل تصویر' },
+    description: { en: 'Convert images between formats (PNG, JPEG, WebP). Resize and adjust quality.', fa: 'تبدیل تصاویر بین فرمت‌های مختلف (PNG, JPEG, WebP). تغییر اندازه و تنظیم کیفیت.' },
+    longDescription: { en: 'Convert your images between PNG, JPEG, and WebP formats with optional resizing and quality adjustment. All processing happens entirely in your browser — no files are uploaded. You can also copy the result as a Data URL.', fa: 'تصاویر خود را بین فرمت‌های PNG، JPEG و WebP با قابلیت تغییر اندازه و تنظیم کیفیت تبدیل کنید. تمام پردازش کاملاً در مرورگر شما انجام می‌شود — هیچ فایلی آپلود نمی‌شود. همچنین می‌توانید نتیجه را به صورت Data URL کپی کنید.' },
+    howToUse: { en: 'Drop or select an image, choose the output format, adjust quality and size, then click Convert. Download the result or copy the Data URL.', fa: 'تصویر را رها کنید یا انتخاب کنید، فرمت خروجی را انتخاب کنید، کیفیت و اندازه را تنظیم کنید و روی Convert کلیک کنید. نتیجه را دانلود کنید یا Data URL را کپی کنید.' },
+    tags: { en: ['image', 'converter', 'convert', 'png', 'jpeg', 'webp', 'resize'], fa: ['تصویر', 'مبدل', 'تبدیل', 'png', 'jpeg', 'webp', 'تغییر اندازه'] },
+  },
+  {
+    slug: 'svg-placeholder-generator',
+    type: 'builtin',
+    category: 'image',
+    featured: false,
+    icon: '🖍️',
+    name: { en: 'SVG Placeholder Generator', fa: 'تولید SVG placeholder' },
+    description: { en: 'Generate custom SVG placeholders with text, colors, and rounded corners.', fa: 'تولید SVG placeholder سفارشی با متن، رنگ‌ها و گوشه‌های گرد.' },
+    longDescription: { en: 'Create beautiful SVG placeholder images for your projects. Customize dimensions, colors, text labels, font size, and corner radius. Copy the SVG code or Data URI, or download as an SVG file. Everything runs in your browser.', fa: 'تصاویر SVG placeholder زیبا برای پروژه‌های خود بسازید. ابعاد، رنگ‌ها، برچسب‌های متنی، اندازه فونت و شعاع گوشه را سفارشی کنید. کد SVG یا Data URI را کپی کنید یا به عنوان فایل SVG دانلود کنید. همه چیز در مرورگر شما اجرا می‌شود.' },
+    howToUse: { en: 'Set the width, height, label, colors, and style options, then click Generate. Preview updates instantly. Copy the SVG source or Data URI, or download the SVG file.', fa: 'عرض، ارتفاع، برچسب، رنگ‌ها و گزینه‌های استایل را تنظیم کنید و روی Generate کلیک کنید. پیش‌نمایش بلافاصله به‌روز می‌شود. کد SVG یا Data URI را کپی کنید یا فایل SVG را دانلود کنید.' },
+    tags: { en: ['svg', 'placeholder', 'generator', 'image', 'placeholder image', 'dummy'], fa: ['svg', 'placeholder', 'تولید', 'تصویر', 'تصویر placeholder'] },
+  },
+
   /* ── TEXT TOOLS ── */
   {
     slug: 'text-diff',
@@ -987,8 +1012,8 @@ export const tools: Tool[] = [
     featured: false,
     icon: '📎',
     name: { en: 'Merge PDF', fa: 'ادغام PDF' },
-    description: { en: 'Combine multiple PDF files into a single document. Coming soon.', fa: 'ترکیب چند فایل PDF در یک سند. به زودی.' },
-    longDescription: { en: 'Merge multiple PDF files into one document. Upload your PDFs, arrange them in the desired order, and download the combined file. This tool is currently in development.', fa: 'ادغام چند فایل PDF در یک سند. فایل‌های PDF خود را آپلود کنید، به ترتیب دلخواه بچینید و فایل ترکیبی را دانلود کنید. این ابزار در حال توسعه است.' },
+    description: { en: 'Combine multiple PDF files into a single document.', fa: 'ترکیب چند فایل PDF در یک سند.' },
+    longDescription: { en: 'Merge multiple PDF files into one document. Upload your PDFs, arrange them in the desired order, and download the combined file. All processing happens in your browser — no files are uploaded.', fa: 'ادغام چند فایل PDF در یک سند. فایل‌های PDF خود را آپلود کنید، به ترتیب دلخواه بچینید و فایل ترکیبی را دانلود کنید. تمام پردازش در مرورگر شما انجام می‌شود — هیچ فایلی آپلود نمی‌شود.' },
     tags: { en: ['pdf', 'merge', 'combine', 'document', 'join'], fa: ['pdf', 'ادغام', 'ترکیب', 'سند', 'اتصال'] },
   },
   {

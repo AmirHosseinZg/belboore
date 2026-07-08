@@ -90,6 +90,9 @@ import Ipv4SubnetCalculator from '../../../components/tools/Ipv4SubnetCalculator
 import Ipv4RangeExpander from '../../../components/tools/Ipv4RangeExpander.astro';
 import Ipv6UlaGenerator from '../../../components/tools/Ipv6UlaGenerator.astro';
 import MacAddressGenerator from '../../../components/tools/MacAddressGenerator.astro';
+import MergePdf from '../../../components/tools/MergePdf.astro';
+import ImageConverter from '../../../components/tools/ImageConverter.astro';
+import SvgPlaceholderGenerator from '../../../components/tools/SvgPlaceholderGenerator.astro';
 import LucideIcon from '../../../components/ui/LucideIcon.astro';
 
 export function getStaticPaths() {
@@ -211,6 +214,9 @@ const toolComponentMap: Record<string, any> = {
   'device-information': DeviceInfo,
   'mime-types': MimeTypes,
   'http-status-codes': HttpStatusCodes,
+  'merge-pdf': MergePdf,
+  'image-converter': ImageConverter,
+  'svg-placeholder-generator': SvgPlaceholderGenerator,
 };
 
 const ToolComponent = toolComponentMap[slug];
