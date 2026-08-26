@@ -5,10 +5,53 @@ import type { Lang } from '../../../i18n/utils';
 import { tools, getTool, getToolsByCategory } from '../../../data/tools';
 import ToolCard from '../../../components/ToolCard.astro';
 import JsonFormatter from '../../../components/tools/JsonFormatter.astro';
+import JsonMinifyTool from '../../../components/tools/JsonMinifyTool.astro';
+import JsonToCsvTool from '../../../components/tools/JsonToCsvTool.astro';
+import JsonTreeViewerTool from '../../../components/tools/JsonTreeViewerTool.astro';
+import JsonDiffTool from '../../../components/tools/JsonDiffTool.astro';
+import YamlJsonConverter from '../../../components/tools/YamlJsonConverter.astro';
+import JsonTomlConverter from '../../../components/tools/JsonTomlConverter.astro';
+import YamlTomlConverter from '../../../components/tools/YamlTomlConverter.astro';
+import XmlJsonConverter from '../../../components/tools/XmlJsonConverter.astro';
+import HtmlEntitiesTool from '../../../components/tools/HtmlEntitiesTool.astro';
+import TextBinaryTool from '../../../components/tools/TextBinaryTool.astro';
+import TextUnicodeTool from '../../../components/tools/TextUnicodeTool.astro';
+import TextNatoTool from '../../../components/tools/TextNatoTool.astro';
+import ListConverterTool from '../../../components/tools/ListConverterTool.astro';
 import Base64Encoder from '../../../components/tools/Base64Encoder.astro';
 import UrlEncoder from '../../../components/tools/UrlEncoder.astro';
+import UrlParserTool from '../../../components/tools/UrlParserTool.astro';
+import SlugifyTool from '../../../components/tools/SlugifyTool.astro';
+import JwtParserTool from '../../../components/tools/JwtParserTool.astro';
+import BasicAuthTool from '../../../components/tools/BasicAuthTool.astro';
+import MetaTagTool from '../../../components/tools/MetaTagTool.astro';
+import SafelinkDecoderTool from '../../../components/tools/SafelinkDecoderTool.astro';
+import UlidGenerator from '../../../components/tools/UlidGenerator.astro';
+import Bip39PassphraseGenerator from '../../../components/tools/Bip39PassphraseGenerator.astro';
+import RandomPortGenerator from '../../../components/tools/RandomPortGenerator.astro';
+import EmailNormalizer from '../../../components/tools/EmailNormalizer.astro';
+import ChmodCalculator from '../../../components/tools/ChmodCalculator.astro';
+import CronJobTranslator from '../../../components/tools/CronJobTranslator.astro';
+import CrontabGenerator from '../../../components/tools/CrontabGenerator.astro';
+import GitMemo from '../../../components/tools/GitMemo.astro';
+import GeoJsonViewer from '../../../components/tools/GeoJsonViewer.astro';
+import SqlPrettify from '../../../components/tools/SqlPrettify.astro';
+import XmlFormatter from '../../../components/tools/XmlFormatter.astro';
+import YamlViewer from '../../../components/tools/YamlViewer.astro';
+import RegexMemo from '../../../components/tools/RegexMemo.astro';
+import KeycodeInfo from '../../../components/tools/KeycodeInfo.astro';
+import UserAgentParser from '../../../components/tools/UserAgentParser.astro';
+import DeviceInfo from '../../../components/tools/DeviceInfo.astro';
+import MimeTypes from '../../../components/tools/MimeTypes.astro';
+import HttpStatusCodes from '../../../components/tools/HttpStatusCodes.astro';
 import UuidGenerator from '../../../components/tools/UuidGenerator.astro';
 import PasswordGenerator from '../../../components/tools/PasswordGenerator.astro';
+import PasswordStrengthAnalyser from '../../../components/tools/PasswordStrengthAnalyser.astro';
+import BcryptTool from '../../../components/tools/BcryptTool.astro';
+import HmacGenerator from '../../../components/tools/HmacGenerator.astro';
+import RsaKeyPairGenerator from '../../../components/tools/RsaKeyPairGenerator.astro';
+import EncryptDecryptText from '../../../components/tools/EncryptDecryptText.astro';
+import OtpCodeGenerator from '../../../components/tools/OtpCodeGenerator.astro';
 import CaseConverter from '../../../components/tools/CaseConverter.astro';
 import WordCounter from '../../../components/tools/WordCounter.astro';
 import QrGenerator from '../../../components/tools/QrGenerator.astro';
@@ -21,6 +64,36 @@ import UnitConverter from '../../../components/tools/UnitConverter.astro';
 import MarkdownEditor from '../../../components/tools/MarkdownEditor.astro';
 import ImageToBase64 from '../../../components/tools/ImageToBase64.astro';
 import TextDiff from '../../../components/tools/TextDiff.astro';
+import RegexTester from '../../../components/tools/RegexTester.astro';
+import DateDifference from '../../../components/tools/DateDifference.astro';
+import PercentageCalculator from '../../../components/tools/PercentageCalculator.astro';
+import RandomNumber from '../../../components/tools/RandomNumber.astro';
+import BmiCalculator from '../../../components/tools/BmiCalculator.astro';
+import AsciiArtGenerator from '../../../components/tools/AsciiArtGenerator.astro';
+import BaseConverter from '../../../components/tools/BaseConverter.astro';
+import CalendarConverter from '../../../components/tools/CalendarConverter.astro';
+import Chronometer from '../../../components/tools/Chronometer.astro';
+import DateTimeConverter from '../../../components/tools/DateTimeConverter.astro';
+import EmojiSearch from '../../../components/tools/EmojiSearch.astro';
+import EtaCalculator from '../../../components/tools/EtaCalculator.astro';
+import HtmlEditor from '../../../components/tools/HtmlEditor.astro';
+import MathEvaluator from '../../../components/tools/MathEvaluator.astro';
+import NumeronymGenerator from '../../../components/tools/NumeronymGenerator.astro';
+import PhoneParser from '../../../components/tools/PhoneParser.astro';
+import QrCodeScanner from '../../../components/tools/QrCodeScanner.astro';
+import RandomGenerator from '../../../components/tools/RandomGenerator.astro';
+import RomanNumeralConverter from '../../../components/tools/RomanNumeralConverter.astro';
+import TextObfuscator from '../../../components/tools/TextObfuscator.astro';
+import WifiQrCodeMaker from '../../../components/tools/WifiQrCodeMaker.astro';
+import Ipv4AddressConverter from '../../../components/tools/Ipv4AddressConverter.astro';
+import Ipv4SubnetCalculator from '../../../components/tools/Ipv4SubnetCalculator.astro';
+import Ipv4RangeExpander from '../../../components/tools/Ipv4RangeExpander.astro';
+import Ipv6UlaGenerator from '../../../components/tools/Ipv6UlaGenerator.astro';
+import MacAddressGenerator from '../../../components/tools/MacAddressGenerator.astro';
+import MergePdf from '../../../components/tools/MergePdf.astro';
+import ImageConverter from '../../../components/tools/ImageConverter.astro';
+import SvgPlaceholderGenerator from '../../../components/tools/SvgPlaceholderGenerator.astro';
+import LucideIcon from '../../../components/ui/LucideIcon.astro';
 
 export function getStaticPaths() {
   return [
@@ -56,10 +129,35 @@ const relatedTools = getToolsByCategory(tool.category)
 
 const toolComponentMap: Record<string, any> = {
   'json-formatter': JsonFormatter,
+  'json-minify': JsonMinifyTool,
+  'json-to-csv': JsonToCsvTool,
+  'json-tree-viewer': JsonTreeViewerTool,
+  'json-diff': JsonDiffTool,
+  'yaml-json-converter': YamlJsonConverter,
+  'json-toml-converter': JsonTomlConverter,
+  'yaml-toml-converter': YamlTomlConverter,
+  'xml-json-converter': XmlJsonConverter,
+  'html-entities': HtmlEntitiesTool,
+  'text-binary-converter': TextBinaryTool,
+  'text-unicode-converter': TextUnicodeTool,
+  'text-nato-alphabet': TextNatoTool,
+  'list-converter': ListConverterTool,
   'base64-encoder': Base64Encoder,
   'url-encoder': UrlEncoder,
+  'url-parser': UrlParserTool,
+  'slugify': SlugifyTool,
+  'jwt-parser': JwtParserTool,
+  'basic-auth-generator': BasicAuthTool,
+  'meta-tag-generator': MetaTagTool,
+  'safelink-decoder': SafelinkDecoderTool,
   'uuid-generator': UuidGenerator,
   'password-generator': PasswordGenerator,
+  'password-strength-analyser': PasswordStrengthAnalyser,
+  'bcrypt': BcryptTool,
+  'hmac-generator': HmacGenerator,
+  'rsa-key-pair-generator': RsaKeyPairGenerator,
+  'encrypt-decrypt-text': EncryptDecryptText,
+  'otp-code-generator': OtpCodeGenerator,
   'case-converter': CaseConverter,
   'word-counter': WordCounter,
   'qr-code-generator': QrGenerator,
@@ -72,6 +170,53 @@ const toolComponentMap: Record<string, any> = {
   'markdown-preview': MarkdownEditor,
   'image-to-base64': ImageToBase64,
   'text-diff': TextDiff,
+  'regex-tester': RegexTester,
+  'date-difference': DateDifference,
+  'percentage-calculator': PercentageCalculator,
+  'random-number': RandomNumber,
+  'bmi-calculator': BmiCalculator,
+  'ascii-art-generator': AsciiArtGenerator,
+  'base-converter': BaseConverter,
+  'calendar-converter': CalendarConverter,
+  'chronometer': Chronometer,
+  'date-time-converter': DateTimeConverter,
+  'emoji-search': EmojiSearch,
+  'eta-calculator': EtaCalculator,
+  'html-editor': HtmlEditor,
+  'math-evaluator': MathEvaluator,
+  'numeronym-generator': NumeronymGenerator,
+  'phone-parser': PhoneParser,
+  'qr-code-scanner': QrCodeScanner,
+  'random-generator': RandomGenerator,
+  'roman-numeral-converter': RomanNumeralConverter,
+  'text-obfuscator': TextObfuscator,
+  'wifi-qr-code-maker': WifiQrCodeMaker,
+  'ipv4-address-converter': Ipv4AddressConverter,
+  'ipv4-subnet-calculator': Ipv4SubnetCalculator,
+  'ipv4-range-expander': Ipv4RangeExpander,
+  'ipv6-ula-generator': Ipv6UlaGenerator,
+  'mac-address-generator': MacAddressGenerator,
+  'ulid-generator': UlidGenerator,
+  'bip39-passphrase-generator': Bip39PassphraseGenerator,
+  'random-port-generator': RandomPortGenerator,
+  'email-normalizer': EmailNormalizer,
+  'chmod-calculator': ChmodCalculator,
+  'cron-job-translator': CronJobTranslator,
+  'crontab-generator': CrontabGenerator,
+  'git-memo': GitMemo,
+  'geojson-viewer': GeoJsonViewer,
+  'sql-prettify': SqlPrettify,
+  'xml-formatter': XmlFormatter,
+  'yaml-viewer': YamlViewer,
+  'regex-memo': RegexMemo,
+  'keycode-info': KeycodeInfo,
+  'user-agent-parser': UserAgentParser,
+  'device-information': DeviceInfo,
+  'mime-types': MimeTypes,
+  'http-status-codes': HttpStatusCodes,
+  'merge-pdf': MergePdf,
+  'image-converter': ImageConverter,
+  'svg-placeholder-generator': SvgPlaceholderGenerator,
 };
 
 const ToolComponent = toolComponentMap[slug];
@@ -79,6 +224,7 @@ const recentMeta = JSON.stringify({
   slug: tool.slug,
   name: name,
   icon: tool.icon,
+  lucideIcon: tool.lucideIcon || '',
   iconPath: tool.iconPath || '',
   type: tool.type,
   url: tool.url || '',
@@ -126,7 +272,9 @@ const recentMeta = JSON.stringify({
       <article class="tool-detail">
         <header class="tool-detail__header">
           <div class="tool-detail__icon-wrap">
-            {tool.iconPath ? (
+            {tool.lucideIcon ? (
+              <LucideIcon name={tool.lucideIcon} size={48} className="tool-detail__icon-lucide" />
+            ) : tool.iconPath ? (
               <img
                 src={tool.iconPath}
                 alt=""
@@ -302,6 +450,10 @@ const recentMeta = JSON.stringify({
     border: 1px solid var(--border-subtle);
     box-shadow: var(--shadow-sm);
     flex-shrink: 0;
+  }
+
+  .tool-detail__icon-lucide {
+    color: var(--color-tech-blue);
   }
 
   .tool-detail__icon {

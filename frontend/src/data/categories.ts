@@ -104,6 +104,13 @@ export const categories: Category[] = [
     description: { en: 'Media downloader utilities. Currently in development.', fa: 'ابزارهای دانلود مدیا. در حال توسعه.' },
     order: 12,
   },
+  {
+    slug: 'network',
+    icon: '🌐',
+    name: { en: 'Network & Diagnostics', fa: 'شبکه و تشخیص' },
+    description: { en: 'IPv4/IPv6 calculation, subnetting, MAC generation, and network utilities.', fa: 'محاسبات IPv4/IPv6، زیرشبکه، تولید MAC و ابزارهای شبکه.' },
+    order: 13,
+  },
 ];
 
 export function getCategory(slug: string): Category | undefined {

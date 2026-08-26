@@ -1,0 +1,237 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'User Agent Parser',
+    inputLabel: 'User Agent String',
+    outputLabel: 'Parsed Information',
+    inputHint: 'Paste a user agent string or use the current browser UA.',
+    outputHint: 'Parsed browser, OS, engine, and device details appear here.',
+    parse: 'Parse',
+    copy: 'Copy JSON',
+    clear: 'Clear',
+    useCurrent: 'Use my browser UA',
+    loadExample: 'Load example',
+    empty: 'Parsed user agent info will appear here',
+    note: 'User agent parsing is best-effort. Some browsers reduce or freeze user agent details for privacy. All processing happens locally.',
+    copied: 'Copied!',
+    field: 'Field',
+    value: 'Value',
+  },
+  fa: {
+    title: 'تجزیه User Agent',
+    inputLabel: 'رشته User Agent',
+    outputLabel: 'اطلاعات تجزیه شده',
+    inputHint: 'یک رشته user agent را جای‌گذاری کنید یا از UA مرورگر فعلی استفاده کنید.',
+    outputHint: 'جزئیات مرورگر، سیستم‌عامل، موتور و دستگاه تجزیه شده اینجا نمایش داده می‌شود.',
+    parse: 'تجزیه',
+    copy: 'کپی JSON',
+    clear: 'پاک کردن',
+    useCurrent: 'استفاده از UA مرورگر من',
+    loadExample: 'نمونه',
+    empty: 'اطلاعات user agent تجزیه شده اینجا نمایش داده می‌شود',
+    note: 'تجزیه user agent با بهترین تلاش انجام می‌شود. برخی مرورگرها جزئیات user agent را برای حریم خصوصی کاهش می‌دهند. تمام پردازش به صورت محلی انجام می‌شود.',
+    copied: 'کپی شد!',
+    field: 'فیلد',
+    value: 'مقدار',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="ua-tool" dir={dir} data-empty={copy.empty} data-copied={copy.copied} data-placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36">
+    <div class="ua-tool__grid">
+      <div class="ua-tool__panel">
+        <div class="ua-tool__panel-head">
+          <label class="ua-tool__label" for="ua-input">{copy.inputLabel}</label>
+          <p class="ua-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea id="ua-input" className="ua-tool__textarea" placeholder="Mozilla/5.0 (Windows NT 10.0..." rows={6} spellcheck="false" />
+      </div>
+      <div class="ua-tool__panel">
+        <div class="ua-tool__panel-head">
+          <label class="ua-tool__label" for="ua-output">{copy.outputLabel}</label>
+          <p class="ua-tool__hint">{copy.outputHint}</p>
+        </div>
+        <div id="ua-output" class="ua-tool__output" role="region" aria-live="polite">
+          <p class="ua-tool__empty-state">{copy.empty}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="ua-tool__toolbar">
+      <ToolActionButton id="ua-run">{copy.parse}</ToolActionButton>
+      <Button id="ua-current" variant="secondary">{copy.useCurrent}</Button>
+      <Button id="ua-example" variant="secondary">{copy.loadExample}</Button>
+      <Button id="ua-copy" variant="outline">{copy.copy}</Button>
+      <Button id="ua-clear" variant="danger">{copy.clear}</Button>
+    </div>
+
+    <div id="ua-error" class="tool-error" style="display:none;" role="alert"></div>
+    <div class="tool-note ua-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('ua-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('ua-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('ua-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('ua-run') as HTMLButtonElement | null;
+  const currentBtn = document.getElementById('ua-current') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('ua-example') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('ua-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('ua-clear') as HTMLButtonElement | null;
+  const section = document.querySelector('.ua-tool') as HTMLElement | null;
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+  const PLACEHOLDER = section?.dataset.placeholder || '';
+
+  const parseUA = (ua: string): Record<string, string> => {
+    const result: Record<string, string> = {};
+    result['Raw UA'] = ua;
+
+    const u = ua.toLowerCase();
+
+    if (/googlebot|bingbot|slurp|duckduckbot|baiduspider|yandexbot|facebot|twitterbot|whatsapp|telegrambot/i.test(ua)) {
+      result['Device Type'] = 'Bot / Crawler';
+      result['Browser'] = /googlebot/i.test(ua) ? 'Googlebot' : /bingbot/i.test(ua) ? 'Bingbot' : 'Crawler';
+      result['OS'] = 'Unknown';
+      return result;
+    }
+
+    if (u.includes('edg/') || u.includes('edge/')) result['Browser'] = 'Microsoft Edge';
+    else if (u.includes('opr/') || u.includes('opera')) result['Browser'] = 'Opera';
+    else if (u.includes('chrome') && !u.includes('safari')) result['Browser'] = 'Chrome';
+    else if (u.includes('safari') && u.includes('version/') && !u.includes('chrome')) result['Browser'] = 'Safari';
+    else if (u.includes('firefox')) result['Browser'] = 'Firefox';
+    else if (u.includes('trident') || u.includes('msie')) result['Browser'] = 'Internet Explorer';
+    else result['Browser'] = 'Unknown';
+
+    if (u.includes('windows nt 10') || u.includes('windows nt 6.4')) result['OS'] = 'Windows 10';
+    else if (u.includes('windows nt 6.3')) result['OS'] = 'Windows 8.1';
+    else if (u.includes('windows nt 6.2')) result['OS'] = 'Windows 8';
+    else if (u.includes('windows nt 6.1')) result['OS'] = 'Windows 7';
+    else if (u.includes('windows nt')) result['OS'] = 'Windows';
+    else if (u.includes('mac os x') || u.includes('macintosh')) result['OS'] = 'macOS';
+    else if (u.includes('iphone') || u.includes('ipad')) { result['OS'] = 'iOS'; const m = u.match(/os (\d+[._]\d+)/); if (m) result['OS'] += ' ' + m[1].replace('_', '.'); }
+    else if (u.includes('android')) { result['OS'] = 'Android'; const m = u.match(/android (\d+[.\d]*)/); if (m) result['OS'] += ' ' + m[1]; }
+    else if (u.includes('linux')) result['OS'] = 'Linux';
+    else if (u.includes('cros')) result['OS'] = 'ChromeOS';
+    else result['OS'] = 'Unknown';
+
+    if (result['Device Type'] === 'Bot / Crawler') { /* already set */ }
+    else if (u.includes('iphone') || u.includes('ipod')) result['Device Type'] = 'Mobile (iPhone)';
+    else if (u.includes('ipad')) result['Device Type'] = 'Tablet (iPad)';
+    else if (u.includes('android') && u.includes('mobile')) result['Device Type'] = 'Mobile (Android)';
+    else if (u.includes('android') && !u.includes('mobile')) result['Device Type'] = 'Tablet (Android)';
+    else if (u.includes('touch') && result['OS'].startsWith('Windows')) result['Device Type'] = 'Tablet (Windows)';
+    else if (result['OS'] !== 'Unknown') result['Device Type'] = 'Desktop';
+    else result['Device Type'] = 'Unknown';
+
+    if (u.includes('applewebkit')) result['Engine'] = 'WebKit';
+    if (u.includes('gecko') && !u.includes('webkit')) result['Engine'] = 'Gecko';
+    if (u.includes('trident')) result['Engine'] = 'Trident';
+    if (!result['Engine']) result['Engine'] = 'Unknown';
+
+    return result;
+  };
+
+  const renderOutput = (data: Record<string, string>) => {
+    if (!output) return;
+    const fieldLbl = section?.querySelector('[data-i18n-field]')?.textContent || 'Field';
+    const valLbl = section?.querySelector('[data-i18n-value]')?.textContent || 'Value';
+    const entries = Object.entries(data);
+    let html = '<div class="ua-tool__result"><table class="ua-tool__table"><tbody>';
+    for (const [key, val] of entries) {
+      const valEscaped = val.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      html += `<tr><td class="ua-tool__field">${key}</td><td class="ua-tool__val"><code>${valEscaped}</code></td></tr>`;
+    }
+    html += '</tbody></table></div>';
+    output.innerHTML = html;
+  };
+
+  const runParse = () => {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    if (!val) { output.innerHTML = `<p class="ua-tool__empty-state">${EMPTY}</p>`; if (errorDiv) { errorDiv.style.display = 'none'; } return; }
+    try {
+      const parsed = parseUA(val);
+      renderOutput(parsed);
+      if (errorDiv) { errorDiv.style.display = 'none'; }
+    } catch (e: any) {
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Error'; errorDiv.style.display = ''; }
+    }
+  };
+
+  const fieldsToIgnore = new Set(['Raw UA']);
+
+  runBtn?.addEventListener('click', runParse);
+  currentBtn?.addEventListener('click', () => {
+    if (input) { input.value = navigator.userAgent; }
+    runParse();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = PLACEHOLDER; }
+    runParse();
+  });
+  copyBtn?.addEventListener('click', () => {
+    if (!output) return;
+    const text = output.textContent || '';
+    if (!text || text === EMPTY) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn!.classList.add('is-copied');
+      const orig = copyBtn!.innerHTML;
+      copyBtn!.innerHTML = COPIED;
+      setTimeout(() => { copyBtn!.innerHTML = orig; copyBtn!.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.innerHTML = `<p class="ua-tool__empty-state">${EMPTY}</p>`;
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+</script>
+
+<style>
+  .ua-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .ua-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .ua-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ua-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .ua-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .ua-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ua-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .ua-tool__textarea { width: 100%; min-height: 140px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ua-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .ua-tool__textarea::placeholder { color: var(--text-muted); }
+  .ua-tool__output { width: 100%; min-height: 140px; max-height: 400px; overflow-y: auto; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .ua-tool__empty-state { color: var(--text-muted); font-style: italic; margin: 0; }
+  .ua-tool__result { display: flex; flex-direction: column; gap: var(--space-2); }
+  .ua-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .ua-tool__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); text-align: start; }
+  .ua-tool__field { color: var(--color-tech-blue); font-weight: var(--weight-medium); white-space: nowrap; vertical-align: top; }
+  .ua-tool__val { word-break: break-all; }
+  .ua-tool__val code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); }
+  .ua-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .ua-tool .tool-action-button { min-width: 148px; }
+  .ua-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .ua-tool__grid { grid-template-columns: 1fr; } .ua-tool .tool-action-button { width: 100%; min-width: 0; } .ua-tool__toolbar { flex-direction: column; align-items: stretch; } }
+</style>

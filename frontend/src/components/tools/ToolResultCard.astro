@@ -1,0 +1,47 @@
+---
+import Button from '../ui/Button.astro';
+
+interface Props {
+  id?: string;
+  copyId?: string;
+  copyLabel?: string;
+  className?: string;
+}
+
+const {
+  id,
+  copyId,
+  copyLabel,
+  className = '',
+} = Astro.props;
+---
+
+<div id={id} class:list={['tool-result-card', className]} style="display: none;">
+  <div class="tool-result-card__body">
+    <slot />
+  </div>
+  {copyId && copyLabel && (
+    <div class="tool-result-card__actions">
+      <Button id={copyId} variant="secondary">{copyLabel}</Button>
+    </div>
+  )}
+</div>
+
+<style>
+  .tool-result-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .tool-result-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .tool-result-card__actions {
+    display: flex;
+    justify-content: center;
+  }
+</style>

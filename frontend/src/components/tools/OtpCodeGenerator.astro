@@ -1,0 +1,266 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'OTP Code Generator (TOTP)',
+    secretLabel: 'Base32 Secret',
+    secretPlaceholder: 'Enter Base32 secret or generate a new one...',
+    generateSecret: 'Generate Secret',
+    getCode: 'Get Code',
+    currentCode: 'Current Code',
+    timeRemaining: 'Time remaining',
+    algorithm: 'Algorithm',
+    digits: 'Digits',
+    interval: 'Interval',
+    note: 'TOTP codes are generated locally using the Web Crypto API. Your secret never leaves your device.',
+    enterOrGenerate: 'Enter a Base32 secret or generate one',
+    seconds: 'seconds',
+    copy: 'Copy',
+    clear: 'Clear',
+    copied: 'Copied!',
+  },
+  fa: {
+    title: 'تولید کد OTP (TOTP)',
+    secretLabel: 'کلید مخفی Base32',
+    secretPlaceholder: 'کلید Base32 را وارد کنید یا یک کلید جدید تولید کنید...',
+    generateSecret: 'تولید کلید مخفی',
+    getCode: 'دریافت کد',
+    currentCode: 'کد فعلی',
+    timeRemaining: 'زمان باقی‌مانده',
+    algorithm: 'الگوریتم',
+    digits: 'ارقام',
+    interval: 'فاصله زمانی',
+    note: 'کدهای TOTP به صورت محلی با Web Crypto API تولید می‌شوند. کلید شما هرگز دستگاه را ترک نمی‌کند.',
+    enterOrGenerate: 'یک کلید Base32 را وارد کنید یا یک کلید جدید تولید کنید',
+    seconds: 'ثانیه',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    copied: 'کپی شد!',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="otp-tool">
+    <Input id="otp-secret" label={copy[lang].secretLabel} placeholder={copy[lang].secretPlaceholder} autocomplete="off" spellcheck={false} />
+    <div class="tool-toolbar">
+      <Button id="otp-generate-secret" variant="outline">{copy[lang].generateSecret}</Button>
+      <ToolActionButton id="otp-get-code">{copy[lang].getCode}</ToolActionButton>
+      <Button id="otp-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+
+    <div id="otp-empty" class="tool-output tool-output--empty" role="status">{copy[lang].enterOrGenerate}</div>
+    <div id="otp-result" style="display:none">
+      <div class="otp-code-display">
+        <div class="otp-code-label">{copy[lang].currentCode}</div>
+        <div id="otp-code" class="otp-code-value">000000</div>
+        <Button id="otp-copy" variant="outline">{copy[lang].copy}</Button>
+      </div>
+      <div class="otp-countdown">
+        <div class="otp-countdown-bar">
+          <div id="otp-countdown-fill" class="otp-countdown-fill" style="width:100%"></div>
+        </div>
+        <span id="otp-remaining" class="otp-countdown-text">30 {copy[lang].seconds}</span>
+      </div>
+    </div>
+    <div id="otp-error" class="tool-error" style="display:none"></div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { generateTotp, generateTotpSecret, base32Decode } from './Phase8Utils.ts';
+
+  const secretInput = document.getElementById('otp-secret') as HTMLInputElement;
+  const genSecretBtn = document.getElementById('otp-generate-secret') as HTMLButtonElement;
+  const getCodeBtn = document.getElementById('otp-get-code') as HTMLButtonElement;
+  const clearBtn = document.getElementById('otp-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('otp-empty')!;
+  const resultEl = document.getElementById('otp-result')!;
+  const codeEl = document.getElementById('otp-code')!;
+  const countdownFill = document.getElementById('otp-countdown-fill')!;
+  const remainingEl = document.getElementById('otp-remaining')!;
+  const copyBtn = document.getElementById('otp-copy') as HTMLButtonElement;
+  const errorEl = document.getElementById('otp-error')!;
+
+  let countdownInterval: ReturnType<typeof setInterval> | null = null;
+  let currentSecret: Uint8Array | null = null;
+
+  function stopCountdown() {
+    if (countdownInterval !== null) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }
+
+  function startCountdown(remaining: number, interval: number) {
+    stopCountdown();
+    const totalMs = interval * 1000;
+    let remainingMs = remaining * 1000;
+
+    function tick() {
+      remainingMs -= 200;
+      if (remainingMs <= 0) {
+        remainingMs = totalMs;
+        updateCode();
+      }
+      const pct = Math.max(0, (remainingMs / totalMs) * 100);
+      countdownFill.style.width = pct + '%';
+      remainingEl.textContent = Math.ceil(remainingMs / 1000) + ' seconds';
+    }
+
+    countdownInterval = setInterval(tick, 200);
+  }
+
+  async function updateCode() {
+    if (!currentSecret) return;
+    try {
+      const result = await generateTotp(currentSecret, 30, 6);
+      codeEl.textContent = result.code;
+      startCountdown(result.remaining, result.interval);
+    } catch {
+      stopCountdown();
+    }
+  }
+
+  genSecretBtn.addEventListener('click', function () {
+    const { secret } = generateTotpSecret();
+    secretInput.value = secret;
+    errorEl.style.display = 'none';
+    stopCountdown();
+    resultEl.style.display = 'none';
+    emptyEl.style.display = '';
+  });
+
+  getCodeBtn.addEventListener('click', function () {
+    const secretStr = secretInput.value.trim();
+    if (!secretStr) {
+      errorEl.textContent = 'Please enter or generate a Base32 secret';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    try {
+      currentSecret = base32Decode(secretStr);
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+      updateCode();
+    } catch (e: any) {
+      errorEl.textContent = 'Invalid Base32 secret: ' + (e.message || 'Check the format');
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    secretInput.value = '';
+    currentSecret = null;
+    stopCountdown();
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    secretInput.focus();
+  });
+
+  copyBtn.addEventListener('click', function () {
+    const code = codeEl.textContent || '';
+    if (!code || code === '000000') return;
+    navigator.clipboard.writeText(code).then(function () {
+      const orig = copyBtn.textContent;
+      copyBtn.textContent = 'Copied!';
+      setTimeout(function () { copyBtn.textContent = orig; }, 1500);
+    });
+  });
+
+  window.addEventListener('beforeunload', function () {
+    stopCountdown();
+  });
+
+  document.addEventListener('astro:before-swap', function () {
+    stopCountdown();
+  });
+</script>
+
+<style>
+  .otp-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .otp-tool .tool-note {
+    margin-top: 0;
+  }
+  .otp-code-display {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-tertiary);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-4);
+  }
+  .otp-code-label {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-medium);
+  }
+  .otp-code-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: 0.15em;
+    color: var(--color-tech-blue);
+    flex: 1;
+    text-align: center;
+  }
+  .otp-countdown {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .otp-countdown-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--surface-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  .otp-countdown-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-tech-blue), var(--color-electric-cyan));
+    border-radius: var(--radius-full);
+    transition: width 0.2s linear;
+  }
+  .otp-countdown-text {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-medium);
+    min-width: 70px;
+    text-align: end;
+  }
+</style>

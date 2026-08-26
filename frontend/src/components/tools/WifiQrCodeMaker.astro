@@ -1,0 +1,264 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import PasswordInput from '../ui/PasswordInput.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'WiFi QR Code Maker',
+    ssidLabel: 'Network Name (SSID)',
+    ssidPlaceholder: 'Enter WiFi network name...',
+    passwordLabel: 'Password',
+    passwordPlaceholder: 'Enter WiFi password...',
+    securityLabel: 'Security Type',
+    wpa: 'WPA / WPA2 / WPA3',
+    wep: 'WEP',
+    open: 'Open (No password)',
+    hiddenLabel: 'Hidden network',
+    generate: 'Generate QR Code',
+    clear: 'Clear',
+    empty: 'Enter network name and click Generate',
+    payload: 'WiFi QR Payload',
+    copied: 'Copied!',
+    passwordNote: 'Your WiFi details are used only in this browser to generate the QR code. They are not stored or sent anywhere.',
+    showPassword: 'Show',
+    hidePassword: 'Hide',
+    preview: 'QR Code Preview',
+    copyPayload: 'Copy Payload',
+    download: 'Download PNG',
+  },
+  fa: {
+    title: 'سازنده QR Code WiFi',
+    ssidLabel: 'نام شبکه (SSID)',
+    ssidPlaceholder: 'نام شبکه WiFi را وارد کنید...',
+    passwordLabel: 'رمز عبور',
+    passwordPlaceholder: 'رمز عبور WiFi را وارد کنید...',
+    securityLabel: 'نوع امنیت',
+    wpa: 'WPA / WPA2 / WPA3',
+    wep: 'WEP',
+    open: 'باز (بدون رمز)',
+    hiddenLabel: 'شبکه مخفی',
+    generate: 'تولید QR Code',
+    clear: 'پاک کردن',
+    empty: 'نام شبکه را وارد کنید و روی Generate کلیک کنید',
+    payload: 'بار WiFi QR',
+    copied: 'کپی شد!',
+    passwordNote: 'جزئیات WiFi شما فقط در این مرورگر برای تولید QR Code استفاده می‌شود. ذخیره یا ارسال نمی‌شود.',
+    showPassword: 'نمایش',
+    hidePassword: 'مخفی',
+    preview: 'پیش‌نمایش QR Code',
+    copyPayload: 'کپی Payload',
+    download: 'دانلود PNG',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="wq-layout">
+    <div class="wq-form">
+      <Input id="wq-ssid" label={copy[lang].ssidLabel} placeholder={copy[lang].ssidPlaceholder} />
+      <PasswordInput id="wq-password" label={copy[lang].passwordLabel} placeholder={copy[lang].passwordPlaceholder} />
+      <Select id="wq-security" label={copy[lang].securityLabel} options={[
+        { value: 'WPA', label: copy[lang].wpa },
+        { value: 'WEP', label: copy[lang].wep },
+        { value: 'nopass', label: copy[lang].open },
+      ]} />
+      <label class="tool-checkbox wq-hidden-cb">
+        <input type="checkbox" id="wq-hidden" />
+        {copy[lang].hiddenLabel}
+      </label>
+      <div class="tool-toolbar">
+        <ToolActionButton id="wq-generate">{copy[lang].generate}</ToolActionButton>
+        <Button id="wq-clear" variant="secondary">{copy[lang].clear}</Button>
+      </div>
+      <div id="wq-error" class="tool-error" style="display:none"></div>
+    </div>
+
+    <div class="wq-preview">
+      <div id="wq-empty" class="tool-output tool-output--empty" role="status">{copy[lang].empty}</div>
+      <div id="wq-result" class="wq-result-inner" style="display:none">
+        <div class="wq-preview-label">{copy[lang].preview}</div>
+        <canvas id="wq-canvas" class="wq-canvas"></canvas>
+        <div class="wq-payload-section">
+          <label class="tool-field__label">{copy[lang].payload}</label>
+          <div id="wq-payload" class="wq-payload-text"></div>
+          <div class="tool-toolbar wq-payload-actions">
+            <Button id="wq-copy" variant="outline">{copy[lang].copyPayload}</Button>
+            <Button id="wq-download" variant="outline">{copy[lang].download}</Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tool-note">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    {copy[lang].passwordNote}
+  </div>
+</ToolWorkspace>
+
+<script>
+  import QRCode from 'qrcode';
+
+  const ssidInput = document.getElementById('wq-ssid') as HTMLInputElement;
+  const pwInput = document.getElementById('wq-password') as HTMLInputElement;
+  const securitySelect = document.getElementById('wq-security') as HTMLSelectElement;
+  const hiddenCb = document.getElementById('wq-hidden') as HTMLInputElement;
+  const genBtn = document.getElementById('wq-generate') as HTMLButtonElement;
+  const clearBtn = document.getElementById('wq-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('wq-empty')!;
+  const resultEl = document.getElementById('wq-result')!;
+  const canvas = document.getElementById('wq-canvas') as HTMLCanvasElement;
+  const payloadEl = document.getElementById('wq-payload')!;
+  const copyBtn = document.getElementById('wq-copy') as HTMLButtonElement;
+  const downloadBtn = document.getElementById('wq-download') as HTMLButtonElement;
+  const errorEl = document.getElementById('wq-error')!;
+
+  function escapeWifiValue(val: string): string {
+    return val.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/:/g, '\\:').replace(/"/g, '\\"');
+  }
+
+  function buildWifiPayload(): string {
+    const ssid = ssidInput.value.trim();
+    const password = pwInput.value;
+    const security = securitySelect.value;
+    const hidden = hiddenCb.checked;
+    if (!ssid) throw new Error('Network name is required');
+    const escapedSsid = escapeWifiValue(ssid);
+    const escapedPw = escapeWifiValue(password);
+    let payload = `WIFI:T:${security};S:${escapedSsid};`;
+    if (security !== 'nopass') payload += `P:${escapedPw};`;
+    payload += `H:${hidden ? 'true' : 'false'};;`;
+    return payload;
+  }
+
+  securitySelect.addEventListener('change', function() {
+    const isOpen = this.value === 'nopass';
+    pwInput.disabled = isOpen;
+    pwInput.placeholder = isOpen ? 'No password needed' : 'Enter WiFi password...';
+    if (isOpen) pwInput.value = '';
+  });
+
+  genBtn.addEventListener('click', async function() {
+    errorEl.style.display = 'none';
+    try {
+      const payload = buildWifiPayload();
+      payloadEl.textContent = payload;
+      await QRCode.toCanvas(canvas, payload, {
+        width: 280,
+        margin: 2,
+        errorCorrectionLevel: 'M',
+        color: { dark: '#111827', light: '#ffffff' },
+      });
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+    } catch (e: any) {
+      errorEl.textContent = e.message || 'Failed to generate QR code';
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    }
+  });
+
+  clearBtn.addEventListener('click', function() {
+    ssidInput.value = '';
+    pwInput.value = '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    ssidInput.focus();
+  });
+
+  copyBtn.addEventListener('click', function() {
+    const text = payloadEl.textContent || '';
+    if (!text) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  downloadBtn.addEventListener('click', function() {
+    canvas.toBlob(function(blob) {
+      if (!blob) return;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `wifi-${ssidInput.value.trim().replace(/\s+/g, '-') || 'qrcode'}.png`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  });
+</script>
+
+<style>
+  .wq-hidden-cb { margin-top: var(--space-1); }
+  .wq-result-inner { text-align: center; }
+  .wq-payload-actions { justify-content: center; margin-top: var(--space-3); }
+  .wq-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    align-items: start;
+  }
+  .wq-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .wq-preview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    padding: var(--space-6);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+  .wq-preview-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: var(--space-3);
+  }
+  .wq-canvas {
+    max-width: 240px;
+    width: 100%;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background: white;
+  }
+  .wq-payload-section {
+    width: 100%;
+    margin-top: var(--space-4);
+    text-align: left;
+  }
+  .wq-payload-text {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    word-break: break-all;
+    padding: var(--space-2);
+    background: var(--surface-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+  }
+  @media (max-width: 768px) {
+    .wq-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

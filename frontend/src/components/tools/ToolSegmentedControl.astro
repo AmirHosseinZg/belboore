@@ -1,0 +1,53 @@
+---
+interface SegmentItem {
+  id: string;
+  value: string;
+  label: string;
+  active?: boolean;
+}
+
+interface Props {
+  label: string;
+  items: SegmentItem[];
+  className?: string;
+  groupClassName?: string;
+}
+
+const {
+  label,
+  items = [],
+  className = '',
+  groupClassName = '',
+} = Astro.props;
+---
+
+<div class:list={['tool-field', className]}>
+  <label class="tool-field__label">{label}</label>
+  <div class:list={['tool-segmented', groupClassName]} role="group" aria-label={label}>
+    {items.map((item) => (
+      <button
+        id={item.id}
+        type="button"
+        class:list={['tool-btn', item.active ? 'tool-btn--primary' : 'tool-btn--ghost']}
+        data-value={item.value}
+        aria-pressed={item.active ? 'true' : 'false'}
+      >
+        {item.label}
+      </button>
+    ))}
+  </div>
+</div>
+
+<style>
+  .tool-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    width: fit-content;
+    max-width: 100%;
+  }
+</style>

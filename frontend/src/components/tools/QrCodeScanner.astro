@@ -1,0 +1,392 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'QR Code Scanner',
+    startCamera: 'Start Camera Scan',
+    stopCamera: 'Stop Camera',
+    uploadImage: 'Upload Image',
+    scanAnother: 'Scan Another',
+    scanning: 'Scanning...',
+    noCamera: 'No camera found on this device.',
+    permissionDenied: 'Camera permission denied. Please allow camera access or use image upload.',
+    unsupported: 'Camera API not supported in this browser. Please use image upload.',
+    result: 'Decoded Content',
+    contentType: 'Content Type',
+    copyResult: 'Copy',
+    openUrl: 'Open URL',
+    url: 'URL',
+    plainText: 'Plain Text',
+    wifiConfig: 'WiFi Config',
+    email: 'Email',
+    phone: 'Phone',
+    sms: 'SMS',
+    vcard: 'vCard',
+    unknown: 'Unknown',
+    empty: 'Start camera or upload an image to scan a QR code',
+    note: 'QR codes can contain unsafe links. Review the decoded content before opening it. No data is sent anywhere.',
+    rawValue: 'Raw Value',
+    cameraSelect: 'Camera',
+    cameraDefault: 'Default camera',
+  },
+  fa: {
+    title: 'اسکنر QR Code',
+    startCamera: 'شروع اسکن دوربین',
+    stopCamera: 'توقف دوربین',
+    uploadImage: 'آپلود تصویر',
+    scanAnother: 'اسکن دیگری',
+    scanning: 'در حال اسکن...',
+    noCamera: 'دوربینی در این دستگاه یافت نشد.',
+    permissionDenied: 'دسترسی دوربین رد شد. لطفاً دسترسی دوربین را مجاز کنید یا از آپلود تصویر استفاده کنید.',
+    unsupported: 'API دوربین در این مرورگر پشتیبانی نمی‌شود. لطفاً از آپلود تصویر استفاده کنید.',
+    result: 'محتوای اسکن شده',
+    contentType: 'نوع محتوا',
+    copyResult: 'کپی',
+    openUrl: 'باز کردن URL',
+    url: 'URL',
+    plainText: 'متن ساده',
+    wifiConfig: 'تنظیمات WiFi',
+    email: 'ایمیل',
+    phone: 'تلفن',
+    sms: 'SMS',
+    vcard: 'vCard',
+    unknown: 'ناشناخته',
+    empty: 'دوربین را شروع کنید یا یک تصویر آپلود کنید تا QR Code اسکن شود',
+    note: 'QR Code ها می‌توانند حاوی لینک‌های ناامن باشند. قبل از باز کردن محتوای اسکن شده را بررسی کنید. هیچ داده‌ایی ارسال نمی‌شود.',
+    rawValue: 'مقدار خام',
+    cameraSelect: 'دوربین',
+    cameraDefault: 'دوربین پیش‌فرض',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="qs-tool">
+    <div class="qs-toolbar-row">
+      <Select id="qs-camera-select" label={copy[lang].cameraSelect} options={[]} disabled selectClassName="qs-camera-select" className="qs-camera-wrap" />
+      <Button id="qs-start" variant="primary">{copy[lang].startCamera}</Button>
+      <Button id="qs-stop" variant="secondary" className="qs-hide-btn">{copy[lang].stopCamera}</Button>
+      <Button id="qs-upload-btn" variant="secondary">{copy[lang].uploadImage}</Button>
+      <input type="file" id="qs-file" accept="image/*" style="display:none" />
+    </div>
+
+    <div id="qs-camera-container" class="qs-camera-container">
+      <video id="qs-video" autoplay playsinline class="qs-video" muted></video>
+      <canvas id="qs-canvas" class="qs-canvas"></canvas>
+      <div id="qs-scanning-indicator" class="qs-scanning-indicator">{copy[lang].scanning}</div>
+      <div class="qs-scan-frame"></div>
+    </div>
+
+    <div id="qs-error" class="tool-error" style="display:none"></div>
+
+    <div id="qs-empty" class="tool-output tool-output--empty" role="status">{copy[lang].empty}</div>
+
+    <div id="qs-result" class="qs-result-card" style="display:none">
+      <div class="qs-result-header">
+        <span class="qs-type-badge" id="qs-type-badge">{copy[lang].plainText}</span>
+        <span class="qs-raw-label" id="qs-raw-label">{copy[lang].rawValue}</span>
+      </div>
+      <div id="qs-content" class="qs-content"></div>
+      <div class="qs-actions">
+        <Button id="qs-copy" variant="outline">{copy[lang].copyResult}</Button>
+        <Button id="qs-open" variant="outline" style="display:none">{copy[lang].openUrl}</Button>
+        <Button id="qs-clear" variant="secondary">{copy[lang].scanAnother}</Button>
+      </div>
+    </div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import jsQR from 'jsqr';
+
+  const cameraSelect = document.getElementById('qs-camera-select') as HTMLSelectElement;
+  const startBtn = document.getElementById('qs-start') as HTMLButtonElement;
+  const stopBtn = document.getElementById('qs-stop') as HTMLButtonElement;
+  const fileInput = document.getElementById('qs-file') as HTMLInputElement;
+  const video = document.getElementById('qs-video') as HTMLVideoElement;
+  const canvas = document.getElementById('qs-canvas') as HTMLCanvasElement;
+  const cameraContainer = document.getElementById('qs-camera-container')!;
+  const scanIndicator = document.getElementById('qs-scanning-indicator')!;
+  const errorEl = document.getElementById('qs-error')!;
+  const emptyEl = document.getElementById('qs-empty')!;
+  const resultEl = document.getElementById('qs-result')!;
+  const typeBadge = document.getElementById('qs-type-badge')!;
+  const contentEl = document.getElementById('qs-content')!;
+  const copyBtn = document.getElementById('qs-copy') as HTMLButtonElement;
+  const openBtn = document.getElementById('qs-open') as HTMLButtonElement;
+  const clearBtn = document.getElementById('qs-clear') as HTMLButtonElement;
+
+  let stream: MediaStream | null = null;
+  let animFrame: number | null = null;
+  let scanning = false;
+  let cameras: MediaDeviceInfo[] = [];
+
+  async function enumerateCameras() {
+    try {
+      const devices = await navigator.mediaDevices?.enumerateDevices();
+      if (!devices) return;
+      cameras = devices.filter(d => d.kind === 'videoinput');
+      if (cameras.length > 1) {
+        cameraSelect.disabled = false;
+        let html = '<option value="">Default camera</option>';
+        cameras.forEach((cam, i) => {
+          html += `<option value="${cam.deviceId}">${cam.label || `Camera ${i + 1}`}</option>`;
+        });
+        cameraSelect.innerHTML = html;
+      }
+    } catch {}
+  }
+  enumerateCameras();
+
+  function stopCamera() {
+    scanning = false;
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    if (stream) {
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    video.srcObject = null;
+    cameraContainer.style.display = 'none';
+    startBtn.style.display = '';
+    stopBtn.style.display = 'none';
+  }
+
+  function showError(msg: string) {
+    errorEl.textContent = msg;
+    errorEl.style.display = '';
+  }
+
+  function hideError() { errorEl.style.display = 'none'; }
+
+  function showResult(content: string, contentType: string) {
+    scanning = false;
+    hideError();
+    emptyEl.style.display = 'none';
+    resultEl.style.display = '';
+    contentEl.textContent = content;
+    typeBadge.textContent = contentType;
+    const isUrl = contentType === 'URL' || content.startsWith('http://') || content.startsWith('https://');
+    openBtn.style.display = isUrl ? '' : 'none';
+  }
+
+  function detectContentType(text: string): string {
+    if (text.startsWith('http://') || text.startsWith('https://')) return 'URL';
+    if (text.startsWith('WIFI:')) return 'WiFi Config';
+    if (text.startsWith('mailto:')) return 'Email';
+    if (text.startsWith('tel:')) return 'Phone';
+    if (text.startsWith('smsto:') || text.startsWith('sms:')) return 'SMS';
+    if (text.startsWith('BEGIN:VCARD')) return 'vCard';
+    return 'Plain Text';
+  }
+
+  function scanFrame() {
+    if (!scanning) return;
+    if (video.readyState < 2) { animFrame = requestAnimationFrame(scanFrame); return; }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { animFrame = requestAnimationFrame(scanFrame); return; }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    try {
+      const code = jsQR(imageData.data, imageData.width, imageData.height);
+      if (code) {
+        const type = detectContentType(code.data);
+        showResult(code.data, type);
+        return;
+      }
+    } catch {}
+    animFrame = requestAnimationFrame(scanFrame);
+  }
+
+  async function startCameraScan() {
+    hideError();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showError('Camera API not supported in this browser. Please use image upload.');
+      return;
+    }
+    try {
+      const constraints: MediaStreamConstraints = {
+        video: { facingMode: 'environment' },
+      };
+      if (cameraSelect.value) {
+        constraints.video = { deviceId: { exact: cameraSelect.value } };
+      }
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      video.srcObject = stream;
+      await video.play();
+      cameraContainer.style.display = '';
+      startBtn.style.display = 'none';
+      stopBtn.style.display = '';
+      scanning = true;
+      scanFrame();
+    } catch (e: any) {
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        showError('Camera permission denied. Please allow camera access or use image upload.');
+      } else if (e.name === 'NotFoundError') {
+        showError('No camera found on this device.');
+      } else {
+        showError('Camera error: ' + (e.message || 'Unknown error'));
+      }
+    }
+  }
+
+  function scanImageFile(file: File) {
+    hideError();
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const img = new Image();
+      img.onload = function() {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { showError('Could not process image'); return; }
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        try {
+          const code = jsQR(imageData.data, imageData.width, imageData.height);
+          if (code) {
+            const type = detectContentType(code.data);
+            showResult(code.data, type);
+          } else {
+            showError('No QR code found in the image.');
+          }
+        } catch (e: any) {
+          showError('Error scanning image: ' + (e.message || 'Unknown error'));
+        }
+      };
+      img.src = evt.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('qs-upload-btn')!.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      stopCamera();
+      scanImageFile(this.files[0]);
+    }
+  });
+
+  startBtn.addEventListener('click', startCameraScan);
+  stopBtn.addEventListener('click', stopCamera);
+
+  clearBtn.addEventListener('click', function() {
+    resultEl.style.display = 'none';
+    emptyEl.style.display = '';
+    fileInput.value = '';
+  });
+
+  copyBtn.addEventListener('click', function() {
+    const text = contentEl.textContent || '';
+    if (!text) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  openBtn.addEventListener('click', function() {
+    const url = contentEl.textContent || '';
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  });
+
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden && scanning) stopCamera();
+  });
+</script>
+
+<style>
+  .qs-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .qs-tool .tool-note { margin-top: 0; }
+  .qs-toolbar-row { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
+  .qs-camera-wrap { flex: 1; max-width: 280px; min-width: 0; }
+  .qs-hide-btn { display: none; }
+  .qs-camera-container { display: none; position: relative; border-radius: var(--radius-md); overflow: hidden; background: var(--surface-tertiary); aspect-ratio: 4/3; }
+  .qs-video { width: 100%; height: 100%; object-fit: contain; }
+  .qs-canvas { display: none; }
+  .qs-scanning-indicator { position: absolute; bottom: var(--space-3); left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-size: var(--text-xs); }
+  .qs-scan-frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%;
+    max-width: 280px;
+    aspect-ratio: 1;
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: var(--radius-md);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.3);
+    pointer-events: none;
+  }
+  .qs-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-4);
+  }
+  .qs-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .qs-type-badge {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--color-tech-blue-subtle);
+    color: var(--color-tech-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .qs-raw-label {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-medium);
+  }
+  .qs-content {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    word-break: break-all;
+    white-space: pre-wrap;
+    padding: var(--space-4);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .qs-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    padding: 0 var(--space-4) var(--space-4);
+  }
+  @media (max-width: 640px) {
+    .qs-toolbar-row { flex-direction: column; align-items: stretch; }
+    .qs-camera-wrap { max-width: 100%; }
+    .qs-actions { flex-direction: column; }
+  }
+</style>

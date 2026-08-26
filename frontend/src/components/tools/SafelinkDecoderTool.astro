@@ -1,0 +1,303 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Safelink Decoder',
+    inputLabel: 'Safelink URL',
+    outputLabel: 'Decoded URL',
+    inputHint: 'Paste a safelink or redirect URL to uncover the final destination.',
+    outputHint: 'The decoded redirect chain appears here.',
+    decode: 'Decode',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Decoded URL will appear here',
+    note: 'This tool detects redirect parameters in safelinks (e.g., url, u, target, redirect, return, link, safe). It iteratively decodes until it finds the real destination. All processing happens in your browser.',
+    copied: 'Copied!',
+    isSafelink: 'Safelink detected',
+    notSafelink: 'No safelink detected',
+    redirectChain: 'Redirect chain',
+    step: 'Step',
+    finalUrl: 'Final URL',
+    step0Label: 'Original URL',
+  },
+  fa: {
+    title: 'رمزگشایی Safelink',
+    inputLabel: 'URL Safelink',
+    outputLabel: 'URL رمزگشایی شده',
+    inputHint: 'یک safelink یا URL redirect را برای یافتن مقصد نهایی وارد کنید.',
+    outputHint: 'زنجیره رمزگشایی شده اینجا نمایش داده می‌شود.',
+    decode: 'رمزگشایی',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'URL رمزگشایی شده اینجا نمایش داده می‌شود',
+    note: 'این ابزار پارامترهای redirect را در safelink ها تشخیص می‌دهد (مثلاً url, u, target, redirect, return, link, safe). به صورت تکراری رمزگشایی می‌کند تا مقصد واقعی را پیدا کند. تمام پردازش در مرورگر شما انجام می‌شود.',
+    copied: 'کپی شد!',
+    isSafelink: 'Safelink تشخیص داده شد',
+    notSafelink: 'Safelink تشخیص داده نشد',
+    redirectChain: 'زنجیره تغییر مسیر',
+    step: 'مرحله',
+    finalUrl: 'URL نهایی',
+    step0Label: 'URL اصلی',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="sd-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-placeholder="https://www.example.com/redirect?url=https%3A%2F%2Freal-site.com%2Fpage&token=abc123"
+  >
+    <div class="sd-tool__controls">
+      <div class="sd-tool__actions">
+        <Button id="sd-copy" variant="outline" className="sd-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="sd-clear" variant="danger" className="sd-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="sd-example" variant="secondary" className="sd-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="sd-tool__grid">
+      <div class="sd-tool__panel">
+        <div class="sd-tool__panel-head">
+          <label class="sd-tool__label" for="sd-input">{copy.inputLabel}</label>
+          <p class="sd-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea
+          id="sd-input"
+          className="sd-tool__textarea"
+          placeholder="https://www.example.com/redirect?url=https%3A%2F%2F..."
+          rows={6}
+          spellcheck="false"
+        />
+      </div>
+      <div class="sd-tool__panel">
+        <div class="sd-tool__panel-head">
+          <label class="sd-tool__label" for="sd-output">{copy.outputLabel}</label>
+          <p class="sd-tool__hint">{copy.outputHint}</p>
+        </div>
+        <div id="sd-output" class="sd-tool__output" role="region" aria-live="polite">
+          <p class="sd-tool__empty-state">{copy.empty}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sd-tool__toolbar">
+      <ToolActionButton id="sd-run">{copy.decode}</ToolActionButton>
+    </div>
+
+    <div id="sd-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note sd-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('sd-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('sd-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('sd-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('sd-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('sd-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('sd-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('sd-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.sd-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+
+  const SAFELINK_PARAMS = new Set([
+    'url', 'u', 'q', 'target', 'to', 'dest', 'destination',
+    'redirect', 'redirect_url', 'return', 'returnUrl', 'r', 'link', 'safe',
+  ]);
+
+  const decodeBase64Url = (str: string): string => {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) base64 += '=';
+    try {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    } catch { return ''; }
+  };
+
+  const tryDecodeAll = (val: string): string | null => {
+    let current = val;
+    for (let i = 0; i < 5; i++) {
+      const prev = current;
+      try { current = decodeURIComponent(current); } catch { break; }
+      if (current === prev) break;
+    }
+    if (current !== val) return current;
+    const b64 = decodeBase64Url(val);
+    if (b64 && b64 !== val) return b64;
+    return null;
+  };
+
+  const looksLikeUrl = (s: string): boolean => {
+    return /^https?:\/\//i.test(s) || (s.includes('.') && !/\s/.test(s) && s.length > 4);
+  };
+
+  const detectSafelink = (url: string): {
+    isSafelink: boolean;
+    decodeAttempts: { step: number; url: string }[];
+    finalUrl: string;
+  } => {
+    const attempts: { step: number; url: string }[] = [{ step: 0, url }];
+    let current = url;
+    let maxIter = 20;
+
+    while (maxIter-- > 0) {
+      const lower = current.toLowerCase().trim();
+      let found = false;
+
+      for (const param of SAFELINK_PARAMS) {
+        const re = new RegExp(`[?&]${encodeURIComponent(param)}=([^&#]+)`, 'i');
+        const m = re.exec(lower);
+        if (m && m[1]) {
+          const decoded = tryDecodeAll(m[1]);
+          if (decoded && decoded !== current && !attempts.some(a => a.url === decoded)) {
+            if (looksLikeUrl(decoded)) {
+              current = decoded;
+              attempts.push({ step: attempts.length, url: current });
+              found = true;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!found) break;
+    }
+
+    return {
+      isSafelink: attempts.length > 1,
+      decodeAttempts: attempts,
+      finalUrl: current,
+    };
+  };
+
+  const runDecode = () => {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    if (!val) {
+      output.innerHTML = `<p class="sd-tool__empty-state">${EMPTY}</p>`;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+    try {
+      const result = detectSafelink(val);
+      const isSafelinkLbl = section?.querySelector('[data-i18n-issafelink]')?.textContent || 'Safelink detected';
+      const notSafelinkLbl = section?.querySelector('[data-i18n-notsafelink]')?.textContent || 'No safelink detected';
+      const chainLbl = section?.querySelector('[data-i18n-chain]')?.textContent || 'Redirect chain';
+      const stepLbl = section?.querySelector('[data-i18n-step]')?.textContent || 'Step';
+      const finalLbl = section?.querySelector('[data-i18n-final]')?.textContent || 'Final URL';
+      const step0Lbl = section?.querySelector('[data-i18n-step0]')?.textContent || 'Original URL';
+
+      let html = '<div class="sd-tool__result">';
+
+      if (result.isSafelink) {
+        html += `<p class="sd-tool__status sd-tool__status--detected">✓ ${isSafelinkLbl}</p>`;
+        html += `<h4 class="sd-tool__result-heading">${chainLbl}</h4>`;
+        html += '<table class="sd-tool__table"><tbody>';
+        for (const attempt of result.decodeAttempts) {
+          const lbl = attempt.step === 0 ? step0Lbl : `${stepLbl} ${attempt.step}`;
+          html += `<tr><td class="sd-tool__table-step">${lbl}</td><td class="sd-tool__table-url"><code>${attempt.url}</code></td></tr>`;
+        }
+        html += '</tbody></table>';
+        html += `<h4 class="sd-tool__result-heading">${finalLbl}</h4>`;
+        html += `<p class="sd-tool__final-url"><code>${result.finalUrl}</code></p>`;
+      } else {
+        html += `<p class="sd-tool__status sd-tool__status--not-detected">— ${notSafelinkLbl}</p>`;
+        html += `<p class="sd-tool__final-url"><code>${val}</code></p>`;
+      }
+
+      html += '</div>';
+      output.innerHTML = html;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.innerHTML = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Error'; errorDiv.style.display = ''; }
+    }
+  };
+
+  runBtn?.addEventListener('click', runDecode);
+  copyBtn?.addEventListener('click', () => {
+    if (!output) return;
+    const text = output.textContent || '';
+    if (!text || text === EMPTY) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.innerHTML = `<p class="sd-tool__empty-state">${EMPTY}</p>`;
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = section?.dataset.placeholder || ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runDecode();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runDecode(); }
+  });
+</script>
+
+<style>
+  .sd-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .sd-tool__controls { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+  .sd-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .sd-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .sd-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .sd-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .sd-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .sd-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sd-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .sd-tool__textarea { width: 100%; min-height: 140px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .sd-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .sd-tool__textarea::placeholder { color: var(--text-muted); }
+  .sd-tool__output { width: 100%; min-height: 140px; max-height: 400px; overflow-y: auto; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .sd-tool__empty-state { color: var(--text-muted); font-style: italic; margin: 0; }
+  .sd-tool__result { display: flex; flex-direction: column; gap: var(--space-3); }
+  .sd-tool__status { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+  .sd-tool__status--detected { color: var(--color-success); }
+  .sd-tool__status--not-detected { color: var(--text-muted); }
+  .sd-tool__result-heading { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .sd-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .sd-tool__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); text-align: start; }
+  .sd-tool__table-step { color: var(--color-tech-blue); font-weight: var(--weight-medium); white-space: nowrap; font-size: var(--text-xs); }
+  .sd-tool__table-url { word-break: break-all; }
+  .sd-tool__table-url code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); }
+  .sd-tool__final-url { margin: 0; }
+  .sd-tool__final-url code { font-family: var(--font-mono); font-size: var(--text-sm); word-break: break-all; color: var(--color-tech-blue); font-weight: var(--weight-semibold); }
+  .sd-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .sd-tool .tool-action-button { min-width: 148px; }
+  .sd-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .sd-tool__grid { grid-template-columns: 1fr; } .sd-tool .tool-action-button { width: 100%; min-width: 0; } .sd-tool__controls { flex-direction: column; align-items: stretch; } .sd-tool__actions { justify-content: center; } }
+</style>

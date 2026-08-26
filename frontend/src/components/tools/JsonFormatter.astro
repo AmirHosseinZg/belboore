@@ -1,11 +1,12 @@
 ---
 import type { Lang } from '../../i18n/utils';
 import { languages } from '../../i18n/utils';
-import { Copy, Trash2 } from '@lucide/astro';
+import { Copy, Trash2, FileJson } from '@lucide/astro';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolActionButton from './ToolActionButton.astro';
+import JsonRelatedTools from './JsonRelatedTools.astro';
 import Button from '../ui/Button.astro';
 import TextArea from '../ui/TextArea.astro';
 
@@ -29,6 +30,7 @@ const copy = {
     validate: 'Validate',
     copy: 'Copy result',
     clear: 'Clear input',
+    loadExample: 'Load example',
     emptyFormatted: 'Formatted JSON will appear here',
     emptyMinified: 'Minified JSON will appear here',
     emptyValidated: 'Paste JSON to validate',
@@ -37,6 +39,8 @@ const copy = {
     validJson: 'Valid JSON',
     topLevelKey: 'top-level key',
     topLevelKeys: 'top-level keys',
+    line: 'Line',
+    column: 'Column',
     note: 'All processing happens in your browser. Your data is never uploaded.',
     copied: 'Copied!',
   },
@@ -52,6 +56,7 @@ const copy = {
     validate: 'اعتبارسنجی',
     copy: 'کپی نتیجه',
     clear: 'پاک کردن ورودی',
+    loadExample: 'نمونه',
     emptyFormatted: 'JSON فرمت‌شده اینجا نمایش داده می‌شود',
     emptyMinified: 'JSON فشرده اینجا نمایش داده می‌شود',
     emptyValidated: 'برای اعتبارسنجی JSON را وارد کنید',
@@ -60,6 +65,8 @@ const copy = {
     validJson: 'JSON معتبر',
     topLevelKey: 'کلید سطح بالا',
     topLevelKeys: 'کلیدهای سطح بالا',
+    line: 'خط',
+    column: 'ستون',
     note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
     copied: 'کپی شد!',
   },
@@ -80,6 +87,8 @@ const copy = {
     data-invalid-json={copy.invalidJson}
     data-valid-json={copy.validJson}
     data-copied={copy.copied}
+    data-line={copy.line}
+    data-column={copy.column}
   >
     <div class="json-tool__input-shell">
       <div class="json-tool__input-head">
@@ -109,6 +118,9 @@ const copy = {
       <Button id="json-clear" variant="danger" className="json-tool__icon-btn" aria-label={copy.clear} title={copy.clear}>
         <Trash2 size={17} />
       </Button>
+      <Button id="json-example" variant="secondary" className="json-tool__icon-btn" aria-label={copy.loadExample} title={copy.loadExample}>
+        <FileJson size={17} />
+      </Button>
     </div>
 
     <div id="json-error" class="tool-error" style="display: none;" role="alert"></div>
@@ -124,6 +136,8 @@ const copy = {
         {copy.emptyFormatted}
       </div>
     </div>
+
+    <JsonRelatedTools lang={lang} currentSlug="json-formatter" />
 
     <div class="tool-note json-tool__note">
       {copy.note}
@@ -141,6 +155,19 @@ const copy = {
   const formatButton = document.getElementById('json-format') as HTMLButtonElement | null;
   const minifyButton = document.getElementById('json-minify') as HTMLButtonElement | null;
   const validateButton = document.getElementById('json-validate') as HTMLButtonElement | null;
+  const exampleButton = document.getElementById('json-example') as HTMLButtonElement | null;
+
+  const SAMPLE = JSON.stringify({
+    name: "Belboore",
+    version: 1.0,
+    features: ["json", "tools", "open-source"],
+    active: true,
+    metadata: null,
+    author: {
+      name: "Developer",
+      website: null
+    }
+  }, null, 2);
 
   let lastParsed: { value: string; parsed: unknown } | null = null;
 
@@ -179,9 +206,39 @@ const copy = {
     return parsed;
   }
 
+  function getLine() {
+    return root?.dataset.line || 'Line';
+  }
+
+  function getColumn() {
+    return root?.dataset.column || 'Column';
+  }
+
+  function formatParseError(val: string, message: string): string {
+    const match = message.match(/position\s+(\d+)/i);
+    if (match) {
+      const pos = parseInt(match[1], 10);
+      const lines = val.slice(0, pos).split('\n');
+      const line = lines.length;
+      const column = (lines[lines.length - 1]?.length || 0) + 1;
+      return `${message} (${getLine()} ${line}, ${getColumn()} ${column})`;
+    }
+    const lineMatch = message.match(/line\s+(\d+)/i);
+    const colMatch = message.match(/column\s+(\d+)/i);
+    if (lineMatch || colMatch) {
+      let extra = '';
+      if (lineMatch) extra += `${getLine()} ${lineMatch[1]}`;
+      if (colMatch) extra += `${extra ? ', ' : ''}${getColumn()} ${colMatch[1]}`;
+      return `${message} (${extra})`;
+    }
+    return message;
+  }
+
   function setError(message: string) {
     if (!errorDiv) return;
-    window.__belbooreTools.setErrorBox(errorDiv, message);
+    const inputVal = input?.value?.trim() || '';
+    const enhancedMsg = inputVal ? formatParseError(inputVal, message) : message;
+    window.__belbooreTools.setErrorBox(errorDiv, enhancedMsg);
   }
 
   function clearError() {
@@ -290,6 +347,14 @@ const copy = {
     setOutputEmpty(getEmptyFormatted());
     clearError();
     input.focus();
+  });
+
+  exampleButton?.addEventListener('click', () => {
+    if (!input) return;
+    input.value = SAMPLE;
+    lastParsed = null;
+    input.focus();
+    formatJson();
   });
 
   input?.addEventListener('keydown', (event) => {

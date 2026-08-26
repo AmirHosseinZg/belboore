@@ -1,0 +1,179 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import { EMOJI_CATEGORIES } from './Phase9Utils.ts';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Emoji Search & Copy',
+    searchPlaceholder: 'Search emojis by name or keyword...',
+    categoryLabel: 'Category',
+    all: 'All Categories',
+    emptyState: 'No emojis found matching your search.',
+    note: 'Click any emoji to copy it to your clipboard. Search by name or keyword.',
+    copied: 'Copied!',
+    clickToCopy: 'Click to copy',
+    resultCount: 'emojis found',
+  },
+  fa: {
+    title: 'جستجو و کپی ایموجی',
+    searchPlaceholder: 'جستجوی ایموجی با نام یا کلمه کلیدی...',
+    categoryLabel: 'دسته‌بندی',
+    all: 'همه دسته‌ها',
+    emptyState: 'هیچ ایموجی‌ای با جستجوی شما مطابقت ندارد.',
+    note: 'روی هر ایموجی کلیک کنید تا در کلیپ‌بورد کپی شود. جستجو بر اساس نام یا کلمه کلیدی.',
+    copied: 'کپی شد!',
+    clickToCopy: 'برای کپی کلیک کنید',
+    resultCount: 'ایموجی پیدا شد',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="es-tool">
+    <Input id="es-search" placeholder={copy[lang].searchPlaceholder} inputClassName="es-search-input" />
+    <Select id="es-category" label={copy[lang].categoryLabel} options={[
+      { value: '', label: copy[lang].all },
+      ...EMOJI_CATEGORIES.map(c => ({ value: c, label: c })),
+    ]} />
+    <div id="es-result-info" class="es-result-info" style="display:none"></div>
+    <div id="es-grid" class="es-grid" role="status" aria-live="polite"></div>
+    <div id="es-empty" class="es-empty-state" style="display:none">{copy[lang].emptyState}</div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { EMOJI_DATA, searchEmojis } from './Phase9Utils.ts';
+
+  const searchInput = document.getElementById('es-search') as HTMLInputElement;
+  const categorySelect = document.getElementById('es-category') as HTMLSelectElement;
+  const gridEl = document.getElementById('es-grid')!;
+  const emptyEl = document.getElementById('es-empty')!;
+  const resultInfo = document.getElementById('es-result-info')!;
+
+  let renderTimeout: ReturnType<typeof setTimeout>;
+
+  categorySelect.addEventListener('change', renderGrid);
+  searchInput.addEventListener('input', () => {
+    clearTimeout(renderTimeout);
+    renderTimeout = setTimeout(renderGrid, 150);
+  });
+
+  function renderGrid() {
+    const query = searchInput.value;
+    const cat = categorySelect.value;
+    const results = searchEmojis(query, cat);
+    if (results.length === 0) {
+      gridEl.style.display = 'none';
+      resultInfo.style.display = 'none';
+      emptyEl.style.display = '';
+      return;
+    }
+    emptyEl.style.display = 'none';
+    resultInfo.style.display = '';
+    resultInfo.textContent = `${results.length} ${results.length > 1 ? 'emojis' : 'emoji'} found`;
+    gridEl.style.display = '';
+    let html = '';
+    for (const emoji of results) {
+      html += `<button class="es-emoji-btn" data-emoji="${emoji.emoji}" title="${emoji.name} - Click to copy"><span class="es-emoji-char">${emoji.emoji}</span></button>`;
+    }
+    gridEl.innerHTML = html;
+
+    for (const btn of gridEl.querySelectorAll<HTMLButtonElement>('.es-emoji-btn')) {
+      btn.addEventListener('click', async () => {
+        const emoji = btn.dataset.emoji || '';
+        if (!emoji) return;
+        try {
+          await navigator.clipboard.writeText(emoji);
+          btn.classList.add('es-emoji-btn--copied');
+          setTimeout(() => btn.classList.remove('es-emoji-btn--copied'), 800);
+        } catch {}
+      });
+    }
+  }
+
+  renderGrid();
+</script>
+
+<style>
+  .es-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .es-tool .tool-note { margin-top: 0; }
+  .es-search-input { width: 100%; }
+
+  .es-result-info {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    font-weight: var(--weight-medium);
+    margin-top: calc(-1 * var(--space-3));
+  }
+
+  .es-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+    gap: var(--space-2);
+    max-height: 480px;
+    overflow-y: auto;
+    padding: var(--space-1);
+  }
+
+  .es-emoji-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--surface-primary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    padding: 0;
+    position: relative;
+  }
+
+  .es-emoji-btn:hover {
+    background: var(--surface-tertiary);
+    border-color: var(--color-tech-blue);
+    box-shadow: 0 2px 8px rgba(0, 82, 255, 0.12);
+    transform: translateY(-1px);
+    z-index: 1;
+  }
+
+  .es-emoji-btn--copied {
+    border-color: var(--color-success);
+    background: var(--color-success-subtle);
+    box-shadow: 0 0 0 2px var(--color-success-subtle);
+  }
+
+  .es-emoji-char {
+    font-size: 1.75rem;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .es-empty-state {
+    padding: var(--space-8) var(--space-4);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-style: italic;
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+  }
+</style>

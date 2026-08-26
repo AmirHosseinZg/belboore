@@ -1,0 +1,312 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Select from '../ui/Select.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Cron Job Translator',
+    inputLabel: 'Cron expression',
+    inputPlaceholder: 'Enter a 5-field cron expression (e.g. */5 * * * *)',
+    outputLabel: 'Human-readable schedule',
+    examplesLabel: 'Examples',
+    translate: 'Translate',
+    copy: 'Copy',
+    clear: 'Clear',
+    empty: 'Enter a cron expression and click Translate',
+    copied: 'Copied!',
+    fieldMinute: 'Minute',
+    fieldHour: 'Hour',
+    fieldDayOfMonth: 'Day of Month',
+    fieldMonth: 'Month',
+    fieldDayOfWeek: 'Day of Week',
+    every: 'every',
+    and: 'and',
+    through: 'through',
+    past: 'past',
+    at: 'at',
+    error: 'Invalid cron expression. Use 5 space-separated fields: minute hour day month weekday.',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    cronExamples: [
+      { value: '*/5 * * * *', label: 'Every 5 minutes' },
+      { value: '0 * * * *', label: 'Every hour' },
+      { value: '0 0 * * *', label: 'Daily at midnight' },
+      { value: '0 9 * * 1-5', label: 'Weekdays at 9 AM' },
+      { value: '0 0 1 * *', label: 'First day of every month' },
+      { value: '0 0 * * 0', label: 'Every Sunday at midnight' },
+      { value: '30 4 * * 1-5', label: 'Weekdays at 4:30 AM' },
+      { value: '0 */2 * * *', label: 'Every 2 hours' },
+    ],
+    parseTable: 'Parsed fields',
+    fieldValue: 'Value',
+  },
+  fa: {
+    title: 'ترجمه Cron Job',
+    inputLabel: 'عبارت Cron',
+    inputPlaceholder: 'یک عبارت 5 فیلدی Cron وارد کنید (مثال: */5 * * * *)',
+    outputLabel: 'زمان‌بندی قابل خواندن',
+    examplesLabel: 'نمونه‌ها',
+    translate: 'ترجمه',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    empty: 'عبارت Cron را وارد کرده و روی ترجمه کلیک کنید',
+    copied: 'کپی شد!',
+    fieldMinute: 'دقیقه',
+    fieldHour: 'ساعت',
+    fieldDayOfMonth: 'روز ماه',
+    fieldMonth: 'ماه',
+    fieldDayOfWeek: 'روز هفته',
+    every: 'هر',
+    and: 'و',
+    through: 'تا',
+    past: 'از',
+    at: 'در',
+    error: 'عبارت Cron نامعتبر است. از 5 فیلد جدا شده با فاصله استفاده کنید: دقیقه ساعت روز ماه روز هفته.',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    cronExamples: [
+      { value: '*/5 * * * *', label: 'هر ۵ دقیقه' },
+      { value: '0 * * * *', label: 'هر ساعت' },
+      { value: '0 0 * * *', label: 'هر روز نیمه‌شب' },
+      { value: '0 9 * * 1-5', label: 'روزهای کاری ساعت ۹ صبح' },
+      { value: '0 0 1 * *', label: 'اول هر ماه' },
+      { value: '0 0 * * 0', label: 'یکشنبه‌ها نیمه‌شب' },
+      { value: '30 4 * * 1-5', label: 'روزهای کاری ۴:۳۰ صبح' },
+      { value: '0 */2 * * *', label: 'هر ۲ ساعت' },
+    ],
+    parseTable: 'فیلدهای تجزیه‌شده',
+    fieldValue: 'مقدار',
+  },
+}[lang];
+
+const options = copy.cronExamples.map((ex: { value: string; label: string }) => ({ value: ex.value, label: ex.label }));
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="cj-tool" dir={dir} data-empty={copy.empty} data-copied={copy.copied} data-error={copy.error}>
+    <div class="cj-tool__controls">
+      <div class="cj-tool__actions">
+        <Button id="cj-copy" variant="outline">{copy.copy}</Button>
+        <Button id="cj-clear" variant="danger">{copy.clear}</Button>
+      </div>
+    </div>
+
+    <TextArea id="cj-input" label={copy.inputLabel} className="cj-tool__textarea" placeholder={copy.inputPlaceholder} rows={3} spellcheck="false" />
+
+    <Select id="cj-examples" label={copy.examplesLabel} className="cj-tool__select" selectedValue="" options={[{ value: '', label: '—' }, ...options]} />
+
+    <div class="cj-tool__output-shell">
+      <div class="cj-tool__panel-head">
+        <label class="cj-tool__label" for="cj-output">{copy.outputLabel}</label>
+      </div>
+      <div id="cj-output" class="tool-output tool-output--empty cj-tool__output" role="status" aria-live="polite">{copy.empty}</div>
+    </div>
+
+    <div id="cj-parse-table" class="cj-tool__parse-table" style="display: none;">
+      <h4 class="cj-tool__parse-title">{copy.parseTable}</h4>
+      <table class="cj-tool__table">
+        <thead>
+          <tr>
+            <th>{copy.fieldMinute}</th>
+            <th>{copy.fieldHour}</th>
+            <th>{copy.fieldDayOfMonth}</th>
+            <th>{copy.fieldMonth}</th>
+            <th>{copy.fieldDayOfWeek}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="cj-parse-row">
+            <td id="cj-p-minute"></td>
+            <td id="cj-p-hour"></td>
+            <td id="cj-p-day"></td>
+            <td id="cj-p-month"></td>
+            <td id="cj-p-weekday"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="cj-tool__toolbar">
+      <ToolActionButton id="cj-translate">{copy.translate}</ToolActionButton>
+    </div>
+
+    <div id="cj-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note cj-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('cj-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('cj-output')!;
+  const parseTable = document.getElementById('cj-parse-table')!;
+  const pMinute = document.getElementById('cj-p-minute')!;
+  const pHour = document.getElementById('cj-p-hour')!;
+  const pDay = document.getElementById('cj-p-day')!;
+  const pMonth = document.getElementById('cj-p-month')!;
+  const pWeekday = document.getElementById('cj-p-weekday')!;
+  const errorDiv = document.getElementById('cj-error') as HTMLDivElement | null;
+  const translateBtn = document.getElementById('cj-translate') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('cj-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('cj-clear') as HTMLButtonElement | null;
+  const examplesSelect = document.getElementById('cj-examples') as HTMLSelectElement | null;
+  const root = document.querySelector('.cj-tool') as HTMLElement | null;
+  const emptyText = root?.dataset.empty || 'Enter a cron expression and click Translate';
+
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  function parseField(field: string, min: number, max: number, names?: string[]): string {
+    if (field === '*') return `every ${names ? names[min] : min}-${names ? names[max] : max}`;
+
+    const parts = field.split(',');
+    const result: string[] = [];
+
+    for (const part of parts) {
+      if (part.includes('/')) {
+        const [range, step] = part.split('/');
+        const stepVal = parseInt(step, 10);
+        if (range === '*') {
+          result.push(`every ${stepVal} units`);
+        } else {
+          const [rMin, rMax] = range.split('-').map(Number);
+          if (isNaN(rMax)) {
+            result.push(`every ${stepVal} units starting at ${names ? names[rMin] || rMin : rMin}`);
+          } else {
+            result.push(`every ${stepVal} units from ${names ? names[rMin] || rMin : rMin} to ${names ? names[rMax] || rMax : rMax}`);
+          }
+        }
+      } else if (part.includes('-')) {
+        const [rMin, rMax] = part.split('-').map(Number);
+        const l = names ? names[rMin] || rMin : rMin;
+        const r = names ? names[rMax] || rMax : rMax;
+        result.push(`${l} through ${r}`);
+      } else {
+        const val = parseInt(part, 10);
+        result.push(names ? names[val] || val : val);
+      }
+    }
+    return result.join(', ');
+  }
+
+  function parseCron(expr: string): { valid: boolean; fields: string[]; description: string } | { valid: false; error: string } {
+    const parts = expr.trim().split(/\s+/);
+    if (parts.length !== 5) {
+      return { valid: false, error: 'Cron expression must have exactly 5 fields' };
+    }
+
+    const [minute, hour, dayOfMonth, month, dayOfWeek] = parts;
+
+    const minuteDesc = parseField(minute, 0, 59);
+    const hourDesc = parseField(hour, 0, 23);
+    const dayDesc = parseField(dayOfMonth, 1, 31);
+    const monthDesc = parseField(month, 1, 12, MONTHS);
+    const weekdayDesc = parseField(dayOfWeek, 0, 6, DAYS);
+
+    return {
+      valid: true,
+      fields: [minute, hour, dayOfMonth, month, dayOfWeek],
+      description: `At ${hourDesc}:${minute === '*' ? 'every minute' : minuteDesc}, on ${dayDesc}, in ${monthDesc}, on ${weekdayDesc}.`,
+    };
+  }
+
+  function translate() {
+    if (!input) return;
+    const expr = input.value.trim();
+    if (!expr) {
+      window.__belbooreTools.showEmpty(output, emptyText);
+      parseTable.style.display = 'none';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+
+    try {
+      const result = parseCron(expr);
+      if (!result.valid) {
+        throw new Error(result.error);
+      }
+
+      output.classList.remove('tool-output--empty', 'tool-output--error');
+      output.textContent = result.description;
+
+      pMinute.textContent = result.fields[0];
+      pHour.textContent = result.fields[1];
+      pDay.textContent = result.fields[2];
+      pMonth.textContent = result.fields[3];
+      pWeekday.textContent = result.fields[4];
+      parseTable.style.display = '';
+
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      window.__belbooreTools.showError(output, e?.message || 'Invalid cron expression');
+      parseTable.style.display = 'none';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Invalid cron expression'; errorDiv.style.display = ''; }
+    }
+  }
+
+  translateBtn?.addEventListener('click', translate);
+
+  copyBtn?.addEventListener('click', () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn!, 1500);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    window.__belbooreTools.showEmpty(output, emptyText);
+    parseTable.style.display = 'none';
+    if (examplesSelect) examplesSelect.value = '';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    input?.focus();
+  });
+
+  examplesSelect?.addEventListener('change', () => {
+    const val = examplesSelect.value;
+    if (val && input) {
+      input.value = val;
+      translate();
+    }
+  });
+
+  input?.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); translate(); }
+  });
+</script>
+
+<style>
+  .cj-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .cj-tool__controls { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-4); flex-wrap: wrap; }
+  .cj-tool__actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .cj-tool__textarea { font-family: var(--font-mono); }
+  .cj-tool__select { max-width: 320px; }
+  .cj-tool__output-shell { display: flex; flex-direction: column; gap: var(--space-2); }
+  .cj-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .cj-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cj-tool__output { min-height: 80px; padding: var(--space-4); font-size: var(--text-sm); line-height: 1.7; }
+  .cj-tool__parse-table { display: flex; flex-direction: column; gap: var(--space-3); }
+  .cj-tool__parse-title { margin: 0; font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cj-tool__table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: var(--text-sm); }
+  .cj-tool__table th, .cj-tool__table td { padding: var(--space-2) var(--space-3); border: 1px solid var(--border-subtle); text-align: center; }
+  .cj-tool__table th { background: var(--surface-tertiary); color: var(--text-tertiary); font-weight: var(--weight-semibold); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cj-tool__table td { color: var(--text-primary); background: var(--surface-secondary); }
+  .cj-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .cj-tool .tool-action-button { min-width: 148px; }
+  .cj-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .cj-tool__controls { flex-direction: column; align-items: stretch; } .cj-tool__actions { justify-content: center; } .cj-tool .tool-action-button { width: 100%; min-width: 0; } .cj-tool__select { max-width: none; } .cj-tool__table { font-size: var(--text-xs); } }
+</style>

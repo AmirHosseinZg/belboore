@@ -1,0 +1,212 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import ToolResultCard from './ToolResultCard.astro';
+import Input from '../ui/Input.astro';
+import Tabs from '../ui/Tabs.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.bmiCalculator.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="bmi-tool" dir={dir}
+    data-empty={t['tools.bmiCalculator.enterValues']}
+    data-invalid={t['tools.bmiCalculator.invalidInput']}
+    data-weight-label={t['tools.bmiCalculator.weight']}
+    data-height-label={t['tools.bmiCalculator.height']}
+    data-kg={t['tools.bmiCalculator.kg']}
+    data-lb={t['tools.bmiCalculator.lb']}
+    data-cm={t['tools.bmiCalculator.cm']}
+    data-inch={t['tools.bmiCalculator.inch']}
+    data-underweight={t['tools.bmiCalculator.underweight']}
+    data-normal={t['tools.bmiCalculator.normal']}
+    data-overweight={t['tools.bmiCalculator.overweight']}
+    data-obesity={t['tools.bmiCalculator.obesity']}
+    data-your-bmi={t['tools.bmiCalculator.yourBmi']}
+    data-category-label={t['tools.bmiCalculator.category']}
+  >
+    <div class="bmi-tool__controls">
+      <div class="bmi-tool__unit-toolbar">
+        <Tabs
+          id="bmi-unit-tabs"
+          className="bmi-tool__unit-tabs"
+          ariaLabel={t['tools.bmiCalculator.unit']}
+          activeId="metric"
+          tabs={[
+            { id: 'metric', label: t['tools.bmiCalculator.metric'] },
+            { id: 'imperial', label: t['tools.bmiCalculator.imperial'] },
+          ]}
+        />
+      </div>
+
+      <div class="bmi-tool__inputs">
+        <Input
+          id="bmi-weight"
+          label={`${t['tools.bmiCalculator.weight']} (${t['tools.bmiCalculator.kg']})`}
+          placeholder="70"
+          inputmode="decimal"
+          inputClassName="bmi-tool__input bmi-tool__input--mono"
+          className="bmi-tool__field"
+        />
+        <Input
+          id="bmi-height"
+          label={`${t['tools.bmiCalculator.height']} (${t['tools.bmiCalculator.cm']})`}
+          placeholder="175"
+          inputmode="decimal"
+          inputClassName="bmi-tool__input bmi-tool__input--mono"
+          className="bmi-tool__field"
+        />
+      </div>
+
+      <div class="tool-toolbar bmi-tool__toolbar">
+        <ToolActionButton id="bmi-calc">{t['tools.bmiCalculator.calculate']}</ToolActionButton>
+      </div>
+    </div>
+
+    <div id="bmi-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <ToolResultCard id="bmi-result" className="bmi-tool__result" copyId="bmi-copy" copyLabel={t['tools.bmiCalculator.copyResult']}>
+      <div class="tool-result bmi-tool__result-surface">
+        <div class="tool-result__value" id="bmi-value">0</div>
+        <div class="tool-result__label">{t['tools.bmiCalculator.yourBmi']}</div>
+      </div>
+      <div class="bmi-tool__category" id="bmi-category"></div>
+    </ToolResultCard>
+
+    <div id="bmi-empty" class="tool-output tool-output--empty">{t['tools.bmiCalculator.enterValues']}</div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.bmiCalculator.disclaimer']}
+    </div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.bmiCalculator.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.bmi-tool');
+  var weightInput = document.getElementById('bmi-weight');
+  var heightInput = document.getElementById('bmi-height');
+  var calcBtn = document.getElementById('bmi-calc');
+  var copyBtn = document.getElementById('bmi-copy');
+  var errorDiv = document.getElementById('bmi-error');
+  var resultDiv = document.getElementById('bmi-result');
+  var emptyDiv = document.getElementById('bmi-empty');
+  var valueDiv = document.getElementById('bmi-value');
+  var categoryDiv = document.getElementById('bmi-category');
+  var unitTabs = document.getElementById('bmi-unit-tabs');
+  var weightField = document.getElementById('bmi-weight') ? document.getElementById('bmi-weight').closest('.ui-input-field') : null;
+  var heightField = document.getElementById('bmi-height') ? document.getElementById('bmi-height').closest('.ui-input-field') : null;
+
+  var isMetric = true;
+
+  function setError(msg){if(!errorDiv)return;window.__belbooreTools.setErrorBox(errorDiv,msg);}
+  function clearError(){if(!errorDiv)return;window.__belbooreTools.clearErrorBox(errorDiv);}
+
+  function getVal(input){if(!input)return NaN;return parseFloat(input.value.replace(/[^0-9.]/g,''));}
+
+  function setUnit(metric){
+    if(!root) return;
+    isMetric=metric;
+    if(weightInput) weightInput.value='';
+    if(heightInput) heightInput.value='';
+    if(resultDiv) resultDiv.style.display='none';
+    if(emptyDiv) emptyDiv.style.display='';
+    clearError();
+    var weightLabel=weightField ? weightField.querySelector('.ui-input-field__label') : null;
+    var heightLabel=heightField ? heightField.querySelector('.ui-input-field__label') : null;
+    var weightText = root.getAttribute('data-weight-label') || 'Weight';
+    var heightText = root.getAttribute('data-height-label') || 'Height';
+    var kgText = root.getAttribute('data-kg') || 'kg';
+    var lbText = root.getAttribute('data-lb') || 'lb';
+    var cmText = root.getAttribute('data-cm') || 'cm';
+    var inchText = root.getAttribute('data-inch') || 'in';
+    if(weightLabel) weightLabel.textContent=weightText+' ('+(metric?kgText:lbText)+')';
+    if(heightLabel) heightLabel.textContent=heightText+' ('+(metric?cmText:inchText)+')';
+  }
+
+  unitTabs?.addEventListener('ui-tabs:change', function(event){
+    var customEvent = event;
+    var tabId = customEvent.detail && customEvent.detail.tabId;
+    setUnit(tabId !== 'imperial');
+  });
+
+  function calcBmi(){
+    if(!root||!weightInput||!heightInput||!resultDiv||!emptyDiv||!valueDiv||!categoryDiv) return;
+    var weight=getVal(weightInput);
+    var height=getVal(heightInput);
+
+    if(isNaN(weight)||isNaN(height)||weight<=0||height<=0){
+      setError(root.getAttribute('data-invalid')||'Please enter valid positive numbers');
+      return;
+    }
+
+    clearError();
+    emptyDiv.style.display='none';
+    resultDiv.style.display='';
+
+    var bmi;
+    if(isMetric){var hm=height/100;bmi=weight/(hm*hm);}
+    else bmi=(weight/(height*height))*703;
+
+    bmi=parseFloat(bmi.toFixed(1));
+    valueDiv.textContent=String(bmi);
+
+    var category,color;
+    if(bmi<18.5){category=root.getAttribute('data-underweight')||'Underweight';color='#f59e0b';}
+    else if(bmi<25){category=root.getAttribute('data-normal')||'Normal';color='#10b981';}
+    else if(bmi<30){category=root.getAttribute('data-overweight')||'Overweight';color='#f97316';}
+    else{category=root.getAttribute('data-obesity')||'Obesity';color='#ef4444';}
+
+    categoryDiv.textContent=category;
+    categoryDiv.style.color=color;
+    categoryDiv.style.borderColor=color;
+  }
+
+  calcBtn.addEventListener('click',calcBmi);
+
+  copyBtn.addEventListener('click',function(){
+    if(!valueDiv||!categoryDiv||!resultDiv) return;
+    if(resultDiv.style.display==='none') return;
+    var bmiLabel=root.getAttribute('data-your-bmi')||'Your BMI';
+    var catLabel=root.getAttribute('data-category-label')||'Category';
+    var text=bmiLabel+': '+valueDiv.textContent+'\n'+catLabel+': '+categoryDiv.textContent;
+    window.__belbooreTools.copyToClipboard(text,copyBtn,1500);
+  });
+
+  setUnit(true);
+</script>
+
+<style>
+  .bmi-tool{display:flex;flex-direction:column;gap:var(--space-5);}
+  .bmi-tool__controls{display:flex;flex-direction:column;gap:var(--space-6);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
+  .bmi-tool__unit-toolbar,.bmi-tool__toolbar{padding:0;}
+  .bmi-tool__unit-tabs{width:max-content;max-width:100%;}
+  .bmi-tool__toolbar{justify-content:flex-end;}
+  .bmi-tool__inputs{width:min(100%, 640px);max-width:640px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-4);align-items:start;}
+  .bmi-tool__field{min-width:0;}
+  .bmi-tool__input{background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 98%,transparent),color-mix(in srgb,var(--surface-secondary) 74%,transparent));}
+  .bmi-tool__input--mono{font-variant-numeric:tabular-nums;}
+  .bmi-tool__result-surface{padding:var(--space-5);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));border:1px solid var(--border-subtle);box-shadow:var(--shadow-sm);}
+  .bmi-tool__result-surface :global(.tool-result__value){font-size:clamp(1.8rem,4vw,2.5rem);}
+  .bmi-tool__category{padding:var(--space-3) var(--space-4);border:1px solid;border-radius:var(--radius-lg);font-size:var(--text-lg);font-weight:var(--weight-bold);text-align:center;background:var(--surface-primary);box-shadow:var(--shadow-sm);}
+  @media(max-width:640px){.bmi-tool__controls,.bmi-tool__result-surface{padding:var(--space-4);}.bmi-tool__inputs{width:100%;max-width:none;grid-template-columns:1fr;gap:var(--space-4);}}
+</style>

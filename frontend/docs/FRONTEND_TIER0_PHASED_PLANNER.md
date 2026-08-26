@@ -1,8 +1,8 @@
 # Frontend Tier 0 — Phased Implementation Planner
 
 **Scope:** Complete all ~88 pure client-side tools across 3 development layers.
-**Baseline:** 17 live builtins + 10 external redirects + 5 coming-soon (in data) + ~61 not yet in data.
-**Total remaining frontend-only work:** ~66 new tool implementations + 17 UI enhancements.
+**Baseline:** 22 live builtins + 10 external redirects + 0 coming-soon (in data, all 5 now live) + ~61 not yet in data.
+**Total remaining frontend-only work:** ~61 new tool implementations + 17 UI enhancements.
 
 ---
 
@@ -16,20 +16,46 @@
 
 ---
 
-## Phase 1 — Quick Wins (Coming-Soon Tools)
+## Phase 1 — Quick Wins (Coming-Soon Tools) ✅ COMPLETE
 
 *Already registered in `tools.ts`, need only component + `[slug].astro` mapping.*
 
-| # | Tool | Slug | Effort |
-|---|------|------|:------:|
-| 1 | Regex Tester | `regex-tester` | 1d |
-| 2 | Date Difference Calculator | `date-difference` | 0.5d |
-| 3 | Percentage Calculator | `percentage-calculator` | 0.5d |
-| 4 | Random Number Generator | `random-number` | 0.5d |
-| 5 | BMI Calculator | `bmi-calculator` | 0.5d |
+| # | Tool | Slug | Effort | Status |
+|---|------|------|:------:|:------:|
+| 1 | Regex Tester | `regex-tester` | 1d | ✅ Live |
+| 2 | Date Difference Calculator | `date-difference` | 0.5d | ✅ Live |
+| 3 | Percentage Calculator | `percentage-calculator` | 0.5d | ✅ Live |
+| 4 | Random Number Generator | `random-number` | 0.5d | ✅ Live |
+| 5 | BMI Calculator | `bmi-calculator` | 0.5d | ✅ Live |
 
 **Total effort:** ~3 days
 **Delivery:** 5 new live tools
+**Completed:** 2026-06-29
+
+---
+
+## Phase 1.1 — UI Repair & Calendar Foundation ✅ COMPLETE
+
+**Scope:** UI consistency pass over all 5 Phase 1 tools + reusable calendar foundation.
+
+**Shared components created:**
+- `src/lib/jalali.ts` — Pure-math Gregorian↔Jalali conversion (0 deps, < 5KB)
+- `src/components/tools/ToolCalendarField.astro` — Reusable date picker with popup calendar, month nav, Gregorian/Jalali mode toggle, holiday metadata from `public/calendar-data/`
+- `src/components/tools/ToolDatePicker.astro` — (deleted) Superseded by `ToolCalendarField.astro`
+
+**UI improvements applied to all 5 tools:**
+- Raw `type="number"` → `type="text" inputmode="decimal"`
+- Raw `<select>` → `Select.astro`
+- Raw buttons → `ToolActionButton.astro` / `Button.astro` with variants
+- Use of `.tool-field`, `.tool-input`, `.tool-error`, `.tool-output`, `.tool-empty`, `.tool-result`, `.tool-note` from `ToolPrimitives`
+- Copy buttons with proper `tool-btn` styling
+- Consistent empty/error/result states
+
+**Calendar:** DateDifference now supports Gregorian and Jalali/Shamsi calendars via `ToolCalendarField`. Two-way toggle switches both start/end pickers simultaneously. Internal date normalization uses Gregorian ISO values. Holiday metadata loaded on-demand from `public/calendar-data/` (35 Jalali year files, 1390–1424).
+
+**Cleanup:** Removed orphaned `ToolDatePicker.astro`.
+
+**Completed:** 2026-06-30
 
 ---
 
@@ -261,7 +287,8 @@
 
 | Phase | Tools | Effort | Layer |
 |:-----:|:-----:|:------:|:-----:|
-| P1 — Quick Wins | 5 new | 3d | 1 |
+| P1 — Quick Wins | 5 new | 3d | 1 | ✅ Complete 2026-06-29
+| P1.1 — UI Repair & Calendar Foundation | — | 1d | 1 | ✅ Complete 2026-06-30
 | P2 — JSON Toolkit | 4 new + 1 enhanced | 5d | 1 |
 | P3 — Format Converters | 4 new | 4d | 1 |
 | P4 — Text & Encoding | 5 new + 2 enhanced | 4.5d | 1 |

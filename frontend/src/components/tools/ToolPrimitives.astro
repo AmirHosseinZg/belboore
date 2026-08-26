@@ -15,7 +15,7 @@
     background: var(--surface-primary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
-    overflow: hidden;
+    /* overflow: hidden; removed to allow calendar popups to escape */
   }
 
   .tool-panel__header {
@@ -397,6 +397,17 @@
 
     .tool-grid-4 {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tool-toolbar {
+      gap: var(--space-3);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .tool-toolbar {
+      flex-direction: column;
+      gap: var(--space-3);
     }
   }
 

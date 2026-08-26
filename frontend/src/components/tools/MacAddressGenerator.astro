@@ -1,0 +1,174 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Button from '../ui/Button.astro';
+import Select from '../ui/Select.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'MAC Address Generator',
+    generate: 'Generate',
+    regenerate: 'Regenerate',
+    copy: 'Copy',
+    copyAll: 'Copy All',
+    clear: 'Clear',
+    emptyState: 'Click Generate to create MAC addresses',
+    note: 'MAC addresses are generated with locally administered (bit set) unicast addresses using cryptographically secure randomness.',
+    countLabel: 'Count',
+    formatLabel: 'Format',
+    vendorLabel: 'Vendor Prefix',
+    randomVendor: 'Random',
+    prefixSelect: 'Select vendor prefix...',
+    noPrefix: 'No prefix selected',
+  },
+  fa: {
+    title: 'تولید آدرس MAC',
+    generate: 'تولید',
+    regenerate: 'تولید مجدد',
+    copy: 'کپی',
+    copyAll: 'کپی همه',
+    clear: 'پاک کردن',
+    emptyState: 'روی Generate کلیک کنید تا آدرس MAC ساخته شود',
+    note: 'آدرس‌های MAC با آدرس‌های unicast مدیریت محلی با استفاده از اعداد تصادفی امن رمزنگاری تولید می‌شوند.',
+    countLabel: 'تعداد',
+    formatLabel: 'فرمت',
+    vendorLabel: 'پیشوند فروشنده',
+    randomVendor: 'تصادفی',
+    prefixSelect: 'انتخاب پیشوند فروشنده...',
+    noPrefix: 'هیچ پیشوندی انتخاب نشده',
+  },
+};
+
+const formatOptions = [
+  { value: ':', label: 'aa:bb:cc:dd:ee:ff' },
+  { value: '-', label: 'aa-bb-cc-dd-ee-ff' },
+  { value: '.', label: 'aabb.ccdd.eeff' },
+  { value: '', label: 'aabbccddeeff' },
+];
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="mac-tool">
+    <div class="mac-controls-row">
+      <Input id="mac-count" label={copy[lang].countLabel} type="number" inputmode="numeric" value={1} inputClassName="mac-count-input" />
+      <Select id="mac-format" label={copy[lang].formatLabel} options={formatOptions} selectedValue=":" selectClassName="mac-format-select" />
+    </div>
+    <div class="tool-toolbar">
+      <ToolActionButton id="mac-generate">{copy[lang].generate}</ToolActionButton>
+      <Button id="mac-regenerate" variant="secondary" className="mac-regen-btn" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        {copy[lang].regenerate}
+      </Button>
+      <Button id="mac-copy-all" variant="outline" style="display:none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        {copy[lang].copyAll}
+      </Button>
+    </div>
+    <div id="mac-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="mac-result-card" style="display:none">
+      <div id="mac-list" class="mac-list"></div>
+    </div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { generateMacAddress, formatMacAddress } from './networkUtils.ts';
+
+  const countInput = document.getElementById('mac-count') as HTMLInputElement;
+  const formatSelect = document.getElementById('mac-format') as HTMLSelectElement;
+  const generateBtn = document.getElementById('mac-generate')!;
+  const regenerateBtn = document.getElementById('mac-regenerate')!;
+  const copyAllBtn = document.getElementById('mac-copy-all')!;
+  const emptyEl = document.getElementById('mac-empty')!;
+  const resultCard = document.getElementById('mac-result-card')!;
+  const macList = document.getElementById('mac-list')!;
+
+  function clampCount() {
+    let count = parseInt(countInput.value, 10);
+    if (isNaN(count) || count < 1) count = 1;
+    if (count > 50) count = 50;
+    countInput.value = String(count);
+    return count;
+  }
+
+  countInput.addEventListener('blur', clampCount);
+
+  function doGenerate() {
+    const count = clampCount();
+    const separator = formatSelect.value || '';
+    macList.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      const raw = generateMacAddress(':');
+      const addr = separator ? raw.replace(/:/g, separator) : raw.replace(/:/g, '');
+      const item = document.createElement('div');
+      item.className = 'mac-item';
+      const addrSpan = document.createElement('span');
+      addrSpan.className = 'mac-addr';
+      addrSpan.textContent = addr;
+      item.appendChild(addrSpan);
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'mac-copy-btn';
+      copyBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      copyBtn.addEventListener('click', () => {
+        window.__belbooreTools.copyToClipboard(addr, copyBtn, 1500);
+      });
+      item.appendChild(copyBtn);
+      macList.appendChild(item);
+    }
+    emptyEl.style.display = 'none';
+    resultCard.style.display = '';
+    regenerateBtn.style.display = '';
+    copyAllBtn.style.display = count > 1 ? '' : 'none';
+  }
+
+  generateBtn.addEventListener('click', doGenerate);
+  regenerateBtn.addEventListener('click', doGenerate);
+
+  copyAllBtn.addEventListener('click', () => {
+    const items = macList.querySelectorAll('.mac-addr');
+    const text = Array.from(items).map(el => el.textContent || '').join('\n');
+    window.__belbooreTools.copyToClipboard(text, copyAllBtn, 1500);
+  });
+</script>
+
+<style>
+  .mac-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .mac-tool .tool-note { margin-top: 0; }
+  .mac-controls-row { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: flex-end; }
+  .mac-count-input { max-width: 100px; text-align: center; }
+  .mac-format-select { min-width: 200px; }
+  .mac-regen-btn { display: none; }
+  .mac-list { display: flex; flex-direction: column; }
+  .mac-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: var(--space-2) var(--space-4);
+    font-family: var(--font-mono); font-size: var(--text-sm);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-secondary); border-radius: var(--radius-md);
+    margin-bottom: var(--space-1);
+  }
+  .mac-item:last-child { margin-bottom: 0; }
+  .mac-addr { color: var(--text-primary); word-break: break-all; }
+  .mac-copy-btn {
+    background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: var(--space-1); border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .mac-copy-btn:hover { color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  @media (max-width: 640px) { .mac-controls-row { flex-direction: column; } }
+</style>

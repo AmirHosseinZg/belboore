@@ -1,0 +1,152 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Text to NATO Alphabet',
+    inputLabel: 'Input text',
+    outputLabel: 'Phonetic spelling',
+    inputPlaceholder: 'Type or paste text to convert to NATO phonetic alphabet...',
+    outputEmpty: 'Phonetic spelling will appear here',
+    copy: 'Copy',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    preservePunct: 'Preserve punctuation',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+  },
+  fa: {
+    title: 'تبدیل متن به الفبای ناتو',
+    inputLabel: 'متن ورودی',
+    outputLabel: 'املای آوایی',
+    inputPlaceholder: 'متن خود را برای تبدیل به الفبای آوایی ناتو وارد کنید...',
+    outputEmpty: 'املای آوایی اینجا نمایش داده می‌شود',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    preservePunct: 'حفظ علائم نگارشی',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+  },
+}[lang];
+
+const NATO_MAP: Record<string, string> = {
+  A: 'Alfa', B: 'Bravo', C: 'Charlie', D: 'Delta', E: 'Echo',
+  F: 'Foxtrot', G: 'Golf', H: 'Hotel', I: 'India', J: 'Juliett',
+  K: 'Kilo', L: 'Lima', M: 'Mike', N: 'November', O: 'Oscar',
+  P: 'Papa', Q: 'Quebec', R: 'Romeo', S: 'Sierra', T: 'Tango',
+  U: 'Uniform', V: 'Victor', W: 'Whiskey', X: 'X-ray', Y: 'Yankee',
+  Z: 'Zulu',
+};
+const NUM_MAP: Record<string, string> = {
+  '0': 'Zero', '1': 'One', '2': 'Two', '3': 'Three', '4': 'Four',
+  '5': 'Five', '6': 'Six', '7': 'Seven', '8': 'Eight', '9': 'Nine',
+};
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="nato-tool" dir={dir} data-empty={copy.outputEmpty}>
+    <div class="nato-tool__controls">
+      <div class="nato-tool__actions">
+        <Button id="nato-copy" variant="primary">{copy.copy}</Button>
+        <Button id="nato-clear" variant="secondary">{copy.clear}</Button>
+        <Button id="nato-example" variant="outline">{copy.loadExample}</Button>
+      </div>
+      <label class="nato-tool__checkbox">
+        <input type="checkbox" id="nato-punct" checked />
+        {copy.preservePunct}
+      </label>
+    </div>
+
+    <div class="nato-tool__grid">
+      <TextArea id="nato-input" label={copy.inputLabel} className="nato-tool__textarea" placeholder={copy.inputPlaceholder} rows={12} spellcheck="false" />
+      <div class="nato-tool__output-shell">
+        <div class="nato-tool__panel-head">
+          <label class="nato-tool__label" for="nato-output">{copy.outputLabel}</label>
+        </div>
+        <div id="nato-output" class="tool-output tool-output--empty nato-tool__output" role="status" aria-live="polite">{copy.outputEmpty}</div>
+      </div>
+    </div>
+
+    <div class="tool-note nato-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('nato-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('nato-output')!;
+  const copyBtn = document.getElementById('nato-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('nato-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('nato-example') as HTMLButtonElement | null;
+  const punctCheck = document.getElementById('nato-punct') as HTMLInputElement | null;
+
+  const NATO: Record<string, string> = { A:'Alfa',B:'Bravo',C:'Charlie',D:'Delta',E:'Echo',F:'Foxtrot',G:'Golf',H:'Hotel',I:'India',J:'Juliett',K:'Kilo',L:'Lima',M:'Mike',N:'November',O:'Oscar',P:'Papa',Q:'Quebec',R:'Romeo',S:'Sierra',T:'Tango',U:'Uniform',V:'Victor',W:'Whiskey',X:'X-ray',Y:'Yankee',Z:'Zulu' };
+  const NUMS: Record<string, string> = { '0':'Zero','1':'One','2':'Two','3':'Three','4':'Four','5':'Five','6':'Six','7':'Seven','8':'Eight','9':'Nine' };
+
+  function convert() {
+    if (!input) return;
+    const val = input.value;
+    if (!val) { window.__belbooreTools.showEmpty(output, ''); return; }
+    const preserve = punctCheck?.checked ?? true;
+    const words: string[] = [];
+    for (const ch of val) {
+      const upper = ch.toUpperCase();
+      if (NATO[upper]) words.push(NATO[upper]);
+      else if (NUMS[upper]) words.push(NUMS[upper]);
+      else if (preserve && /[^\w\s]/.test(ch)) words.push(ch);
+    }
+    const result = words.join(' ');
+    if (!result) { window.__belbooreTools.showEmpty(output, ''); return; }
+    window.__belbooreTools.showOutput(output, result);
+  }
+
+  input?.addEventListener('input', convert);
+  punctCheck?.addEventListener('change', convert);
+
+  copyBtn?.addEventListener('click', () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    window.__belbooreTools.showEmpty(output, '');
+    input?.focus();
+  });
+
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = 'ChatGPT 5'; }
+    convert();
+  });
+</script>
+
+<style>
+  .nato-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .nato-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4) var(--space-5); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); background: var(--surface-tertiary); }
+  .nato-tool__actions { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .nato-tool__checkbox { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }
+  .nato-tool__checkbox input { accent-color: var(--color-tech-blue); width: 16px; height: 16px; }
+  .nato-tool__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-5); align-items: stretch; }
+  .nato-tool__textarea { display: block; min-height: 260px; height: 100%; }
+  .nato-tool__output-shell { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; height: 100%; }
+  .nato-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .nato-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .nato-tool__output { min-height: 260px; padding: var(--space-5); line-height: 1.8; }
+  .nato-tool__note { margin-top: 0; }
+  @media (max-width: 900px) { .nato-tool__grid { grid-template-columns: 1fr; } .nato-tool__controls { flex-direction: column; align-items: stretch; } .nato-tool__actions { justify-content: flex-start; } }
+</style>

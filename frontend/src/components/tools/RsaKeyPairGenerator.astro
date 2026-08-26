@@ -1,0 +1,269 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Select from '../ui/Select.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'RSA Key Pair Generator',
+    keySize: 'Key size',
+    generate: 'Generate Key Pair',
+    publicKey: 'Public Key',
+    privateKey: 'Private Key',
+    copyPublic: 'Copy Public Key',
+    copyPrivate: 'Copy Private Key',
+    resultEmpty: 'Click Generate to create a new RSA key pair',
+    loading: 'Generating key pair...',
+    note: 'RSA key pairs are generated locally using the Web Crypto API. Keys are never sent anywhere. Keep your private key secure — never share it.',
+    copied: 'Copied!',
+    hidePrivate: 'Hide private key',
+    showPrivate: 'Show private key',
+    clear: 'Clear',
+    warning: 'Warning: Private keys are shown only on screen. Copy and store them securely. Do not share your private key.',
+  },
+  fa: {
+    title: 'تولید جفت کلید RSA',
+    keySize: 'اندازه کلید',
+    generate: 'تولید جفت کلید',
+    publicKey: 'کلید عمومی',
+    privateKey: 'کلید خصوصی',
+    copyPublic: 'کپی کلید عمومی',
+    copyPrivate: 'کپی کلید خصوصی',
+    resultEmpty: 'برای ایجاد جفت کلید RSA روی Generate کلیک کنید',
+    loading: 'در حال تولید جفت کلید...',
+    note: 'جفت کلید RSA به صورت محلی با Web Crypto API تولید می‌شود. کلیدها هرگز به جایی ارسال نمی‌شوند. کلید خصوصی خود را ایمن نگه دارید — هرگز آن را به اشتراک نگذارید.',
+    copied: 'کپی شد!',
+    hidePrivate: 'مخفی کردن کلید خصوصی',
+    showPrivate: 'نمایش کلید خصوصی',
+    clear: 'پاک کردن',
+    warning: 'هشدار: کلیدهای خصوصی فقط روی صفحه نمایش داده می‌شوند. آنها را کپی و ایمن ذخیره کنید. کلید خصوصی خود را به اشتراک نگذارید.',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="rkg-tool">
+    <div class="rkg-controls">
+      <Select id="rkg-bits" label={copy[lang].keySize} options={[
+        { value: '2048', label: '2048-bit' },
+        { value: '4096', label: '4096-bit' },
+      ]} selectedValue="2048" />
+      <div class="rkg-actions">
+        <ToolActionButton id="rkg-generate">{copy[lang].generate}</ToolActionButton>
+        <Button id="rkg-clear" variant="secondary">{copy[lang].clear}</Button>
+      </div>
+    </div>
+
+    <div id="rkg-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
+    <div id="rkg-loading" style="display:none" class="rkg-loading">
+      <div class="rkg-spinner"></div>
+      <span>{copy[lang].loading}</span>
+    </div>
+
+    <div id="rkg-result" style="display:none">
+      <div class="rkg-section">
+        <div class="rkg-section-header">
+          <h4 class="rkg-section-title">{copy[lang].publicKey}</h4>
+          <div class="rkg-section-actions">
+            <Button id="rkg-copy-pub" variant="outline">{copy[lang].copyPublic}</Button>
+          </div>
+        </div>
+        <TextArea id="rkg-pub" className="rkg-textarea" rows={6} readonly={true} />
+      </div>
+      <div class="rkg-section">
+        <div class="rkg-section-header">
+          <h4 class="rkg-section-title">{copy[lang].privateKey}</h4>
+          <div class="rkg-section-actions">
+            <Button id="rkg-toggle-priv" variant="secondary">{copy[lang].hidePrivate}</Button>
+            <Button id="rkg-copy-priv" variant="outline">{copy[lang].copyPrivate}</Button>
+          </div>
+        </div>
+        <TextArea id="rkg-priv" className="rkg-textarea" rows={12} readonly={true} />
+      </div>
+      <div class="rkg-warning">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        {copy[lang].warning}
+      </div>
+    </div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { generateRsaKeyPair } from './Phase8Utils.ts';
+
+  const bitsSelect = document.getElementById('rkg-bits') as HTMLSelectElement;
+  const genBtn = document.getElementById('rkg-generate') as HTMLButtonElement;
+  const clearBtn = document.getElementById('rkg-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('rkg-empty')!;
+  const loadingEl = document.getElementById('rkg-loading')!;
+  const resultEl = document.getElementById('rkg-result')!;
+  const pubTextarea = document.getElementById('rkg-pub') as HTMLTextAreaElement;
+  const privTextarea = document.getElementById('rkg-priv') as HTMLTextAreaElement;
+  const copyPubBtn = document.getElementById('rkg-copy-pub') as HTMLButtonElement;
+  const copyPrivBtn = document.getElementById('rkg-copy-priv') as HTMLButtonElement;
+  const togglePrivBtn = document.getElementById('rkg-toggle-priv') as HTMLButtonElement;
+
+  let privateKeyVisible = true;
+
+  async function generate() {
+    genBtn.disabled = true;
+    emptyEl.style.display = 'none';
+    resultEl.style.display = 'none';
+    loadingEl.style.display = 'flex';
+
+    try {
+      const { publicKeyPem, privateKeyPem } = await generateRsaKeyPair();
+      pubTextarea.value = publicKeyPem;
+      privTextarea.value = privateKeyPem;
+      privateKeyVisible = true;
+      togglePrivBtn.textContent = 'Hide private key';
+      loadingEl.style.display = 'none';
+      resultEl.style.display = '';
+    } catch (e: any) {
+      loadingEl.style.display = 'none';
+      emptyEl.style.display = '';
+      emptyEl.textContent = 'Error: ' + (e.message || 'Failed to generate keys. Web Crypto API may not be available.');
+    } finally {
+      genBtn.disabled = false;
+    }
+  }
+
+  genBtn.addEventListener('click', generate);
+
+  clearBtn.addEventListener('click', function () {
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    loadingEl.style.display = 'none';
+    pubTextarea.value = '';
+    privTextarea.value = '';
+  });
+
+  copyPubBtn.addEventListener('click', function () {
+    navigator.clipboard.writeText(pubTextarea.value).then(function () {
+      const orig = copyPubBtn.textContent;
+      copyPubBtn.textContent = 'Copied!';
+      setTimeout(function () { copyPubBtn.textContent = orig; }, 1500);
+    });
+  });
+
+  copyPrivBtn.addEventListener('click', function () {
+    navigator.clipboard.writeText(privTextarea.value).then(function () {
+      const orig = copyPrivBtn.textContent;
+      copyPrivBtn.textContent = 'Copied!';
+      setTimeout(function () { copyPrivBtn.textContent = orig; }, 1500);
+    });
+  });
+
+  togglePrivBtn.addEventListener('click', function () {
+    privateKeyVisible = !privateKeyVisible;
+    privTextarea.style.display = privateKeyVisible ? '' : 'none';
+    togglePrivBtn.textContent = privateKeyVisible ? 'Hide private key' : 'Show private key';
+  });
+</script>
+
+<style>
+  .rkg-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .rkg-tool .tool-note {
+    margin-top: 0;
+  }
+  .rkg-loading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+  }
+  .rkg-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-subtle);
+    border-top-color: var(--color-tech-blue);
+    border-radius: 50%;
+    animation: rkg-spin 0.6s linear infinite;
+  }
+  @keyframes rkg-spin {
+    to { transform: rotate(360deg); }
+  }
+  .rkg-section {
+    margin-bottom: var(--space-5);
+  }
+  .rkg-controls {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+  .rkg-controls > :first-child {
+    min-width: 140px;
+  }
+  .rkg-actions {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .rkg-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-2);
+  }
+  .rkg-section-title {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    margin: 0;
+  }
+  .rkg-section-actions {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .rkg-textarea {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    min-height: 100px;
+  }
+  .rkg-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-warning-subtle);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-top: var(--space-2);
+  }
+  .rkg-warning svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+</style>

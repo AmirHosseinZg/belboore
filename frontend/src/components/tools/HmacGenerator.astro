@@ -1,0 +1,180 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import TextArea from '../ui/TextArea.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'HMAC Generator',
+    keyLabel: 'Secret key',
+    keyPlaceholder: 'Enter your secret key...',
+    dataLabel: 'Message / Data',
+    dataPlaceholder: 'Enter message to sign...',
+    algoLabel: 'Algorithm',
+    formatLabel: 'Output format',
+    resultEmpty: 'Enter key and message to generate HMAC',
+    generate: 'Generate HMAC',
+    copy: 'Copy',
+    clear: 'Clear',
+    note: 'All HMAC computation happens locally in your browser using the Web Crypto API. Your key never leaves your device.',
+    hex: 'Hex',
+    base64: 'Base64',
+  },
+  fa: {
+    title: 'تولید HMAC',
+    keyLabel: 'کلید مخفی',
+    keyPlaceholder: 'کلید مخفی را وارد کنید...',
+    dataLabel: 'پیام / داده',
+    dataPlaceholder: 'پیام را برای امضا وارد کنید...',
+    algoLabel: 'الگوریتم',
+    formatLabel: 'فرمت خروجی',
+    resultEmpty: 'برای تولید HMAC کلید و پیام را وارد کنید',
+    generate: 'تولید HMAC',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    note: 'تمام محاسبات HMAC در مرورگر شما با Web Crypto API انجام می‌شود. کلید شما هرگز دستگاه را ترک نمی‌کند.',
+    hex: 'هگز',
+    base64: 'Base64',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="hmac-tool">
+    <Input id="hg-key" label={copy[lang].keyLabel} placeholder={copy[lang].keyPlaceholder} autocomplete="off" spellcheck={false} />
+    <TextArea id="hg-data" label={copy[lang].dataLabel} placeholder={copy[lang].dataPlaceholder} rows={4} />
+    <div class="hg-controls">
+      <Select id="hg-algo" label={copy[lang].algoLabel} options={[
+        { value: 'SHA-1', label: 'SHA-1' },
+        { value: 'SHA-256', label: 'SHA-256' },
+        { value: 'SHA-384', label: 'SHA-384' },
+        { value: 'SHA-512', label: 'SHA-512' },
+      ]} selectedValue="SHA-256" />
+      <Select id="hg-format" label={copy[lang].formatLabel} options={[
+        { value: 'hex', label: copy[lang].hex },
+        { value: 'base64', label: copy[lang].base64 },
+      ]} selectedValue="hex" />
+    </div>
+    <div class="tool-toolbar">
+      <ToolActionButton id="hg-generate">{copy[lang].generate}</ToolActionButton>
+      <Button id="hg-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+
+    <div id="hg-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
+    <div id="hg-result" class="tool-output hg-result" style="display:none" role="status" aria-live="polite"></div>
+    <div id="hg-error" class="tool-error" style="display:none"></div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { computeHmac } from './Phase8Utils.ts';
+
+  const keyInput = document.getElementById('hg-key') as HTMLInputElement;
+  const dataInput = document.getElementById('hg-data') as HTMLTextAreaElement;
+  const algoSelect = document.getElementById('hg-algo') as HTMLSelectElement;
+  const formatSelect = document.getElementById('hg-format') as HTMLSelectElement;
+  const genBtn = document.getElementById('hg-generate') as HTMLButtonElement;
+  const clearBtn = document.getElementById('hg-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('hg-empty')!;
+  const resultEl = document.getElementById('hg-result')!;
+  const errorEl = document.getElementById('hg-error')!;
+
+  genBtn.addEventListener('click', async function () {
+    const key = keyInput.value;
+    const data = dataInput.value;
+    const algo = algoSelect.value as any;
+    const format = formatSelect.value as 'hex' | 'base64';
+
+    if (!key || !data) {
+      errorEl.textContent = 'Please enter both a secret key and message';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      return;
+    }
+
+    genBtn.disabled = true;
+    genBtn.textContent = 'Generating...';
+    errorEl.style.display = 'none';
+
+    try {
+      const hmac = await computeHmac(algo, key, data, format);
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+      resultEl.textContent = hmac;
+    } catch (e: any) {
+      errorEl.textContent = 'Error: ' + (e.message || 'Failed to generate HMAC');
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    } finally {
+      genBtn.disabled = false;
+      genBtn.textContent = 'Generate HMAC';
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    keyInput.value = '';
+    dataInput.value = '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    keyInput.focus();
+  });
+
+  resultEl.addEventListener('click', function () {
+    const text = resultEl.textContent || '';
+    if (!text || resultEl.style.display === 'none') return;
+    navigator.clipboard.writeText(text).then(function () {
+      const orig = resultEl.style.background;
+      resultEl.style.background = 'var(--color-success-subtle)';
+      setTimeout(function () { resultEl.style.background = orig; }, 500);
+    }).catch(function () {});
+  });
+</script>
+
+<style>
+  .hmac-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .hmac-tool .tool-note {
+    margin-top: 0;
+  }
+  .hg-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+  .hg-controls > * {
+    flex: 1;
+    min-width: 160px;
+  }
+  .hg-result {
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    word-break: break-all;
+  }
+</style>

@@ -1,102 +1,443 @@
 ---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
 import ToolPrimitives from './ToolPrimitives.astro';
 import ToolUtils from './ToolUtils.astro';
 import ToolWorkspace from './ToolWorkspace.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import Select from '../ui/Select.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Case Converter',
+    mode: 'Conversion mode',
+    input: 'Input text',
+    inputPlaceholder: 'Type or paste your text here...',
+    output: 'Converted output',
+    outputEmpty: 'Converted text will appear here',
+    switchLabel: 'Choose a case conversion mode',
+    copy: 'Copy',
+    clear: 'Clear',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    upper: 'UPPERCASE',
+    lower: 'lowercase',
+    titleCase: 'Title Case',
+    sentence: 'Sentence case',
+    camel: 'camelCase',
+    pascal: 'PascalCase',
+    snake: 'snake_case',
+    constant: 'CONSTANT_CASE',
+    kebab: 'kebab-case',
+    dot: 'dot.case',
+    path: 'path/case',
+    train: 'Train-Case',
+    alternating: 'aLtErNaTiNg',
+    inverse: 'iNVERSE',
+    slug: 'slug-case',
+  },
+  fa: {
+    title: 'تبدیل حروف',
+    mode: 'حالت تبدیل',
+    input: 'متن ورودی',
+    inputPlaceholder: 'متن خود را اینجا تایپ یا جای‌گذاری کنید...',
+    output: 'خروجی تبدیل‌شده',
+    outputEmpty: 'متن تبدیل‌شده اینجا نمایش داده می‌شود',
+    switchLabel: 'حالت تبدیل حروف را انتخاب کنید',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    note: 'تمام پردازش در مرورگر شما انجام می‌شود و داده‌های شما هرگز آپلود نمی‌شود.',
+    upper: 'حروف بزرگ',
+    lower: 'حروف کوچک',
+    titleCase: 'ابتدای کلمات بزرگ',
+    sentence: 'ابتدای جمله بزرگ',
+    camel: 'camelCase',
+    pascal: 'PascalCase',
+    snake: 'snake_case',
+    constant: 'CONSTANT_CASE',
+    kebab: 'kebab-case',
+    dot: 'dot.case',
+    path: 'path/case',
+    train: 'Train-Case',
+    alternating: 'aLtErNaTiNg',
+    inverse: 'معکوس',
+    slug: 'slug-case',
+  },
+}[lang];
 ---
 
 <ToolPrimitives />
 <ToolUtils />
 
-<ToolWorkspace title="Case Converter">
-  <div class="tool-toolbar">
-    <button type="button" id="cc-upper" class="tool-btn tool-btn--primary">UPPERCASE</button>
-    <button type="button" id="cc-lower" class="tool-btn">lowercase</button>
-    <button type="button" id="cc-title" class="tool-btn">Title Case</button>
-    <button type="button" id="cc-sentence" class="tool-btn">Sentence case</button>
-    <button type="button" id="cc-camel" class="tool-btn">camelCase</button>
-    <button type="button" id="cc-pascal" class="tool-btn">PascalCase</button>
-    <button type="button" id="cc-snake" class="tool-btn">snake_case</button>
-    <button type="button" id="cc-kebab" class="tool-btn">kebab-case</button>
-  </div>
-  <div class="tool-toolbar">
-    <button type="button" id="cc-copy" class="tool-btn">Copy</button>
-    <button type="button" id="cc-clear" class="tool-btn">Clear</button>
-  </div>
-  <div class="tool-grid-2">
-    <div class="tool-field">
-      <label class="tool-field__label" for="cc-input">Input</label>
-      <textarea id="cc-input" class="tool-textarea" placeholder="Type or paste your text here..."></textarea>
+<ToolWorkspace title={copy.title}>
+  <section
+    class="case-converter"
+    dir={dir}
+    data-empty={copy.outputEmpty}
+    data-default-mode="upper"
+  >
+    <div class="case-converter__controls">
+      <div class="case-converter__switch">
+        <Select
+          id="cc-mode-select"
+          label={copy.mode}
+          className="case-converter__mode-select"
+          selectedValue="upper"
+          options={[
+            { value: 'upper', label: copy.upper },
+            { value: 'lower', label: copy.lower },
+            { value: 'title', label: copy.titleCase },
+            { value: 'sentence', label: copy.sentence },
+            { value: 'camel', label: copy.camel },
+            { value: 'pascal', label: copy.pascal },
+            { value: 'snake', label: copy.snake },
+            { value: 'constant', label: copy.constant },
+            { value: 'kebab', label: copy.kebab },
+            { value: 'dot', label: copy.dot },
+            { value: 'path', label: copy.path },
+            { value: 'train', label: copy.train },
+            { value: 'alternating', label: copy.alternating },
+            { value: 'inverse', label: copy.inverse },
+            { value: 'slug', label: copy.slug },
+          ]}
+        />
+      </div>
+
+      <div class="case-converter__actions">
+        <Button id="cc-copy" variant="primary">{copy.copy}</Button>
+        <Button id="cc-clear" variant="secondary">{copy.clear}</Button>
+      </div>
     </div>
-    <div class="tool-field">
-      <label class="tool-field__label" for="cc-output">Output</label>
-      <div id="cc-output" class="tool-output tool-output--empty" role="status" aria-live="polite">Converted text will appear here</div>
+
+    <div class="case-converter__grid">
+      <TextArea
+        id="cc-input"
+        label={copy.input}
+        fieldClassName="case-converter__field"
+        className="case-converter__textarea"
+        placeholder={copy.inputPlaceholder}
+      />
+
+      <div class="case-converter__output-shell">
+        <div id="cc-output" class="tool-output tool-output--empty case-converter__output" role="status" aria-live="polite">
+          {copy.outputEmpty}
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="tool-note">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    All processing happens in your browser. Your data is never uploaded.
-  </div>
+
+    <div class="tool-note case-converter__note">
+      <span class="tool-note__icon">i</span>
+      {copy.note}
+    </div>
+  </section>
 </ToolWorkspace>
 
 <script>
-  const ciInput = document.getElementById('cc-input') as HTMLTextAreaElement;
-  const ciOutput = document.getElementById('cc-output')!;
+  var root = document.querySelector('.case-converter');
+  var modeSelect = document.getElementById('cc-mode-select');
+  var inputEl = document.getElementById('cc-input');
+  var outputEl = document.getElementById('cc-output');
+  var copyBtn = document.getElementById('cc-copy');
+  var clearBtn = document.getElementById('cc-clear');
+  var currentMode = root ? root.getAttribute('data-default-mode') || 'upper' : 'upper';
 
-  function showOutput(text: string) {
-    window.__belbooreTools.showOutput(ciOutput, text);
-  }
-  function showEmpty(text: string) {
-    window.__belbooreTools.showEmpty(ciOutput, text);
-  }
-  function getText(): string { return ciInput.value; }
-
-  function toTitleCase(s: string): string {
-    return s.replace(/\w\S*/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  function showOutput(text) {
+    if(!outputEl) return;
+    window.__belbooreTools.showOutput(outputEl, text);
   }
 
-  function toSentenceCase(s: string): string {
+  function showEmpty(text) {
+    if(!outputEl) return;
+    window.__belbooreTools.showEmpty(outputEl, text);
+  }
+
+  function getText() {
+    return inputEl ? inputEl.value : '';
+  }
+
+  function toTitleCase(s) {
+    return s.replace(/\w\S*/g, function(w){ return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); });
+  }
+
+  function toSentenceCase(s) {
     return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   }
 
-  function toCamelCase(s: string): string {
-    return s.replace(/(?:^\w|[A-Z]|\b\w)/g, (m, i) => i === 0 ? m.toLowerCase() : m.toUpperCase()).replace(/\s+/g, '');
+  function toCamelCase(s) {
+    return s
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9\s_-]+/g, ' ')
+      .replace(/[-_\s]+(.)?/g, function(match, chr){ return chr ? chr.toUpperCase() : ''; })
+      .replace(/^(.)/, function(m){ return m.toLowerCase(); });
   }
 
-  function toPascalCase(s: string): string {
-    return s.replace(/(?:^\w|[A-Z]|\b\w)/g, (m) => m.toUpperCase()).replace(/\s+/g, '');
+  function toPascalCase(s) {
+    var camel = toCamelCase(s);
+    return camel ? camel.charAt(0).toUpperCase() + camel.slice(1) : '';
   }
 
-  function toSnakeCase(s: string): string {
-    return s.toLowerCase().replace(/\s+/g, '_');
+  function toSnakeCase(s) {
+    return s
+      .trim()
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .toLowerCase();
   }
 
-  function toKebabCase(s: string): string {
-    return s.toLowerCase().replace(/\s+/g, '-');
+  function toKebabCase(s) {
+    return s
+      .trim()
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .replace(/[^a-zA-Z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase();
   }
 
-  function convert(fn: (s: string) => string) {
-    const val = getText().trim();
-    if (!val) { showEmpty('Converted text will appear here'); return; }
-    showOutput(fn(val));
+  function toDotCase(s) {
+    return s.trim().replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[^a-zA-Z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').toLowerCase();
   }
 
-  document.getElementById('cc-upper')!.addEventListener('click', () => convert((s) => s.toUpperCase()));
-  document.getElementById('cc-lower')!.addEventListener('click', () => convert((s) => s.toLowerCase()));
-  document.getElementById('cc-title')!.addEventListener('click', () => convert(toTitleCase));
-  document.getElementById('cc-sentence')!.addEventListener('click', () => convert(toSentenceCase));
-  document.getElementById('cc-camel')!.addEventListener('click', () => convert(toCamelCase));
-  document.getElementById('cc-pascal')!.addEventListener('click', () => convert(toPascalCase));
-  document.getElementById('cc-snake')!.addEventListener('click', () => convert(toSnakeCase));
-  document.getElementById('cc-kebab')!.addEventListener('click', () => convert(toKebabCase));
+  function toPathCase(s) {
+    return s.trim().replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[^a-zA-Z0-9]+/g, '/').replace(/^\/+|\/+$/g, '').toLowerCase();
+  }
 
-  document.getElementById('cc-copy')!.addEventListener('click', () => {
-    const text = ciOutput.textContent || '';
-    if (!text || ciOutput.classList.contains('tool-output--empty')) return;
-    window.__belbooreTools.copyToClipboard(text, document.getElementById('cc-copy')!, 1500);
+  function toTrainCase(s) {
+    return toKebabCase(s).replace(/(^|-)(.)/g, function(_, sep, c) { return sep + c.toUpperCase(); });
+  }
+
+  function toAlternating(s) {
+    var result = '';
+    var upper = true;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (/[a-zA-Z]/.test(ch)) {
+        result += upper ? ch.toUpperCase() : ch.toLowerCase();
+        upper = !upper;
+      } else { result += ch; }
+    }
+    return result;
+  }
+
+  function toInverse(s) {
+    var result = '';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (ch >= 'a' && ch <= 'z') result += ch.toUpperCase();
+      else if (ch >= 'A' && ch <= 'Z') result += ch.toLowerCase();
+      else result += ch;
+    }
+    return result;
+  }
+
+  function toSlug(s) {
+    return s.trim().toLowerCase().replace(/[^\w\s-]/g, '').replace(/[\s_]+/g, '-').replace(/^-+|-+$/g, '');
+  }
+
+  function convertText(value, mode) {
+    switch(mode){
+      case 'upper': return value.toUpperCase();
+      case 'lower': return value.toLowerCase();
+      case 'title': return toTitleCase(value);
+      case 'sentence': return toSentenceCase(value);
+      case 'camel': return toCamelCase(value);
+      case 'pascal': return toPascalCase(value);
+      case 'snake': return toSnakeCase(value);
+      case 'constant': return toSnakeCase(value).toUpperCase();
+      case 'kebab': return toKebabCase(value);
+      case 'dot': return toDotCase(value);
+      case 'path': return toPathCase(value);
+      case 'train': return toTrainCase(value);
+      case 'alternating': return toAlternating(value);
+      case 'inverse': return toInverse(value);
+      case 'slug': return toSlug(value);
+      default: return value;
+    }
+  }
+
+  function runConversion() {
+    if(!root || !outputEl) return;
+    var val = getText().trim();
+    if(!val){
+      showEmpty(root.getAttribute('data-empty') || 'Converted text will appear here');
+      return;
+    }
+    showOutput(convertText(val, currentMode));
+  }
+
+  modeSelect?.addEventListener('change', function(){
+    currentMode = modeSelect.value || currentMode;
+    runConversion();
   });
 
-  document.getElementById('cc-clear')!.addEventListener('click', () => {
-    ciInput.value = '';
-    showEmpty('Converted text will appear here');
+  inputEl?.addEventListener('input', function(){
+    runConversion();
+  });
+
+  copyBtn?.addEventListener('click', function(){
+    if(!outputEl) return;
+    var text = outputEl.textContent || '';
+    if(!text || outputEl.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  clearBtn?.addEventListener('click', function(){
+    if(inputEl) inputEl.value = '';
+    if(root) showEmpty(root.getAttribute('data-empty') || 'Converted text will appear here');
   });
 </script>
+
+<style>
+  .case-converter {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .case-converter__controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .case-converter__switch {
+    width: min(100%, 420px);
+    min-width: 0;
+  }
+
+  .case-converter__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .case-converter__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  .case-converter__field {
+    min-width: 0;
+    height: 100%;
+    padding-top: var(--space-2);
+  }
+
+  .case-converter__textarea {
+    display: block;
+    min-height: 260px;
+    height: 100%;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 74%, transparent));
+    border: 1.5px solid color-mix(in srgb, var(--color-tech-blue) 75%, white 25%);
+    border-radius: var(--radius-lg);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+  }
+
+  .case-converter__textarea:focus {
+    box-shadow:
+      0 0 0 4px var(--color-tech-blue-subtle),
+      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 64%, transparent),
+      var(--shadow-sm);
+  }
+
+  .case-converter__output-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-width: 0;
+    height: 100%;
+  }
+
+  .case-converter__output-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .case-converter__output-label {
+    position: static;
+    transform: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  .case-converter__output {
+    min-height: 260px;
+    padding: var(--space-5);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-subtle);
+    background:
+      radial-gradient(circle at top right, rgba(0,82,255,0.08), transparent 38%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.8;
+    unicode-bidi: plaintext;
+  }
+
+  .case-converter__note {
+    margin-top: calc(var(--space-1) * -1);
+  }
+
+  @media (max-width: 900px) {
+    .case-converter__controls {
+      grid-template-columns: 1fr;
+      align-items: stretch;
+    }
+
+    .case-converter__switch {
+      width: 100%;
+    }
+
+    .case-converter__actions {
+      justify-content: flex-start;
+    }
+
+    .case-converter__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .case-converter__controls {
+      padding: var(--space-4);
+      gap: var(--space-4);
+    }
+
+    .case-converter__actions {
+      justify-content: stretch;
+    }
+
+    .case-converter__actions :global(.ui-button) {
+      flex: 1 1 0;
+    }
+
+    .case-converter__output {
+      min-height: 220px;
+      padding: var(--space-4);
+    }
+
+    .case-converter__textarea {
+      min-height: 220px;
+    }
+  }
+</style>

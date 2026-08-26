@@ -1,0 +1,395 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import Checkbox from '../ui/Checkbox.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+---
+
+<ToolWorkspace title={t['tools.regexTester.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="regex-tester" dir={dir}
+    data-enter-pattern={t['tools.regexTester.enterPattern']}
+    data-no-match={t['tools.regexTester.noMatch']}
+    data-match-count={t['tools.regexTester.matchCount']}
+    data-invalid-regex={t['tools.regexTester.invalidRegex']}
+  >
+    <div class="regex-tester__top-grid">
+      <div class="regex-tester__top-field regex-tester__pattern-field">
+        <div class="tool-field">
+          <label class="tool-field__label" for="rt-pattern">{t['tools.regexTester.pattern']}</label>
+          <TextArea
+            id="rt-pattern"
+            className="tool-textarea--mono regex-tester__pattern-textarea"
+            placeholder={t['tools.regexTester.patternPlaceholder']}
+            rows={3}
+            spellcheck={false}
+          />
+        </div>
+      </div>
+
+      <div class="regex-tester__top-field regex-tester__flags-field">
+        <span class="tool-field__label regex-tester__field-label">{t['tools.regexTester.flags']}</span>
+        <fieldset class="regex-tester__section regex-tester__section--flags">
+        <div class="regex-tester__flags" role="group" aria-label={t['tools.regexTester.flags']}>
+          <Checkbox id="rt-flag-g" className="regex-tester__flag">{t['tools.regexTester.global']}</Checkbox>
+          <Checkbox id="rt-flag-i" className="regex-tester__flag">{t['tools.regexTester.caseInsensitive']}</Checkbox>
+          <Checkbox id="rt-flag-m" className="regex-tester__flag">{t['tools.regexTester.multiline']}</Checkbox>
+          <Checkbox id="rt-flag-s" className="regex-tester__flag">{t['tools.regexTester.dotAll']}</Checkbox>
+          <Checkbox id="rt-flag-u" className="regex-tester__flag">{t['tools.regexTester.unicode']}</Checkbox>
+          <Checkbox id="rt-flag-y" className="regex-tester__flag">{t['tools.regexTester.sticky']}</Checkbox>
+        </div>
+        </fieldset>
+      </div>
+    </div>
+
+    <div class="regex-tester__section regex-tester__section--textarea">
+      <div class="tool-field">
+        <label class="tool-field__label" for="rt-text">{t['tools.regexTester.testText']}</label>
+        <TextArea id="rt-text" className="tool-textarea--mono regex-tester__textarea" placeholder={t['tools.regexTester.testPlaceholder']} />
+      </div>
+    </div>
+
+    <div class="tool-toolbar regex-tester__toolbar">
+      <Button id="rt-sample" variant="secondary">{t['tools.regexTester.sample']}</Button>
+      <Button id="rt-copy" variant="primary">{t['tools.regexTester.copyMatches']}</Button>
+    </div>
+
+    <div id="rt-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="regex-tester__output-shell">
+      <div class="regex-tester__output-head">
+        <span class="tool-field__label">{t['tools.regexTester.result']}</span>
+        <span id="rt-summary" class="regex-tester__summary"></span>
+      </div>
+      <div id="rt-output" class="tool-output tool-output--empty regex-tester__output" role="status" aria-live="polite">
+        {t['tools.regexTester.enterPattern']}
+      </div>
+    </div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.regexTester.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.regex-tester');
+  var patternInput = document.getElementById('rt-pattern');
+  var textArea = document.getElementById('rt-text');
+  var output = document.getElementById('rt-output');
+  var errorDiv = document.getElementById('rt-error');
+  var summary = document.getElementById('rt-summary');
+  var copyBtn = document.getElementById('rt-copy');
+  var sampleBtn = document.getElementById('rt-sample');
+
+  var flagIds = ['g','i','m','s','u','y'];
+
+  function getFlags(){return flagIds.filter(function(f){var cb=document.getElementById('rt-flag-'+f);return cb&&cb.checked;}).join('');}
+  function setError(msg){
+    if(patternInput) patternInput.setAttribute('aria-invalid','true');
+    if(!errorDiv)return;
+    window.__belbooreTools.setErrorBox(errorDiv,msg);
+  }
+  function clearError(){
+    if(patternInput) patternInput.removeAttribute('aria-invalid');
+    if(!errorDiv)return;
+    window.__belbooreTools.clearErrorBox(errorDiv);
+  }
+
+  function escapeHtml(str){var d=document.createElement('div');d.textContent=str;return d.innerHTML;}
+
+  function runTest(){
+    if(!patternInput||!textArea||!output||!summary||!root) return;
+    var pattern=patternInput.value;
+    var text=textArea.value;
+
+    if(!pattern&&!text){
+      clearError();
+      output.textContent=root.getAttribute('data-enter-pattern')||'Enter a pattern and test text to see matches';
+      output.classList.add('tool-output--empty');
+      summary.textContent='';
+      return;
+    }
+    if(!pattern){
+      clearError();
+      output.textContent=root.getAttribute('data-enter-pattern')||'Enter a pattern and test text to see matches';
+      output.classList.add('tool-output--empty');
+      summary.textContent='';
+      return;
+    }
+
+    var regex;
+    try{regex=new RegExp(pattern,getFlags());}catch(e){
+      setError(e.message||(root.getAttribute('data-invalid-regex')||'Invalid regex pattern'));
+      output.textContent='';
+      output.classList.add('tool-output--empty');
+      summary.textContent='';
+      return;
+    }
+
+    clearError();
+    var matches=[];
+    var m;
+    regex.lastIndex=0;
+
+    if(regex.flags.includes('g')){
+      while((m=regex.exec(text))!==null){matches.push(m);if(m.index===regex.lastIndex)regex.lastIndex++;}
+    }else{m=regex.exec(text);if(m)matches.push(m);}
+
+    if(matches.length===0){
+      summary.textContent=root.getAttribute('data-no-match')||'No matches found';
+      output.textContent=root.getAttribute('data-no-match')||'No matches found';
+      output.classList.add('tool-output--empty');
+      return;
+    }
+
+    var modeLabel = root.getAttribute('data-match-count')||'{count} match(es) found';
+    summary.textContent=modeLabel.replace('{count}',String(matches.length));
+
+    var lines=[];
+    matches.forEach(function(match,idx){
+      var escaped=escapeHtml(match[0]);
+      lines.push('['+idx+'] "'+escaped+'" — index '+match.index);
+      if(match.length>1){
+        for(var g=1;g<match.length;g++){
+          if(match[g]!==undefined) lines.push('  Group '+g+': "'+escapeHtml(match[g])+'"');
+        }
+      }
+    });
+
+    output.textContent=lines.join('\n');
+    output.classList.remove('tool-output--empty');
+  }
+
+  var debouncedTest=window.__belbooreTools.debounce(runTest,200);
+  patternInput.addEventListener('input',debouncedTest);
+  textArea.addEventListener('input',debouncedTest);
+
+  flagIds.forEach(function(f){
+    var cb=document.getElementById('rt-flag-'+f);
+    if(cb) cb.addEventListener('change',debouncedTest);
+  });
+
+  sampleBtn.addEventListener('click',function(){
+    if(!patternInput||!textArea) return;
+    patternInput.value='(\\w+)@(\\w+\\.\\w+)';
+    textArea.value='user@example.com\nadmin@test.org\nsupport@belboore.ir';
+    var gcb=document.getElementById('rt-flag-g');
+    if(gcb&&!gcb.checked) gcb.click();
+    runTest();
+  });
+
+  copyBtn.addEventListener('click',function(){
+    if(!output) return;
+    var text=output.textContent||'';
+    if(!text||output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text,copyBtn,1500);
+  });
+</script>
+
+<style>
+  .regex-tester {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .regex-tester__top-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 1fr);
+    gap: var(--space-4);
+    align-items: stretch;
+  }
+
+  .regex-tester__top-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    min-height: 0;
+  }
+
+  .regex-tester__section {
+    padding: var(--space-5);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 92%, transparent), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .regex-tester__pattern-field :global(.tool-field) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    gap: var(--space-3);
+    min-height: 0;
+  }
+
+  .regex-tester__pattern-field :global(.tool-field__label) {
+    color: var(--text-secondary);
+  }
+
+  .regex-tester__field-label {
+    color: var(--text-secondary);
+  }
+
+  .regex-tester__section--flags {
+    margin: 0;
+    min-inline-size: 0;
+  }
+
+  .regex-tester__flags-field {
+    min-width: 0;
+  }
+
+  .regex-tester__section :global(.tool-field) {
+    gap: var(--space-3);
+  }
+
+  .regex-tester__section :global(.tool-field__label) {
+    color: var(--text-secondary);
+  }
+
+  .regex-tester__section :global(.ui-textarea:focus) {
+    box-shadow: 0 0 0 4px var(--color-tech-blue-subtle);
+  }
+
+  .regex-tester__pattern-textarea {
+    min-height: 156px;
+    flex: 1 1 auto;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-primary) 84%, var(--surface-secondary));
+    font-size: var(--text-base);
+    line-height: 1.55;
+  }
+
+  .regex-tester__flags {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-3);
+    align-content: start;
+  }
+
+  .regex-tester__flag {
+    justify-content: flex-start;
+    border-color: var(--border-subtle);
+    background: color-mix(in srgb, var(--surface-primary) 76%, var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .regex-tester__textarea {
+    min-height: 220px;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-primary) 84%, var(--surface-secondary));
+  }
+
+  .regex-tester__toolbar {
+    justify-content: flex-end;
+    padding: 0;
+  }
+
+  .regex-tester__toolbar :global(.ui-button) {
+    min-width: 140px;
+  }
+
+  .regex-tester__output-shell {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at top right, rgba(0, 82, 255, 0.1), transparent 35%),
+      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
+    box-shadow: var(--shadow-sm);
+  }
+
+  .regex-tester__output-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .regex-tester__summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-full);
+    background: var(--color-tech-blue-subtle);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--color-tech-blue);
+  }
+
+  .regex-tester__summary:empty {
+    display: none;
+  }
+
+  .regex-tester__output {
+    min-height: 180px;
+    padding: var(--space-5);
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: var(--font-mono);
+    direction: inherit;
+    text-align: start;
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--surface-primary) 60%, var(--surface-secondary));
+  }
+
+  .regex-tester[dir='rtl'] .regex-tester__output-head {
+    flex-direction: row-reverse;
+  }
+
+  .regex-tester[dir='rtl'] .regex-tester__output {
+    direction: rtl;
+    text-align: right;
+  }
+
+  @media (max-width: 900px) {
+    .regex-tester__top-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .regex-tester__section,
+    .regex-tester__output-shell {
+      padding: var(--space-4);
+    }
+
+    .regex-tester__flags {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2);
+    }
+
+    .regex-tester__toolbar {
+      justify-content: stretch;
+    }
+
+    .regex-tester__toolbar :global(.ui-button) {
+      flex: 1 1 100%;
+      min-width: 0;
+    }
+  }
+</style>

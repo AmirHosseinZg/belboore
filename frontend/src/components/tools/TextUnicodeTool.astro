@@ -1,0 +1,221 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Text ↔ Unicode Converter',
+    inputLabel: 'Input',
+    outputLabel: 'Output',
+    inputHint: 'Paste text or Unicode code points depending on selected direction.',
+    outputHint: 'Converted output appears here.',
+    convert: 'Convert',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Converted output will appear here',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    copied: 'Copied!',
+    textToUnicode: 'Text → Unicode',
+    unicodeToText: 'Unicode → Text',
+  },
+  fa: {
+    title: 'مبدل متن ↔ یونیکد',
+    inputLabel: 'ورودی',
+    outputLabel: 'خروجی',
+    inputHint: 'بسته به جهت انتخاب شده، متن یا کدهای یونیکد را وارد کنید.',
+    outputHint: 'خروجی تبدیل شده اینجا نمایش داده می‌شود.',
+    convert: 'تبدیل',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'خروجی تبدیل شده اینجا نمایش داده می‌شود',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    copied: 'کپی شد!',
+    textToUnicode: 'متن ← یونیکد',
+    unicodeToText: 'یونیکد ← متن',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="ut-tool" dir={dir} data-empty={copy.empty} data-copied={copy.copied}>
+    <div class="ut-tool__controls">
+      <div class="ut-tool__toggle-row">
+        <button id="ut-mode-tu" class="ut-tool__mode-btn is-active" type="button" data-mode="tu">{copy.textToUnicode}</button>
+        <button id="ut-mode-ut" class="ut-tool__mode-btn" type="button" data-mode="ut">{copy.unicodeToText}</button>
+      </div>
+      <div class="ut-tool__actions">
+        <Button id="ut-copy" variant="outline" className="ut-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="ut-clear" variant="danger" className="ut-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="ut-example" variant="secondary" className="ut-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="ut-tool__grid">
+      <div class="ut-tool__panel">
+        <div class="ut-tool__panel-head">
+          <label class="ut-tool__label" for="ut-input">{copy.inputLabel}</label>
+          <p class="ut-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea id="ut-input" className="ut-tool__textarea" placeholder="Enter text or Unicode code points..." rows={12} spellcheck="false" />
+      </div>
+      <div class="ut-tool__panel">
+        <div class="ut-tool__panel-head">
+          <label class="ut-tool__label" for="ut-output">{copy.outputLabel}</label>
+          <p class="ut-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea id="ut-output" class="ut-tool__textarea ut-tool__textarea--output ut-tool__output-block" rows={12} readonly spellcheck="false" placeholder={copy.empty}></textarea>
+      </div>
+    </div>
+
+    <div class="ut-tool__toolbar">
+      <ToolActionButton id="ut-run">{copy.convert}</ToolActionButton>
+    </div>
+
+    <div id="ut-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note ut-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  let activeMode = 'tu';
+
+  const input = document.getElementById('ut-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('ut-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('ut-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('ut-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('ut-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('ut-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('ut-example') as HTMLButtonElement | null;
+  const modeBtns = document.querySelectorAll('.ut-tool__mode-btn');
+
+  const EXAMPLES = { tu: 'A سلام 😀', ut: 'U+0041 U+0633 U+1F600' };
+
+  function setMode(mode: string) {
+    activeMode = mode;
+    modeBtns.forEach(btn => btn.classList.toggle('is-active', btn.dataset.mode === mode));
+    if (input) input.placeholder = mode === 'tu' ? 'Enter text...' : 'Enter Unicode code points (e.g. U+0041 U+0633)...';
+    if (output) { output.value = ''; output.placeholder = ''; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+  }
+
+  function runConvert() {
+    if (!input || !output) return;
+    const val = input.value;
+    if (!val) { output.value = ''; if (errorDiv) errorDiv.style.display = 'none'; return; }
+    try {
+      let result: string;
+      if (activeMode === 'tu') {
+        const rows: { char: string; codePoint: string; unicodeEscape: string; decimal: number }[] = [];
+        const chars = [...val];
+        for (const ch of chars) {
+          const code = ch.codePointAt(0)!;
+          const hex = code.toString(16).toUpperCase().padStart(4, '0');
+          rows.push({
+            char: ch,
+            codePoint: `U+${hex}`,
+            unicodeEscape: code > 0xFFFF ? `\\u{${hex}}` : `\\u${hex}`,
+            decimal: code,
+          });
+        }
+        const header = 'Char │ Code Point │ Unicode Escape │ Decimal';
+        const sep = '─────┼────────────┼────────────────┼─────────';
+        const body = rows.map(r =>
+          `${r.char.padEnd(4)} │ ${r.codePoint.padEnd(10)} │ ${r.unicodeEscape.padEnd(14)} │ ${r.decimal}`
+        ).join('\n');
+        result = header + '\n' + sep + '\n' + body;
+      } else {
+        const cleaned = val.trim();
+        if (!cleaned) { output.value = ''; return; }
+        const tokens = cleaned.split(/\s+/);
+        let text = '';
+        for (const token of tokens) {
+          let code: number | undefined;
+          if (/^U\+/i.test(token)) code = parseInt(token.slice(2), 16);
+          else if (/^\\u\{/.test(token) && token.endsWith('}')) code = parseInt(token.slice(3, -1), 16);
+          else if (/^\\u/i.test(token)) code = parseInt(token.slice(2), 16);
+          else if (/^[0-9a-fA-F]+$/.test(token)) code = parseInt(token, 16);
+          if (code === undefined || isNaN(code)) throw new Error(`Invalid Unicode value: "${token}". Use formats like U+0041, \\u0041, \\u{1F600}, or 0041.`);
+          if (code < 0 || code > 0x10FFFF) throw new Error(`Invalid code point: U+${code.toString(16).toUpperCase()}. Must be between U+0000 and U+10FFFF.`);
+          text += String.fromCodePoint(code);
+        }
+        result = text;
+      }
+      output.value = result;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Conversion error'; errorDiv.style.display = ''; }
+    }
+  }
+
+  modeBtns.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode || 'tu')));
+  runBtn?.addEventListener('click', runConvert);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = 'Copied!';
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.value = '';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    input?.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) input.value = EXAMPLES[activeMode as 'tu' | 'ut'];
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runConvert();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runConvert(); }
+  });
+</script>
+
+<style>
+  .ut-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .ut-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .ut-tool__toggle-row { display: inline-flex; gap: var(--space-1); padding: var(--space-1); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); }
+  .ut-tool__mode-btn { border: 0; border-radius: var(--radius-lg); padding: var(--space-2) var(--space-4); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-tertiary); background: transparent; cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .ut-tool__mode-btn.is-active { color: var(--color-tech-blue); background: var(--surface-primary); box-shadow: var(--shadow-sm); }
+  .ut-tool__mode-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .ut-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .ut-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .ut-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ut-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .ut-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .ut-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .ut-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .ut-tool__textarea { width: 100%; min-height: 240px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .ut-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .ut-tool__textarea::placeholder { color: var(--text-muted); }
+  .ut-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .ut-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .ut-tool__output-block { white-space: pre; font-family: var(--font-mono); }
+  .ut-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .ut-tool .tool-action-button { min-width: 148px; }
+  .ut-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .ut-tool__grid { grid-template-columns: 1fr; } .ut-tool .tool-action-button { width: 100%; min-width: 0; } .ut-tool__controls { flex-direction: column; align-items: stretch; } .ut-tool__actions { justify-content: center; } }
+</style>

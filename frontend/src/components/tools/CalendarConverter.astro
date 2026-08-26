@@ -1,0 +1,260 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Calendar Converter',
+    sourceLabel: 'Source Calendar',
+    targetLabel: 'Target Calendar',
+    year: 'Year',
+    month: 'Month',
+    day: 'Day',
+    convert: 'Convert',
+    today: 'Today',
+    clear: 'Clear',
+    copy: 'Copy',
+    emptyState: 'Enter a date and click Convert',
+    note: 'Supports Gregorian and Jalali (Persian) calendar systems. All conversion is client-side.',
+    gregorian: 'Gregorian',
+    jalali: 'Jalali (Persian)',
+    sourceDate: 'Source Date',
+    targetDate: 'Converted Date',
+    dayOfWeek: 'Day of Week',
+    invalidDate: 'Invalid date. Please check the values.',
+  },
+  fa: {
+    title: 'مبدل تقویم',
+    sourceLabel: 'تقویم مبدأ',
+    targetLabel: 'تقویم مقصد',
+    year: 'سال',
+    month: 'ماه',
+    day: 'روز',
+    convert: 'تبدیل',
+    today: 'امروز',
+    clear: 'پاک کردن',
+    copy: 'کپی',
+    emptyState: 'یک تاریخ وارد کنید و روی Convert کلیک کنید',
+    note: 'پشتیبانی از تقویم میلادی و جلالی (شمسی). تمام تبدیل در سمت کاربر انجام می‌شود.',
+    gregorian: 'میلادی',
+    jalali: 'جلالی (شمسی)',
+    sourceDate: 'تاریخ مبدأ',
+    targetDate: 'تاریخ تبدیل شده',
+    dayOfWeek: 'روز هفته',
+    invalidDate: 'تاریخ نامعتبر. لطفاً مقادیر را بررسی کنید.',
+  },
+};
+
+const MONTHS_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTHS_FA = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAYS_FA = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
+const JALALI_MONTHS_EN = ['Farvardin','Ordibehesht','Khordad','Tir','Mordad','Shahrivar','Mehr','Aban','Azar','Dey','Bahman','Esfand'];
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="cc-tool">
+    <div class="cc-cal-row">
+      <Select id="cc-source" label={copy[lang].sourceLabel} options={[
+        { value: 'gregorian', label: copy[lang].gregorian },
+        { value: 'jalali', label: copy[lang].jalali },
+      ]} />
+      <span class="cc-arrow">&rarr;</span>
+      <Select id="cc-target" label={copy[lang].targetLabel} options={[
+        { value: 'jalali', label: copy[lang].jalali },
+        { value: 'gregorian', label: copy[lang].gregorian },
+      ]} />
+    </div>
+    <div class="cc-date-row">
+      <Input id="cc-year" label={copy[lang].year} type="number" placeholder="2026" inputClassName="cc-date-input" />
+      <Input id="cc-month" label={copy[lang].month} type="number" placeholder="3" inputClassName="cc-date-input" />
+      <Input id="cc-day" label={copy[lang].day} type="number" placeholder="21" inputClassName="cc-date-input" />
+    </div>
+    <div class="tool-toolbar">
+      <ToolActionButton id="cc-convert">{copy[lang].convert}</ToolActionButton>
+      <Button id="cc-today" variant="secondary">{copy[lang].today}</Button>
+      <Button id="cc-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+    <div id="cc-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="cc-result-card" class="cc-result-card" style="display:none">
+      <div class="cc-result-panels">
+        <div class="cc-result-panel">
+          <div class="cc-result-header">
+            <span class="cc-result-label">{copy[lang].sourceDate}</span>
+            <span id="cc-source-badge" class="cc-result-badge"></span>
+          </div>
+          <div id="cc-source-display" class="cc-result-value"></div>
+        </div>
+        <div class="cc-result-panel-divider"></div>
+        <div class="cc-result-panel">
+          <div class="cc-result-header">
+            <span class="cc-result-label">{copy[lang].targetDate}</span>
+            <span id="cc-target-badge" class="cc-result-badge"></span>
+          </div>
+          <div id="cc-target-display" class="cc-result-value"></div>
+        </div>
+      </div>
+      <div id="cc-dayofweek" class="cc-dow"></div>
+      <div class="tool-toolbar cc-copy-row">
+        <Button id="cc-copy" variant="outline">{copy[lang].copy}</Button>
+      </div>
+    </div>
+    <div id="cc-error" class="tool-error" style="display:none"></div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { toJalali, toGregorian } from './Phase10Utils.ts';
+
+  const srcSelect = document.getElementById('cc-source') as HTMLSelectElement;
+  const tgtSelect = document.getElementById('cc-target') as HTMLSelectElement;
+  const yearInput = document.getElementById('cc-year') as HTMLInputElement;
+  const monthInput = document.getElementById('cc-month') as HTMLInputElement;
+  const dayInput = document.getElementById('cc-day') as HTMLInputElement;
+  const convertBtn = document.getElementById('cc-convert') as HTMLButtonElement;
+  const todayBtn = document.getElementById('cc-today') as HTMLButtonElement;
+  const clearBtn = document.getElementById('cc-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('cc-empty')!;
+  const resultCard = document.getElementById('cc-result-card')!;
+  const srcDisplay = document.getElementById('cc-source-display')!;
+  const tgtDisplay = document.getElementById('cc-target-display')!;
+  const dowEl = document.getElementById('cc-dayofweek')!;
+  const copyBtn = document.getElementById('cc-copy') as HTMLButtonElement;
+  const errorEl = document.getElementById('cc-error')!;
+
+  const G_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const J_MONTHS = ['Farvardin','Ordibehesht','Khordad','Tir','Mordad','Shahrivar','Mehr','Aban','Azar','Dey','Bahman','Esfand'];
+  const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const DAYS_FA = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنجشنبه','جمعه','شنبه'];
+
+  const ccLang = document.documentElement.lang || 'en';
+  const isFa = ccLang === 'fa';
+  const DAYS = isFa ? DAYS_FA : DAYS_EN;
+
+  function doConvert() {
+    const y = parseInt(yearInput.value, 10);
+    const m = parseInt(monthInput.value, 10);
+    const d = parseInt(dayInput.value, 10);
+    const src = srcSelect.value;
+    const tgt = tgtSelect.value;
+
+    if (isNaN(y) || isNaN(m) || isNaN(d)) {
+      errorEl.textContent = isFa ? 'لطفاً سال، ماه و روز معتبر وارد کنید' : 'Please enter valid year, month, and day';
+      errorEl.style.display = '';
+      resultCard.style.display = 'none';
+      return;
+    }
+    errorEl.style.display = 'none';
+    try {
+      let gy: number, gm: number, gd: number;
+      let srcDesc: string, tgtDesc: string;
+      if (src === 'gregorian') {
+        gy = y; gm = m; gd = d;
+        const dObj = new Date(gy, gm - 1, gd);
+        if (isNaN(dObj.getTime()) || dObj.getDate() !== gd) throw new Error(isFa ? 'تاریخ میلادی نامعتبر' : 'Invalid Gregorian date');
+        const jalali = toJalali(gy, gm, gd);
+        srcDesc = `${G_MONTHS[gm-1]} ${gd}, ${gy}`;
+        tgtDesc = `${J_MONTHS[jalali.jm-1]} ${jalali.jd}, ${jalali.jy}`;
+      } else {
+        const greg = toGregorian(y, m, d);
+        gy = greg.gy; gm = greg.gm; gd = greg.gd;
+        const dObj = new Date(gy, gm - 1, gd);
+        if (isNaN(dObj.getTime())) throw new Error(isFa ? 'تاریخ شمسی نامعتبر' : 'Invalid Jalali date');
+        srcDesc = `${J_MONTHS[m-1]} ${d}, ${y}`;
+        tgtDesc = `${G_MONTHS[gm-1]} ${gd}, ${gy}`;
+      }
+
+      const dObj = new Date(gy, gm - 1, gd);
+      const dayName = DAYS[dObj.getDay()];
+      emptyEl.style.display = 'none';
+      resultCard.style.display = '';
+      srcDisplay.textContent = srcDesc;
+      tgtDisplay.textContent = tgtDesc;
+      document.getElementById('cc-source-badge')!.textContent = src === 'gregorian' ? 'Gregorian' : 'Jalali';
+      document.getElementById('cc-target-badge')!.textContent = tgt === 'gregorian' ? 'Gregorian' : 'Jalali';
+      dowEl.textContent = `\u{1F4C5} ${dayName}`;
+    } catch (e: any) {
+      errorEl.textContent = e.message || (isFa ? 'تاریخ نامعتبر' : 'Invalid date');
+      errorEl.style.display = '';
+      resultCard.style.display = 'none';
+    }
+  }
+
+  function setToday() {
+    const now = new Date();
+    yearInput.value = String(now.getFullYear());
+    monthInput.value = String(now.getMonth() + 1);
+    dayInput.value = String(now.getDate());
+    doConvert();
+  }
+
+  convertBtn.addEventListener('click', doConvert);
+  todayBtn.addEventListener('click', setToday);
+
+  clearBtn.addEventListener('click', () => {
+    yearInput.value = ''; monthInput.value = ''; dayInput.value = '';
+    emptyEl.style.display = '';
+    resultCard.style.display = 'none';
+    errorEl.style.display = 'none';
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = `Source: ${srcDisplay.textContent}\nConverted: ${tgtDisplay.textContent}\n${dowEl.textContent || ''}`;
+    if (!text) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+</script>
+
+<style>
+  .cc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .cc-tool .tool-note { margin-top: 0; }
+  .cc-cal-row { display: flex; align-items: flex-end; gap: var(--space-3); }
+  .cc-arrow { margin: 0 var(--space-2); color: var(--text-muted); font-size: var(--text-lg); margin-bottom: var(--space-2); }
+  .cc-date-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  .cc-date-row .cc-date-input { min-width: 100px; }
+  .cc-copy-row { justify-content: center; }
+
+  .cc-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-4);
+  }
+  .cc-result-panels { display: grid; grid-template-columns: 1fr auto 1fr; }
+  .cc-result-panel { padding: var(--space-5); }
+  .cc-result-panel-divider { width: 1px; background: var(--border-subtle); align-self: stretch; }
+  .cc-result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-3); }
+  .cc-result-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .cc-result-badge { font-size: var(--text-xs); font-weight: var(--weight-medium); color: var(--color-tech-blue); }
+  .cc-result-value { font-family: var(--font-mono); font-size: var(--text-lg); word-break: break-all; line-height: 1.5; }
+  .cc-dow { text-align: center; padding: var(--space-2) var(--space-4); border-top: 1px solid var(--border-subtle); background: var(--surface-primary); font-size: var(--text-sm); color: var(--text-secondary); }
+
+  @media (max-width: 640px) {
+    .cc-cal-row { flex-direction: column; align-items: stretch; }
+    .cc-arrow { display: none; }
+    .cc-date-row { flex-direction: column; }
+    .cc-date-row .cc-date-input { min-width: 100%; }
+    .cc-result-panels { grid-template-columns: 1fr; }
+    .cc-result-panel-divider { display: none; }
+    .cc-result-panel:first-child { border-bottom: 1px solid var(--border-subtle); }
+  }
+</style>

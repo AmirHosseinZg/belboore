@@ -1,0 +1,199 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Slugify String',
+    inputLabel: 'Input Text',
+    outputLabel: 'Slug Result',
+    inputHint: 'Enter any text to convert into a URL-friendly slug.',
+    outputHint: 'The slugified result appears here in real time.',
+    slugify: 'Slugify',
+    copy: 'Copy slug',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Slugified text will appear here',
+    note: 'Slug generation happens entirely in your browser. Your data never leaves your device.',
+    copied: 'Copied!',
+    lowercase: 'Lowercase',
+    trim: 'Trim whitespace',
+    replaceSpaces: 'Replace spaces with hyphens',
+    removeSpecial: 'Remove special characters',
+  },
+  fa: {
+    title: 'Slugify رشته',
+    inputLabel: 'متن ورودی',
+    outputLabel: 'نتیجه Slug',
+    inputHint: 'هر متنی را برای تبدیل به slug مناسب URL وارد کنید.',
+    outputHint: 'نتیجه slug شده به صورت زنده اینجا نمایش داده می‌شود.',
+    slugify: 'Slugify',
+    copy: 'کپی slug',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'متن slug شده اینجا نمایش داده می‌شود',
+    note: 'تولید slug کاملاً در مرورگر شما انجام می‌شود. داده‌های شما هرگز از دستگاه شما خارج نمی‌شود.',
+    copied: 'کپی شد!',
+    lowercase: 'حروف کوچک',
+    trim: 'حذف فاصله‌ها',
+    replaceSpaces: 'جایگزینی فاصله با خط تیره',
+    removeSpecial: 'حذف کاراکترهای خاص',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="sg-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-placeholder="Hello World! This is a Test String with 123 numbers & special chars!"
+  >
+    <div class="sg-tool__controls">
+      <div class="sg-tool__actions">
+        <Button id="sg-copy" variant="outline" className="sg-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="sg-clear" variant="danger" className="sg-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="sg-example" variant="secondary" className="sg-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="sg-tool__grid">
+      <div class="sg-tool__panel">
+        <div class="sg-tool__panel-head">
+          <label class="sg-tool__label" for="sg-input">{copy.inputLabel}</label>
+          <p class="sg-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea
+          id="sg-input"
+          className="sg-tool__textarea"
+          placeholder="Hello World! This is a Test..."
+          rows={8}
+          spellcheck="false"
+        />
+      </div>
+      <div class="sg-tool__panel">
+        <div class="sg-tool__panel-head">
+          <label class="sg-tool__label" for="sg-output">{copy.outputLabel}</label>
+          <p class="sg-tool__hint">{copy.outputHint}</p>
+        </div>
+        <textarea
+          id="sg-output"
+          class="sg-tool__textarea sg-tool__textarea--output"
+          rows={8}
+          readonly
+          spellcheck="false"
+          placeholder={copy.empty}
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="sg-tool__toolbar">
+      <ToolActionButton id="sg-run">{copy.slugify}</ToolActionButton>
+    </div>
+
+    <div id="sg-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note sg-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('sg-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('sg-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('sg-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('sg-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('sg-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('sg-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('sg-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.sg-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+  const PLACEHOLDER = section?.dataset.placeholder || '';
+
+  const slugify = (str: string): string => {
+    return str
+      .trim()
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
+  const runSlugify = () => {
+    if (!input || !output) return;
+    const val = input.value;
+    if (!val) { output.value = ''; output.placeholder = EMPTY; if (errorDiv) errorDiv.style.display = 'none'; return; }
+    try {
+      const result = slugify(val);
+      output.value = result;
+      output.placeholder = '';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = ''; output.placeholder = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Error'; errorDiv.style.display = ''; }
+    }
+  };
+
+  runBtn?.addEventListener('click', runSlugify);
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    navigator.clipboard.writeText(output.value).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) { output.value = ''; output.placeholder = EMPTY; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = PLACEHOLDER; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runSlugify();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runSlugify(); }
+  });
+</script>
+
+<style>
+  .sg-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .sg-tool__controls { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+  .sg-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .sg-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .sg-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .sg-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .sg-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .sg-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .sg-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .sg-tool__textarea { width: 100%; min-height: 200px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .sg-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .sg-tool__textarea::placeholder { color: var(--text-muted); }
+  .sg-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .sg-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .sg-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .sg-tool .tool-action-button { min-width: 148px; }
+  .sg-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .sg-tool__grid { grid-template-columns: 1fr; } .sg-tool .tool-action-button { width: 100%; min-width: 0; } .sg-tool__controls { flex-direction: column; align-items: stretch; } .sg-tool__actions { justify-content: center; } }
+</style>

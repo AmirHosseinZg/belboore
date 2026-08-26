@@ -1,0 +1,266 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Email Normalizer',
+    inputLabel: 'Input emails',
+    outputLabel: 'Normalized emails',
+    inputPlaceholder: 'Paste email addresses, one per line or comma-separated...',
+    outputEmpty: 'Normalized emails will appear here',
+    normalize: 'Normalize',
+    copy: 'Copy',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    copied: 'Copied!',
+    lowercase: 'Lowercase',
+    trim: 'Trim whitespace',
+    removeDuplicates: 'Remove duplicates',
+    sort: 'Sort alphabetically',
+    removeInvalid: 'Remove invalid emails',
+    statsTotal: 'Total detected',
+    statsValid: 'Valid',
+    statsInvalid: 'Invalid',
+    statsDuplicates: 'Duplicates removed',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    error: 'No valid emails found',
+  },
+  fa: {
+    title: 'نرمال‌سازی ایمیل',
+    inputLabel: 'ایمیل‌های ورودی',
+    outputLabel: 'ایمیل‌های نرمال‌شده',
+    inputPlaceholder: 'آدرس‌های ایمیل را هر یک در یک خط یا با کاما جدا کنید...',
+    outputEmpty: 'ایمیل‌های نرمال‌شده اینجا نمایش داده می‌شوند',
+    normalize: 'نرمال‌سازی',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    copied: 'کپی شد!',
+    lowercase: 'حروف کوچک',
+    trim: 'حذف فاصله‌ها',
+    removeDuplicates: 'حذف موارد تکراری',
+    sort: 'مرتب‌سازی الفبایی',
+    removeInvalid: 'حذف ایمیل‌های نامعتبر',
+    statsTotal: 'کل شناسایی‌شده',
+    statsValid: 'معتبر',
+    statsInvalid: 'نامعتبر',
+    statsDuplicates: 'مکرر حذف‌شده',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    error: 'ایمیل معتبری یافت نشد',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="en-tool" dir={dir} data-empty={copy.outputEmpty} data-copied={copy.copied} data-error={copy.error}>
+    <div class="en-tool__controls">
+      <div class="en-tool__actions">
+        <Button id="en-copy" variant="outline">{copy.copy}</Button>
+        <Button id="en-clear" variant="danger">{copy.clear}</Button>
+        <Button id="en-example" variant="secondary">{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="en-tool__grid">
+      <div class="en-tool__panel">
+        <div class="en-tool__panel-head">
+          <label class="en-tool__label" for="en-input">{copy.inputLabel}</label>
+        </div>
+        <TextArea id="en-input" className="en-tool__textarea" placeholder={copy.inputPlaceholder} rows={10} spellcheck="false" />
+      </div>
+      <div class="en-tool__panel">
+        <div class="en-tool__panel-head">
+          <label class="en-tool__label" for="en-output">{copy.outputLabel}</label>
+        </div>
+        <textarea id="en-output" class="en-tool__textarea en-tool__textarea--output" rows={10} readonly spellcheck="false" placeholder={copy.outputEmpty}></textarea>
+      </div>
+    </div>
+
+    <div class="en-tool__options">
+      <label class="en-tool__checkbox"><input type="checkbox" id="en-lowercase" checked /> {copy.lowercase}</label>
+      <label class="en-tool__checkbox"><input type="checkbox" id="en-trim" checked /> {copy.trim}</label>
+      <label class="en-tool__checkbox"><input type="checkbox" id="en-dedup" checked /> {copy.removeDuplicates}</label>
+      <label class="en-tool__checkbox"><input type="checkbox" id="en-sort" /> {copy.sort}</label>
+      <label class="en-tool__checkbox"><input type="checkbox" id="en-remove-invalid" checked /> {copy.removeInvalid}</label>
+    </div>
+
+    <div id="en-stats" class="en-tool__stats" style="display: none;"></div>
+
+    <div class="en-tool__toolbar">
+      <ToolActionButton id="en-normalize">{copy.normalize}</ToolActionButton>
+    </div>
+
+    <div id="en-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note en-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('en-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('en-output') as HTMLTextAreaElement | null;
+  const statsDiv = document.getElementById('en-stats')!;
+  const errorDiv = document.getElementById('en-error') as HTMLDivElement | null;
+  const normalizeBtn = document.getElementById('en-normalize') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('en-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('en-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('en-example') as HTMLButtonElement | null;
+  const lowercaseCb = document.getElementById('en-lowercase') as HTMLInputElement | null;
+  const trimCb = document.getElementById('en-trim') as HTMLInputElement | null;
+  const dedupCb = document.getElementById('en-dedup') as HTMLInputElement | null;
+  const sortCb = document.getElementById('en-sort') as HTMLInputElement | null;
+  const removeInvalidCb = document.getElementById('en-remove-invalid') as HTMLInputElement | null;
+  const root = document.querySelector('.en-tool') as HTMLElement | null;
+  const emptyText = root?.dataset.empty || 'Normalized emails will appear here';
+  const copiedText = root?.dataset.copied || 'Copied!';
+  const errorText = root?.dataset.error || 'No valid emails found';
+
+  const EMAIL_RE = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/g;
+
+  function extractEmails(text: string): string[] {
+    const matches = text.match(EMAIL_RE);
+    return matches || [];
+  }
+
+  function isValidEmail(email: string): boolean {
+    return EMAIL_RE.test(email);
+  }
+
+  function normalize() {
+    if (!input || !output) return;
+    const val = input.value;
+    if (!val) {
+      output.value = '';
+      output.placeholder = emptyText;
+      statsDiv.style.display = 'none';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+
+    try {
+      let rawEmails = extractEmails(val);
+      const totalDetected = rawEmails.length;
+
+      if (trimCb?.checked) rawEmails = rawEmails.map(e => e.trim());
+      if (lowercaseCb?.checked) rawEmails = rawEmails.map(e => e.toLowerCase());
+
+      let valid: string[] = [];
+      let invalid: string[] = [];
+
+      if (removeInvalidCb?.checked) {
+        rawEmails.forEach(e => {
+          if (isValidEmail(e)) valid.push(e);
+          else invalid.push(e);
+        });
+      } else {
+        valid = [...rawEmails];
+      }
+
+      const beforeDedup = valid.length;
+      let duplicatesRemoved = 0;
+      if (dedupCb?.checked) {
+        const seen = new Set<string>();
+        const deduped: string[] = [];
+        valid.forEach(e => {
+          if (seen.has(e)) { duplicatesRemoved++; }
+          else { seen.add(e); deduped.push(e); }
+        });
+        valid = deduped;
+      }
+
+      if (sortCb?.checked) valid.sort((a, b) => a.localeCompare(b));
+
+      output.value = valid.join('\n');
+      output.placeholder = '';
+      output.classList.remove('tool-output--empty', 'tool-output--error');
+
+      const statsValid = valid.length;
+      const statsInvalid = removeInvalidCb?.checked ? invalid.length : 0;
+      statsDiv.style.display = '';
+      statsDiv.innerHTML = `
+        <span class="en-tool__stat"><strong>${totalDetected}</strong> ${'totalDetected' in root?.dataset ? root.dataset.totalDetected || '' : copy.statsTotal}</span>
+        <span class="en-tool__stat en-tool__stat--valid"><strong>${statsValid}</strong> ${copy.statsValid}</span>
+        <span class="en-tool__stat en-tool__stat--invalid"><strong>${statsInvalid}</strong> ${copy.statsInvalid}</span>
+        <span class="en-tool__stat en-tool__stat--dup"><strong>${duplicatesRemoved}</strong> ${copy.statsDuplicates}</span>
+      `;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.value = '';
+      output.placeholder = '';
+      statsDiv.style.display = 'none';
+      if (errorDiv) { errorDiv.textContent = e?.message || 'Normalization error'; errorDiv.style.display = ''; }
+    }
+  }
+
+  normalizeBtn?.addEventListener('click', normalize);
+
+  copyBtn?.addEventListener('click', () => {
+    if (!output || !output.value) return;
+    window.__belbooreTools.copyToClipboard(output.value, copyBtn!, 1500);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) { output.value = ''; output.placeholder = emptyText; }
+    statsDiv.style.display = 'none';
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    input?.focus();
+  });
+
+  exampleBtn?.addEventListener('click', () => {
+    if (input) {
+      input.value = 'user@example.com\nUSER@EXAMPLE.COM\n invalid-email\nuser+tag@example.com\nuser@example.com\nanother.user@domain.org\n  spaced@email.com  \nnot-an-email\nuser@example.com';
+    }
+    normalize();
+  });
+
+  input?.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); normalize(); }
+  });
+</script>
+
+<style>
+  .en-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .en-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+  .en-tool__actions { display: flex; gap: var(--space-2); align-items: center; flex-wrap: wrap; }
+  .en-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .en-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .en-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .en-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .en-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .en-tool__textarea { width: 100%; min-height: 200px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .en-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .en-tool__textarea::placeholder { color: var(--text-muted); }
+  .en-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .en-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .en-tool__options { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); padding: var(--space-3) var(--space-4); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); }
+  .en-tool__checkbox { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }
+  .en-tool__checkbox input { accent-color: var(--color-tech-blue); width: 16px; height: 16px; }
+  .en-tool__stats { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-6); padding: var(--space-3) var(--space-4); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); font-size: var(--text-sm); }
+  .en-tool__stat { color: var(--text-secondary); }
+  .en-tool__stat strong { color: var(--text-primary); font-weight: var(--weight-semibold); }
+  .en-tool__stat--valid strong { color: var(--color-success, #10b981); }
+  .en-tool__stat--invalid strong { color: var(--color-error); }
+  .en-tool__stat--dup strong { color: var(--color-warning, #f59e0b); }
+  .en-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .en-tool .tool-action-button { min-width: 148px; }
+  .en-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .en-tool__grid { grid-template-columns: 1fr; } .en-tool .tool-action-button { width: 100%; min-width: 0; } .en-tool__controls { flex-direction: column; align-items: stretch; } .en-tool__actions { justify-content: center; } }
+</style>

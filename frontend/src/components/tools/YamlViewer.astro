@@ -1,0 +1,214 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'YAML Viewer / نمایش YAML',
+    inputLabel: 'YAML Input',
+    yamlLabel: 'Formatted YAML',
+    jsonLabel: 'JSON View',
+    inputHint: 'Paste YAML content here.',
+    yamlEmpty: 'Formatted YAML will appear here',
+    jsonEmpty: 'JSON output will appear here',
+    view: 'View',
+    copyYaml: 'Copy YAML',
+    copyJson: 'Copy JSON',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    copied: 'Copied!',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    error: 'YAML parse error',
+    exampleYaml: '# Belboore config\nname: Belboore\nversion: 1.0\nfeatures:\n  - yaml\n  - json\n  - toml\nactive: true\nmetadata:\n  author: Developer\n  license: MIT\n',
+  },
+  fa: {
+    title: 'نمایش YAML',
+    inputLabel: 'ورودی YAML',
+    yamlLabel: 'YAML فرمت شده',
+    jsonLabel: 'نمایش JSON',
+    inputHint: 'محتوای YAML را اینجا وارد کنید.',
+    yamlEmpty: 'YAML فرمت شده اینجا نمایش داده می‌شود',
+    jsonEmpty: 'خروجی JSON اینجا نمایش داده می‌شود',
+    view: 'نمایش',
+    copyYaml: 'کپی YAML',
+    copyJson: 'کپی JSON',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    copied: 'کپی شد!',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    error: 'خطا در تجزیه YAML',
+    exampleYaml: '# پیکربندی Belboore\nname: Belboore\nversion: 1.0\nfeatures:\n  - yaml\n  - json\n  - toml\nactive: true\nmetadata:\n  author: Developer\n  license: MIT\n',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="yv-tool" dir={dir} data-copied={copy.copied} data-error={copy.error} data-yaml-empty={copy.yamlEmpty} data-json-empty={copy.jsonEmpty}>
+    <div class="yv-tool__input-section">
+      <div class="yv-tool__panel-head">
+        <label class="yv-tool__label" for="yv-input">{copy.inputLabel}</label>
+        <p class="yv-tool__hint">{copy.inputHint}</p>
+      </div>
+      <TextArea id="yv-input" className="yv-tool__textarea" placeholder={copy.exampleYaml} rows={10} spellcheck="false" />
+      <div class="yv-tool__input-actions">
+        <Button id="yv-example" variant="secondary">{copy.loadExample}</Button>
+        <Button id="yv-clear" variant="danger">{copy.clear}</Button>
+      </div>
+    </div>
+
+    <div class="yv-tool__grid">
+      <div class="yv-tool__panel">
+        <div class="yv-tool__panel-head">
+          <span class="yv-tool__label">{copy.yamlLabel}</span>
+          <Button id="yv-copy-yaml" variant="outline">{copy.copyYaml}</Button>
+        </div>
+        <textarea id="yv-yaml-output" class="yv-tool__textarea yv-tool__textarea--output" rows={12} readonly spellcheck="false" placeholder={copy.yamlEmpty}></textarea>
+      </div>
+
+      <div class="yv-tool__panel">
+        <div class="yv-tool__panel-head">
+          <span class="yv-tool__label">{copy.jsonLabel}</span>
+          <Button id="yv-copy-json" variant="outline">{copy.copyJson}</Button>
+        </div>
+        <textarea id="yv-json-output" class="yv-tool__textarea yv-tool__textarea--output yv-tool__textarea--json" rows={12} readonly spellcheck="false" placeholder={copy.jsonEmpty}></textarea>
+      </div>
+    </div>
+
+    <div class="yv-tool__toolbar">
+      <ToolActionButton id="yv-run">{copy.view}</ToolActionButton>
+    </div>
+
+    <div id="yv-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div class="tool-note yv-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  import * as yaml from 'js-yaml';
+
+  const input = document.getElementById('yv-input') as HTMLTextAreaElement | null;
+  const yamlOutput = document.getElementById('yv-yaml-output') as HTMLTextAreaElement | null;
+  const jsonOutput = document.getElementById('yv-json-output') as HTMLTextAreaElement | null;
+  const errorDiv = document.getElementById('yv-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('yv-run') as HTMLButtonElement | null;
+  const copyYamlBtn = document.getElementById('yv-copy-yaml') as HTMLButtonElement | null;
+  const copyJsonBtn = document.getElementById('yv-copy-json') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('yv-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('yv-example') as HTMLButtonElement | null;
+
+  const root = document.querySelector('.yv-tool') as HTMLElement | null;
+
+  function getData(key: string, fallback: string): string {
+    return root?.dataset[key] || fallback;
+  }
+
+  function runView() {
+    if (!input || !yamlOutput || !jsonOutput) return;
+    const val = input.value.trim();
+    if (!val) {
+      yamlOutput.value = '';
+      yamlOutput.placeholder = getData('yaml-empty', '');
+      jsonOutput.value = '';
+      jsonOutput.placeholder = getData('json-empty', '');
+      if (errorDiv) errorDiv.style.display = 'none';
+      return;
+    }
+    try {
+      const parsed = yaml.load(val);
+      const yamlStr = yaml.dump(parsed, { indent: 2, lineWidth: -1, noRefs: true, forceQuotes: false });
+      const jsonStr = JSON.stringify(parsed, null, 2);
+      yamlOutput.value = yamlStr;
+      yamlOutput.placeholder = '';
+      jsonOutput.value = jsonStr;
+      jsonOutput.placeholder = '';
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      yamlOutput.value = '';
+      yamlOutput.placeholder = getData('yaml-empty', '');
+      jsonOutput.value = '';
+      jsonOutput.placeholder = getData('json-empty', '');
+      if (errorDiv) { errorDiv.textContent = `${getData('error', 'YAML parse error')}: ${e?.message || 'Invalid YAML'}`; errorDiv.style.display = ''; }
+    }
+  }
+
+  runBtn?.addEventListener('click', runView);
+
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runView(); }
+  });
+
+  copyYamlBtn?.addEventListener('click', () => {
+    if (!yamlOutput || !yamlOutput.value) return;
+    navigator.clipboard.writeText(yamlOutput.value).then(() => {
+      copyYamlBtn.classList.add('is-copied');
+      const orig = copyYamlBtn.innerHTML;
+      copyYamlBtn.innerHTML = copy.copied;
+      setTimeout(() => { copyYamlBtn.innerHTML = orig; copyYamlBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+
+  copyJsonBtn?.addEventListener('click', () => {
+    if (!jsonOutput || !jsonOutput.value) return;
+    navigator.clipboard.writeText(jsonOutput.value).then(() => {
+      copyJsonBtn.classList.add('is-copied');
+      const orig = copyJsonBtn.innerHTML;
+      copyJsonBtn.innerHTML = copy.copied;
+      setTimeout(() => { copyJsonBtn.innerHTML = orig; copyJsonBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (yamlOutput) { yamlOutput.value = ''; yamlOutput.placeholder = getData('yaml-empty', ''); }
+    if (jsonOutput) { jsonOutput.value = ''; jsonOutput.placeholder = getData('json-empty', ''); }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    input?.focus();
+  });
+
+  exampleBtn?.addEventListener('click', () => {
+    if (input) input.value = copy.exampleYaml;
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runView();
+  });
+</script>
+
+<style>
+  .yv-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .yv-tool__input-section { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .yv-tool__input-section:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .yv-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .yv-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .yv-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .yv-tool__textarea { width: 100%; min-height: 200px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .yv-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .yv-tool__textarea::placeholder { color: var(--text-muted); }
+  .yv-tool__textarea--output { background: var(--surface-secondary); resize: none; }
+  .yv-tool__textarea--output:focus { border-color: var(--border-subtle); box-shadow: none; }
+  .yv-tool__input-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+  .yv-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .yv-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .yv-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .yv-tool__panel-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .yv-tool__panel .yv-tool__label { margin-bottom: 0; }
+  .yv-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .yv-tool .tool-action-button { min-width: 148px; }
+  .yv-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .yv-tool__grid { grid-template-columns: 1fr; } .yv-tool .tool-action-button { width: 100%; min-width: 0; } }
+</style>

@@ -1,0 +1,271 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Random Generator',
+    dice: 'Dice',
+    coin: 'Coin Flip',
+    number: 'Random Number',
+    listPicker: 'List Picker',
+    shuffle: 'Shuffle List',
+    flip: 'Flip Coin',
+    roll: 'Roll Dice',
+    generate: 'Generate',
+    pick: 'Pick',
+    shuffleBtn: 'Shuffle',
+    result: 'Result',
+    min: 'Min',
+    max: 'Max',
+    count: 'Count',
+    items: 'Items (one per line)',
+    itemsPlaceholder: 'Enter items, one per line\nItem A\nItem B\nItem C',
+    heads: 'Heads',
+    tails: 'Tails',
+    note: 'Generate random numbers, flip coins, roll dice, pick from lists, and shuffle items. All randomness is client-side using crypto.getRandomValues().',
+    emptyState: 'Choose a mode and configure the options',
+    copy: 'Copy',
+    clear: 'Clear',
+  },
+  fa: {
+    title: 'تولیدکننده تصادفی',
+    dice: 'تاس',
+    coin: 'پرتاب سکه',
+    number: 'عدد تصادفی',
+    listPicker: 'انتخاب از لیست',
+    shuffle: 'ترکیب لیست',
+    flip: 'پرتاب سکه',
+    roll: 'پرتاب تاس',
+    generate: 'تولید',
+    pick: 'انتخاب',
+    shuffleBtn: 'ترکیب',
+    result: 'نتیجه',
+    min: 'حداقل',
+    max: 'حداکثر',
+    count: 'تعداد',
+    items: 'آیتم‌ها (یکی در هر خط)',
+    itemsPlaceholder: 'آیتم‌ها را وارد کنید، یکی در هر خط\nمورد الف\nمورد ب\nمورد ج',
+    heads: 'شیر',
+    tails: 'خط',
+    note: 'تولید اعداد تصادفی، پرتاب سکه، تاس، انتخاب از لیست و ترکیب آیتم‌ها. همه تصادفی‌ها در سمت کاربر با crypto.getRandomValues() انجام می‌شود.',
+    emptyState: 'یک حالت انتخاب کنید و گزینه‌ها را تنظیم کنید',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="rg-tool">
+    <Select id="rg-mode" label={copy[lang].title} options={[
+      { value: 'dice', label: copy[lang].dice },
+      { value: 'coin', label: copy[lang].coin },
+      { value: 'number', label: copy[lang].number },
+      { value: 'picker', label: copy[lang].listPicker },
+      { value: 'shuffle', label: copy[lang].shuffle },
+    ]} />
+
+    <div id="rg-number-opts" class="rg-opts" style="display:none">
+      <div class="rg-input-row">
+        <Input id="rg-min" label={copy[lang].min} type="number" value="0" inputClassName="rg-field-input" />
+        <Input id="rg-max" label={copy[lang].max} type="number" value="100" inputClassName="rg-field-input" />
+        <Input id="rg-count" label={copy[lang].count} type="number" value="1" inputClassName="rg-field-input" />
+      </div>
+      <ToolActionButton id="rg-number-btn">{copy[lang].generate}</ToolActionButton>
+    </div>
+
+    <div id="rg-dice-opts" class="rg-opts">
+      <Input id="rg-dice-count" label={copy[lang].count} type="number" value="1" inputClassName="rg-field-input" />
+      <ToolActionButton id="rg-dice-btn">{copy[lang].roll}</ToolActionButton>
+    </div>
+
+    <div id="rg-coin-opts" class="rg-opts" style="display:none">
+      <ToolActionButton id="rg-coin-btn" className="rg-coin-btn">{copy[lang].flip}</ToolActionButton>
+    </div>
+
+    <div id="rg-picker-opts" class="rg-opts" style="display:none">
+      <TextArea id="rg-picker-items" label={copy[lang].items} placeholder={copy[lang].itemsPlaceholder} inputClassName="rg-textarea" />
+      <ToolActionButton id="rg-picker-btn">{copy[lang].pick}</ToolActionButton>
+    </div>
+
+    <div id="rg-shuffle-opts" class="rg-opts" style="display:none">
+      <TextArea id="rg-shuffle-items" label={copy[lang].items} placeholder={copy[lang].itemsPlaceholder} inputClassName="rg-textarea" />
+      <ToolActionButton id="rg-shuffle-btn">{copy[lang].shuffleBtn}</ToolActionButton>
+    </div>
+
+    <div id="rg-result-card" class="rg-result-card" style="display:none">
+      <div class="rg-result-header">
+        <span class="rg-result-label">{copy[lang].result}</span>
+        <Button id="rg-copy" variant="outline" className="rg-copy-btn">{copy[lang].copy}</Button>
+      </div>
+      <div class="rg-result-body">
+        <div id="rg-result-value" class="rg-result-value"></div>
+      </div>
+    </div>
+
+    <div id="rg-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { randomInt, randomDice, randomCoin, randomPicker, randomShuffle } from './Phase10Utils.ts';
+
+  const modeSelect = document.getElementById('rg-mode') as HTMLSelectElement;
+  const optsDice = document.getElementById('rg-dice-opts')!;
+  const optsCoin = document.getElementById('rg-coin-opts')!;
+  const optsNumber = document.getElementById('rg-number-opts')!;
+  const optsPicker = document.getElementById('rg-picker-opts')!;
+  const optsShuffle = document.getElementById('rg-shuffle-opts')!;
+  const resultCard = document.getElementById('rg-result-card')!;
+  const resultValue = document.getElementById('rg-result-value')!;
+  const emptyEl = document.getElementById('rg-empty')!;
+  const copyBtn = document.getElementById('rg-copy')!;
+
+  function showResult(val: string, keepEmpty = false) {
+    resultValue.textContent = val;
+    resultCard.style.display = '';
+    if (!keepEmpty) emptyEl.style.display = 'none';
+  }
+
+  function hideResult() {
+    resultCard.style.display = 'none';
+  }
+
+  function switchMode(mode: string) {
+    optsDice.style.display = mode === 'dice' ? '' : 'none';
+    optsCoin.style.display = mode === 'coin' ? '' : 'none';
+    optsNumber.style.display = mode === 'number' ? '' : 'none';
+    optsPicker.style.display = mode === 'picker' ? '' : 'none';
+    optsShuffle.style.display = mode === 'shuffle' ? '' : 'none';
+    hideResult();
+    emptyEl.style.display = '';
+  }
+
+  modeSelect.addEventListener('change', () => switchMode(modeSelect.value));
+  switchMode('dice');
+
+  document.getElementById('rg-dice-btn')!.addEventListener('click', () => {
+    const count = parseInt((document.getElementById('rg-dice-count') as HTMLInputElement).value) || 1;
+    const results = randomDice(count);
+    showResult(results.join(', '));
+  });
+
+  document.getElementById('rg-coin-btn')!.addEventListener('click', () => {
+    const result = randomCoin();
+    showResult(result);
+  });
+
+  document.getElementById('rg-number-btn')!.addEventListener('click', () => {
+    const min = parseInt((document.getElementById('rg-min') as HTMLInputElement).value) || 0;
+    const max = parseInt((document.getElementById('rg-max') as HTMLInputElement).value) || 100;
+    const count = Math.min(parseInt((document.getElementById('rg-count') as HTMLInputElement).value) || 1, 100);
+    const results: number[] = [];
+    for (let i = 0; i < count; i++) {
+      results.push(randomInt(min, max));
+    }
+    showResult(results.join(', '));
+  });
+
+  document.getElementById('rg-picker-btn')!.addEventListener('click', () => {
+    const text = (document.getElementById('rg-picker-items') as HTMLTextAreaElement).value;
+    const items = text.split('\n').map(s => s.trim()).filter(Boolean);
+    if (items.length === 0) {
+      showResult('Please enter at least one item', true);
+      return;
+    }
+    const picked = randomPicker(items);
+    showResult(picked);
+  });
+
+  document.getElementById('rg-shuffle-btn')!.addEventListener('click', () => {
+    const text = (document.getElementById('rg-shuffle-items') as HTMLTextAreaElement).value;
+    const items = text.split('\n').map(s => s.trim()).filter(Boolean);
+    if (items.length === 0) {
+      showResult('Please enter at least one item', true);
+      return;
+    }
+    const shuffled = randomShuffle(items);
+    showResult(shuffled.join('\n'));
+  });
+
+  copyBtn.addEventListener('click', function() {
+    const text = resultValue.textContent || '';
+    if (!text) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn as HTMLElement, 1500);
+  });
+</script>
+
+<style>
+  .rg-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .rg-tool .tool-note { margin-top: 0; }
+  .rg-opts { display: flex; flex-direction: column; gap: var(--space-4); }
+  .rg-input-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
+  .rg-field-input { width: 100%; }
+  .rg-textarea { width: 100%; min-height: 100px; resize: vertical; }
+  .rg-coin-btn { min-width: 150px; align-self: flex-start; }
+
+  .rg-result-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-4);
+  }
+  .rg-result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .rg-result-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .rg-copy-btn {
+    font-size: var(--text-xs) !important;
+    padding: var(--space-1) var(--space-3) !important;
+  }
+  .rg-result-body {
+    padding: var(--space-5);
+    text-align: center;
+  }
+  .rg-result-value {
+    font-family: var(--font-mono);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: var(--text-primary);
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+
+  @media (max-width: 640px) {
+    .rg-input-row { flex-direction: column; }
+    .rg-input-row .ui-input-field { min-width: 100%; }
+  }
+</style>

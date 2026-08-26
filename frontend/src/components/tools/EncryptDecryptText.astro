@@ -1,0 +1,302 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Switch from '../ui/Switch.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Encrypt / Decrypt Text',
+    modeEncrypt: 'Encrypt',
+    modeDecrypt: 'Decrypt',
+    password: 'Encryption password',
+    plaintext: 'Plain text',
+    ciphertext: 'Encrypted text',
+    ciphertextPlaceholder: 'Paste encrypted text to decrypt...',
+    resultEmpty: 'Enter text and password, then click Encrypt',
+    encrypt: 'Encrypt',
+    decrypt: 'Decrypt',
+    copy: 'Copy',
+    clear: 'Clear',
+    encryptSuccess: 'Text encrypted successfully',
+    decryptSuccess: 'Text decrypted successfully',
+    loading: 'Processing...',
+    note: 'Encryption uses AES-256-GCM with PBKDF2 key derivation (100,000 iterations). Your password and data never leave your browser. Decryption requires the same password used to encrypt.',
+    decryptEmpty: 'Paste encrypted text and enter password, then click Decrypt',
+    warning: 'If you lose the password, the data cannot be recovered. There is no "forgot password" option.',
+  },
+  fa: {
+    title: 'رمزگذاری / رمزگشایی متن',
+    modeEncrypt: 'رمزگذاری',
+    modeDecrypt: 'رمزگشایی',
+    password: 'رمز عبور رمزگذاری',
+    plaintext: 'متن ساده',
+    ciphertext: 'متن رمزگذاری شده',
+    ciphertextPlaceholder: 'متن رمزگذاری شده را برای رمزگشایی جای‌گذاری کنید...',
+    resultEmpty: 'متن و رمز عبور را وارد کنید، سپس روی Encrypt کلیک کنید',
+    encrypt: 'رمزگذاری',
+    decrypt: 'رمزگشایی',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    encryptSuccess: 'متن با موفقیت رمزگذاری شد',
+    decryptSuccess: 'متن با موفقیت رمزگشایی شد',
+    loading: 'در حال پردازش...',
+    note: 'رمزگذاری از AES-256-GCM با PBKDF2 (۱۰۰,۰۰۰ تکرار) استفاده می‌کند. رمز عبور و داده شما هرگز مرورگر را ترک نمی‌کند. رمزگشایی به همان رمز عبور نیاز دارد.',
+    decryptEmpty: 'متن رمزگذاری شده و رمز عبور را وارد کنید، سپس روی Decrypt کلیک کنید',
+    warning: 'اگر رمز عبور را گم کنید، داده قابل بازیابی نیست. گزینه "رمز عبور را فراموش کرده‌ام" وجود ندارد.',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="ed-tool">
+    <Switch
+      name={copy[lang].title}
+      items={[
+        { id: 'ed-mode-encrypt', value: 'encrypt', label: copy[lang].modeEncrypt },
+        { id: 'ed-mode-decrypt', value: 'decrypt', label: copy[lang].modeDecrypt },
+      ]}
+      activeValue="encrypt"
+    />
+
+    <div class="ed-password-wrap">
+      <Input id="ed-password" label={copy[lang].password} type="password" autocomplete="off" spellcheck={false} />
+      <button id="ed-toggle" class="ed-password-wrap__toggle" type="button" aria-label="Toggle visibility" tabindex="-1">
+        <svg class="ed-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg class="ed-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>
+    </div>
+
+    <div id="ed-encrypt-section">
+      <TextArea id="ed-plaintext" label={copy[lang].plaintext} placeholder="Enter text to encrypt..." rows={5} />
+    </div>
+
+    <div id="ed-decrypt-section" style="display:none">
+      <TextArea id="ed-ciphertext" label={copy[lang].ciphertext} placeholder={copy[lang].ciphertextPlaceholder} rows={5} />
+    </div>
+
+    <div class="tool-toolbar">
+      <ToolActionButton id="ed-action">{copy[lang].encrypt}</ToolActionButton>
+      <Button id="ed-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+
+    <div id="ed-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
+    <div id="ed-result" class="tool-output ed-result" style="display:none" role="status" aria-live="polite"></div>
+    <div id="ed-error" class="tool-error" style="display:none"></div>
+
+    <div class="ed-warning">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      {copy[lang].warning}
+    </div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { encryptAesGcm, decryptAesGcm } from './Phase8Utils.ts';
+
+  const modeBtns = document.querySelectorAll('.ed-tool .ui-switch__btn');
+  const encryptSection = document.getElementById('ed-encrypt-section')!;
+  const decryptSection = document.getElementById('ed-decrypt-section')!;
+  const pwInput = document.getElementById('ed-password') as HTMLInputElement;
+  const plaintextInput = document.getElementById('ed-plaintext') as HTMLTextAreaElement;
+  const ciphertextInput = document.getElementById('ed-ciphertext') as HTMLTextAreaElement;
+  const actionBtn = document.getElementById('ed-action') as HTMLButtonElement;
+  const clearBtn = document.getElementById('ed-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('ed-empty')!;
+  const resultEl = document.getElementById('ed-result')!;
+  const errorEl = document.getElementById('ed-error')!;
+  const toggle = document.getElementById('ed-toggle')!;
+  const eyeIcon = toggle.querySelector('.ed-eye') as HTMLElement;
+  const eyeOffIcon = toggle.querySelector('.ed-eye-off') as HTMLElement;
+
+  let currentMode: 'encrypt' | 'decrypt' = 'encrypt';
+
+  toggle.addEventListener('click', function () {
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      eyeIcon.style.display = 'none';
+      eyeOffIcon.style.display = '';
+    } else {
+      pwInput.type = 'password';
+      eyeIcon.style.display = '';
+      eyeOffIcon.style.display = 'none';
+    }
+  });
+
+  function setMode(mode: string) {
+    currentMode = mode as 'encrypt' | 'decrypt';
+    modeBtns.forEach(function (btn) {
+      btn.classList.toggle('is-active', btn.getAttribute('data-value') === mode);
+    });
+    const isEncrypt = mode === 'encrypt';
+    encryptSection.style.display = isEncrypt ? '' : 'none';
+    decryptSection.style.display = isEncrypt ? 'none' : '';
+    actionBtn.textContent = isEncrypt ? 'Encrypt' : 'Decrypt';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+  }
+
+  modeBtns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setMode(btn.getAttribute('data-value') || 'encrypt');
+    });
+  });
+
+  actionBtn.addEventListener('click', async function () {
+    const password = pwInput.value;
+
+    if (!password) {
+      errorEl.textContent = 'Please enter an encryption password';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      return;
+    }
+
+    if (!crypto.subtle) {
+      errorEl.textContent = 'Web Crypto API is not available. Please use HTTPS or localhost.';
+      errorEl.style.display = '';
+      return;
+    }
+
+    actionBtn.disabled = true;
+    actionBtn.textContent = 'Processing...';
+    errorEl.style.display = 'none';
+
+    try {
+      if (currentMode === 'encrypt') {
+        const text = plaintextInput.value;
+        if (!text) {
+          errorEl.textContent = 'Please enter text to encrypt';
+          errorEl.style.display = '';
+          actionBtn.disabled = false;
+          actionBtn.textContent = 'Encrypt';
+          return;
+        }
+        const result = await encryptAesGcm(text, password);
+        emptyEl.style.display = 'none';
+        resultEl.style.display = '';
+        resultEl.style.fontFamily = 'var(--font-mono)';
+        resultEl.textContent = result;
+      } else {
+        const ciphertext = ciphertextInput.value.trim();
+        if (!ciphertext) {
+          errorEl.textContent = 'Please paste encrypted text to decrypt';
+          errorEl.style.display = '';
+          actionBtn.disabled = false;
+          actionBtn.textContent = 'Decrypt';
+          return;
+        }
+        const result = await decryptAesGcm(ciphertext, password);
+        emptyEl.style.display = 'none';
+        resultEl.style.display = '';
+        resultEl.style.fontFamily = 'inherit';
+        resultEl.style.whiteSpace = 'pre-wrap';
+        resultEl.textContent = result;
+      }
+    } catch (e: any) {
+      errorEl.textContent = currentMode === 'decrypt'
+        ? 'Decryption failed. Wrong password or corrupted data.'
+        : 'Error: ' + (e.message || 'Encryption failed');
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    } finally {
+      actionBtn.disabled = false;
+      actionBtn.textContent = currentMode === 'encrypt' ? 'Encrypt' : 'Decrypt';
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    pwInput.value = '';
+    plaintextInput.value = '';
+    ciphertextInput.value = '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    pwInput.focus();
+  });
+
+  resultEl.addEventListener('click', function () {
+    const text = resultEl.textContent || '';
+    if (!text || resultEl.style.display === 'none') return;
+    navigator.clipboard.writeText(text).catch(function () {});
+  });
+</script>
+
+<style>
+  .ed-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .ed-tool .tool-note {
+    margin-top: 0;
+  }
+  .ed-result {
+    font-size: var(--text-sm);
+    word-break: break-all;
+  }
+  .ed-password-wrap {
+    position: relative;
+  }
+  .ed-password-wrap__toggle {
+    position: absolute;
+    inset-inline-end: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: var(--space-2);
+    color: var(--text-tertiary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  .ed-password-wrap__toggle:hover {
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+  }
+  .ed-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-warning-subtle);
+    border: 1px solid var(--color-warning-border);
+    border-radius: var(--radius-md);
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-4);
+  }
+  .ed-warning svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+    color: var(--color-warning);
+  }
+</style>

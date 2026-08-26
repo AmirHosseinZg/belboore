@@ -1,0 +1,403 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Button from '../ui/Button.astro';
+import Checkbox from '../ui/Checkbox.astro';
+import Select from '../ui/Select.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Image Converter',
+    dropTitle: 'Drop your image here',
+    dropHint: 'or click to select a file',
+    browse: 'Browse Image',
+    previewLabel: 'Original Preview',
+    convertedLabel: 'Converted Preview',
+    emptyState: 'Select an image to begin conversion',
+    convert: 'Convert',
+    clear: 'Clear',
+    download: 'Download Converted',
+    copyDataUrl: 'Copy Data URL',
+    outputFormat: 'Output Format',
+    quality: 'Quality',
+    resizeWidth: 'Width',
+    resizeHeight: 'Height',
+    preserveAspect: 'Preserve Aspect Ratio',
+    bgColor: 'Background Color',
+    note: 'All image processing happens in your browser. No files are uploaded.',
+    converting: 'Converting...',
+    fileTooLarge: 'File is too large. Maximum size is 10 MB.',
+    invalidFile: 'Please select a valid image file (PNG, JPEG, WebP, GIF, BMP, SVG).',
+    conversionFailed: 'Conversion failed. Please try again.',
+    name: 'Name',
+    type: 'Type',
+    size: 'Size',
+    dimensions: 'Dimensions',
+    originalInfo: 'Original Image Info',
+    outputInfo: 'Converted Output',
+    outputSize: 'Output Size',
+    conversionNote: 'Metadata may not be preserved during conversion. Transparent areas will be filled with the selected background color when converting to JPEG.',
+    resizeLabel: 'Resize (optional)',
+  },
+  fa: {
+    title: 'مبدل تصویر',
+    dropTitle: 'تصویر خود را اینجا رها کنید',
+    dropHint: 'یا کلیک کنید تا فایل انتخاب شود',
+    browse: 'انتخاب تصویر',
+    previewLabel: 'پیش‌نمایش اصلی',
+    convertedLabel: 'پیش‌نمایش تبدیل شده',
+    emptyState: 'یک تصویر انتخاب کنید تا تبدیل شروع شود',
+    convert: 'تبدیل',
+    clear: 'پاک کردن',
+    download: 'دانلود تصویر تبدیل شده',
+    copyDataUrl: 'کپی Data URL',
+    outputFormat: 'فرمت خروجی',
+    quality: 'کیفیت',
+    resizeWidth: 'عرض',
+    resizeHeight: 'ارتفاع',
+    preserveAspect: 'حفظ نسبت ابعاد',
+    bgColor: 'رنگ پس‌زمینه',
+    note: 'تمام پردازش تصویر در مرورگر شما انجام می‌شود. هیچ فایلی آپلود نمی‌شود.',
+    converting: 'در حال تبدیل...',
+    fileTooLarge: 'حجم فایل زیاد است. حداکثر حجم ۱۰ مگابایت.',
+    invalidFile: 'لطفاً یک فایل تصویر معتبر انتخاب کنید (PNG, JPEG, WebP, GIF, BMP, SVG).',
+    conversionFailed: 'تبدیل ناموفق بود. لطفاً دوباره تلاش کنید.',
+    name: 'نام',
+    type: 'نوع',
+    size: 'حجم',
+    dimensions: 'ابعاد',
+    originalInfo: 'اطلاعات تصویر اصلی',
+    outputInfo: 'خروجی تبدیل شده',
+    outputSize: 'حجم خروجی',
+    conversionNote: 'متادیتا ممکن است در طول تبدیل حفظ نشود. نواحی شفاف هنگام تبدیل به JPEG با رنگ پس‌زمینه پر می‌شوند.',
+    resizeLabel: 'تغییر اندازه (اختیاری)',
+  },
+};
+
+const formatOptions = [
+  { value: 'image/png', label: 'PNG' },
+  { value: 'image/jpeg', label: 'JPEG' },
+  { value: 'image/webp', label: 'WebP' },
+];
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="imgc-tool">
+    <div class="imgc-layout">
+      <div class="imgc-settings">
+        <div class="imgc-section">
+          <div class="imgc-dropzone" id="imgc-dropzone" role="button" tabindex="0" aria-label="Upload image">
+            <span class="imgc-drop-title">{copy[lang].dropTitle}</span>
+            <span class="imgc-drop-hint">{copy[lang].dropHint}</span>
+            <span class="imgc-drop-action">{copy[lang].browse}</span>
+          </div>
+          <input id="imgc-input" type="file" accept="image/*" class="imgc-input" aria-hidden="true" />
+          <div id="imgc-error" class="tool-error" style="display:none" role="alert"></div>
+        </div>
+        <div id="imgc-info-area" class="imgc-info-area" style="display:none">
+          <span class="imgc-section-title">{copy[lang].originalInfo}</span>
+          <div id="imgc-meta-grid" class="imgc-meta-grid"></div>
+        </div>
+        <div id="imgc-controls" class="imgc-controls" style="display:none">
+          <div class="imgc-section">
+            <span class="imgc-section-title">{copy[lang].outputFormat}</span>
+            <Select id="imgc-format" label={copy[lang].outputFormat} options={formatOptions} selectedValue="image/png" />
+          </div>
+          <div class="imgc-section">
+            <span class="imgc-section-title">{copy[lang].quality}</span>
+            <div class="imgc-quality-row">
+              <input id="imgc-quality" type="range" min="0.1" max="1" step="0.05" value="0.92" class="imgc-quality-slider" aria-label={copy[lang].quality} />
+              <span id="imgc-quality-val" class="imgc-quality-val">92%</span>
+            </div>
+          </div>
+          <div class="imgc-section">
+            <span class="imgc-section-title">{copy[lang].resizeLabel}</span>
+            <div class="imgc-resize-row">
+              <Input id="imgc-resize-w" label={copy[lang].resizeWidth} type="number" inputmode="numeric" inputClassName="imgc-resize-input" />
+              <Input id="imgc-resize-h" label={copy[lang].resizeHeight} type="number" inputmode="numeric" inputClassName="imgc-resize-input" />
+            </div>
+            <Checkbox id="imgc-keep-ar" checked>{copy[lang].preserveAspect}</Checkbox>
+          </div>
+          <div class="imgc-section">
+            <span class="imgc-section-title">{copy[lang].bgColor}</span>
+            <input id="imgc-bg" type="color" value="#ffffff" class="imgc-bg-input" aria-label={copy[lang].bgColor} />
+          </div>
+          <div class="tool-toolbar">
+            <ToolActionButton id="imgc-convert">{copy[lang].convert}</ToolActionButton>
+            <Button id="imgc-clear" variant="secondary">{copy[lang].clear}</Button>
+          </div>
+        </div>
+      </div>
+      <div class="imgc-previews">
+        <div id="imgc-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+        <div id="imgc-original-area" class="imgc-preview-card" style="display:none">
+          <span class="imgc-section-title">{copy[lang].previewLabel}</span>
+          <div class="imgc-preview-frame">
+            <img id="imgc-original-preview" class="imgc-preview-img" alt="Original image preview" />
+          </div>
+        </div>
+        <div id="imgc-converted-area" class="imgc-preview-card" style="display:none">
+          <span class="imgc-section-title">
+            <span>{copy[lang].convertedLabel}</span>
+            <span id="imgc-output-size" class="imgc-size-badge"></span>
+          </span>
+          <div class="imgc-preview-frame">
+            <img id="imgc-converted-preview" class="imgc-preview-img" alt="Converted image preview" />
+          </div>
+          <div class="tool-toolbar">
+            <Button id="imgc-download" variant="primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              {copy[lang].download}
+            </Button>
+            <Button id="imgc-copy-url" variant="outline">{copy[lang].copyDataUrl}</Button>
+          </div>
+        </div>
+        <div id="imgc-note" class="imgc-note" style="display:none">{copy[lang].conversionNote}</div>
+      </div>
+    </div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import { formatFileSize, validateImageFile, loadImageFromFile, readImageDimensions, drawImageToCanvas, convertCanvasToBlob, fileToDataUrl, downloadBlob, dataUrlToBlob } from './mediaUtils.ts';
+
+  const input = document.getElementById('imgc-input') as HTMLInputElement;
+  const dropzone = document.getElementById('imgc-dropzone')!;
+  const errorEl = document.getElementById('imgc-error')!;
+  const emptyEl = document.getElementById('imgc-empty')!;
+  const infoArea = document.getElementById('imgc-info-area')!;
+  const metaGrid = document.getElementById('imgc-meta-grid')!;
+  const controlsArea = document.getElementById('imgc-controls')!;
+  const originalArea = document.getElementById('imgc-original-area')!;
+  const convertedArea = document.getElementById('imgc-converted-area')!;
+  const noteEl = document.getElementById('imgc-note')!;
+  const originalPreview = document.getElementById('imgc-original-preview') as HTMLImageElement;
+  const convertedPreview = document.getElementById('imgc-converted-preview') as HTMLImageElement;
+  const formatSelect = document.getElementById('imgc-format') as HTMLSelectElement;
+  const qualitySlider = document.getElementById('imgc-quality') as HTMLInputElement;
+  const qualityVal = document.getElementById('imgc-quality-val')!;
+  const resizeW = document.getElementById('imgc-resize-w') as HTMLInputElement;
+  const resizeH = document.getElementById('imgc-resize-h') as HTMLInputElement;
+  const keepAr = document.getElementById('imgc-keep-ar') as HTMLInputElement;
+  const bgInput = document.getElementById('imgc-bg') as HTMLInputElement;
+  const convertBtn = document.getElementById('imgc-convert')!;
+  const clearBtn = document.getElementById('imgc-clear')!;
+  const downloadBtn = document.getElementById('imgc-download')!;
+  const copyUrlBtn = document.getElementById('imgc-copy-url')!;
+  const outputSizeEl = document.getElementById('imgc-output-size')!;
+
+  let currentFile: File | null = null;
+  let currentImg: HTMLImageElement | null = null;
+  let lastConvertedBlob: Blob | null = null;
+  let lastConvertedUrl: string = '';
+
+  qualitySlider.addEventListener('input', () => {
+    qualityVal.textContent = Math.round(parseFloat(qualitySlider.value) * 100) + '%';
+  });
+
+  function showError(msg: string) {
+    errorEl.textContent = msg;
+    errorEl.style.display = '';
+  }
+
+  function clearError() {
+    errorEl.textContent = '';
+    errorEl.style.display = 'none';
+  }
+
+  function resetState() {
+    input.value = '';
+    currentFile = null;
+    currentImg = null;
+    if (lastConvertedUrl) { URL.revokeObjectURL(lastConvertedUrl); lastConvertedUrl = ''; }
+    lastConvertedBlob = null;
+    emptyEl.style.display = '';
+    infoArea.style.display = 'none';
+    controlsArea.style.display = 'none';
+    originalArea.style.display = 'none';
+    convertedArea.style.display = 'none';
+    noteEl.style.display = 'none';
+    originalPreview.src = '';
+    convertedPreview.src = '';
+    clearError();
+    dropzone.classList.remove('is-dragover');
+  }
+
+  function buildMetaGrid(file: File, w: number, h: number) {
+    const items = [
+      { label: 'Name', value: file.name },
+      { label: 'Type', value: file.type },
+      { label: 'Size', value: formatFileSize(file.size) },
+      { label: 'Dimensions', value: w + ' \u00d7 ' + h },
+    ];
+    metaGrid.innerHTML = items.map(it =>
+      '<div class="imgc-meta-item"><span class="imgc-meta-label">' + it.label + '</span><span class="imgc-meta-value">' + it.value + '</span></div>'
+    ).join('');
+  }
+
+  function processFile(file: File) {
+    const err = validateImageFile(file, 10 * 1024 * 1024);
+    if (err) { showError(err); return; }
+    clearError();
+    currentFile = file;
+    emptyEl.style.display = 'none';
+    loadImageFromFile(file).then(img => {
+      currentImg = img;
+      const url = URL.createObjectURL(file);
+      originalPreview.src = url;
+      originalArea.style.display = '';
+      buildMetaGrid(file, img.naturalWidth, img.naturalHeight);
+      infoArea.style.display = '';
+      controlsArea.style.display = '';
+      doConvert();
+    }).catch(() => {
+      showError('Failed to load image. The file may be corrupted or in an unsupported format.');
+    });
+  }
+
+  function doConvert() {
+    if (!currentImg || !currentFile) return;
+    const mimeType = formatSelect.value;
+    const quality = mimeType === 'image/png' ? undefined : parseFloat(qualitySlider.value);
+    const targetW = resizeW.value ? parseInt(resizeW.value, 10) : null;
+    const targetH = resizeH.value ? parseInt(resizeH.value, 10) : null;
+    const preserve = keepAr.checked;
+    const bgColor = bgInput.value;
+    convertBtn.textContent = 'Converting...';
+    (convertBtn as HTMLButtonElement).disabled = true;
+
+    setTimeout(async () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const dims = getTargetDims(currentImg!.naturalWidth, currentImg!.naturalHeight, targetW, targetH, preserve);
+        canvas.width = dims.width;
+        canvas.height = dims.height;
+        const ctx = canvas.getContext('2d')!;
+        if (mimeType === 'image/jpeg' || mimeType === 'image/webp') {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(currentImg!, 0, 0, dims.width, dims.height);
+        const blob = await convertCanvasToBlob(canvas, mimeType, quality);
+        if (!blob) throw new Error('Conversion failed');
+        if (lastConvertedUrl) URL.revokeObjectURL(lastConvertedUrl);
+        lastConvertedUrl = URL.createObjectURL(blob);
+        lastConvertedBlob = blob;
+        convertedPreview.src = lastConvertedUrl;
+        convertedArea.style.display = '';
+        outputSizeEl.textContent = formatFileSize(blob.size);
+        noteEl.style.display = '';
+      } catch {
+        showError('Conversion failed. Please try again.');
+      }
+      convertBtn.textContent = 'Convert';
+      (convertBtn as HTMLButtonElement).disabled = false;
+    }, 50);
+  }
+
+  function getTargetDims(ow: number, oh: number, tw: number | null, th: number | null, preserve: boolean): { width: number; height: number } {
+    if (!tw && !th) return { width: ow, height: oh };
+    let w = tw || ow;
+    let h = th || oh;
+    if (preserve) {
+      if (tw && th) {
+        const ratio = Math.min(tw / ow, th / oh);
+        w = Math.round(ow * ratio);
+        h = Math.round(oh * ratio);
+      } else if (tw) {
+        h = Math.round(oh * (tw / ow));
+      } else if (th) {
+        w = Math.round(ow * (th / oh));
+      }
+    }
+    return { width: Math.max(1, w), height: Math.max(1, h) };
+  }
+
+  convertBtn.addEventListener('click', doConvert);
+
+  downloadBtn.addEventListener('click', () => {
+    if (!lastConvertedBlob || !currentFile) return;
+    const ext = formatSelect.value.split('/')[1] || 'png';
+    const name = currentFile.name.substring(0, currentFile.name.lastIndexOf('.')) || 'image';
+    downloadBlob(lastConvertedBlob, name + '.' + ext);
+  });
+
+  copyUrlBtn.addEventListener('click', () => {
+    if (lastConvertedBlob) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          window.__belbooreTools.copyToClipboard(reader.result, copyUrlBtn, 1500);
+        }
+      };
+      reader.readAsDataURL(lastConvertedBlob);
+    }
+  });
+
+  dropzone.addEventListener('click', () => input.click());
+  dropzone.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') input.click(); });
+  input.addEventListener('change', () => { if (input.files?.[0]) processFile(input.files[0]); });
+  ['dragenter', 'dragover'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add('is-dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(ev => {
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove('is-dragover'); });
+  });
+  dropzone.addEventListener('drop', (e) => {
+    const dt = (e as DragEvent).dataTransfer;
+    if (dt?.files?.[0]) processFile(dt.files[0]);
+  });
+
+  clearBtn.addEventListener('click', resetState);
+</script>
+
+<style>
+  .imgc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .imgc-tool .tool-note { margin-top: 0; }
+  .imgc-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); align-items: start; }
+  .imgc-settings, .imgc-previews { display: flex; flex-direction: column; gap: var(--space-5); }
+  .imgc-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .imgc-dropzone { display: flex; flex-direction: column; gap: var(--space-2); align-items: center; justify-content: center; min-height: 160px; width: 100%; padding: var(--space-6); border-radius: var(--radius-lg); border: 2px dashed var(--border-default); background: var(--surface-secondary); color: var(--text-secondary); cursor: pointer; transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); text-align: center; }
+  .imgc-dropzone:hover, .imgc-dropzone.is-dragover { border-color: var(--color-tech-blue); background: var(--color-tech-blue-subtle); }
+  .imgc-dropzone:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 3px; }
+  .imgc-drop-title { font-weight: var(--weight-semibold); color: var(--text-primary); }
+  .imgc-drop-hint { font-size: var(--text-sm); color: var(--text-muted); }
+  .imgc-drop-action { margin-top: var(--space-1); padding: var(--space-2) var(--space-4); border-radius: var(--radius-md); background: var(--surface-primary); border: 1px solid var(--border-default); font-size: var(--text-sm); color: var(--text-primary); }
+  .imgc-section { display: flex; flex-direction: column; gap: var(--space-3); }
+  .imgc-section-title { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .imgc-info-area { display: flex; flex-direction: column; gap: var(--space-3); }
+  .imgc-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+  .imgc-meta-item { display: flex; flex-direction: column; gap: var(--space-1); background: var(--surface-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); }
+  .imgc-meta-label { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; }
+  .imgc-meta-value { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--text-primary); word-break: break-all; }
+  .imgc-controls { display: flex; flex-direction: column; gap: var(--space-4); }
+  .imgc-quality-row { display: flex; align-items: center; gap: var(--space-3); }
+  .imgc-quality-slider { flex: 1; accent-color: var(--color-tech-blue); }
+  .imgc-quality-val { font-family: var(--font-mono); font-size: var(--text-sm); min-width: 40px; text-align: right; color: var(--text-primary); }
+  .imgc-resize-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .imgc-resize-input { max-width: 100px; text-align: center; }
+  .imgc-bg-input { width: 48px; height: 40px; border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 2px; cursor: pointer; background: none; }
+  .imgc-preview-card { display: flex; flex-direction: column; gap: var(--space-3); }
+  .imgc-preview-frame { background: repeating-conic-gradient(#e5e7eb 0% 25%, transparent 0% 50%) 50% / 20px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-subtle); overflow: hidden; display: flex; align-items: center; justify-content: center; min-height: 160px; }
+  .imgc-preview-img { max-width: 100%; max-height: 300px; display: block; object-fit: contain; }
+  .imgc-size-badge { font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); background: var(--surface-tertiary); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); }
+  .imgc-note { font-size: var(--text-xs); color: var(--text-tertiary); padding: var(--space-3); background: var(--surface-secondary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); line-height: 1.5; }
+  .imgc-note::before { content: '\2139\FE0F '; }
+  @media (max-width: 768px) { .imgc-layout { grid-template-columns: 1fr; } }
+</style>

@@ -1,0 +1,297 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'URL Parser',
+    inputLabel: 'URL Input',
+    outputLabel: 'Parsed URL',
+    inputHint: 'Enter a full URL (with or without protocol).',
+    outputHint: 'Parsed URL components appear here.',
+    parse: 'Parse URL',
+    copy: 'Copy result',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    empty: 'Parsed URL data will appear here',
+    note: 'URL parsing is done entirely in your browser. Your data never leaves your device.',
+    copied: 'Copied!',
+    sectionBasic: 'Basic Info',
+    sectionQuery: 'Query Parameters',
+    protocol: 'Protocol',
+    hostname: 'Hostname',
+    port: 'Port',
+    pathname: 'Path',
+    search: 'Query String',
+    hash: 'Hash / Fragment',
+    key: 'Key',
+    value: 'Value',
+    noParams: 'No query parameters found.',
+    error: 'Parsing error',
+  },
+  fa: {
+    title: 'تجزیه URL',
+    inputLabel: 'ورودی URL',
+    outputLabel: 'URL تجزیه شده',
+    inputHint: 'یک URL کامل (با یا بدون پروتکل) وارد کنید.',
+    outputHint: 'اجزای URL تجزیه شده اینجا نمایش داده می‌شود.',
+    parse: 'تجزیه URL',
+    copy: 'کپی نتیجه',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    empty: 'داده‌های URL تجزیه شده اینجا نمایش داده می‌شود',
+    note: 'تجزیه URL کاملاً در مرورگر شما انجام می‌شود. داده‌های شما هرگز از دستگاه شما خارج نمی‌شود.',
+    copied: 'کپی شد!',
+    sectionBasic: 'اطلاعات پایه',
+    sectionQuery: 'پارامترهای Query',
+    protocol: 'پروتکل',
+    hostname: 'نام میزبان',
+    port: 'پورت',
+    pathname: 'مسیر',
+    search: 'رشته Query',
+    hash: 'هش / تکه',
+    key: 'کلید',
+    value: 'مقدار',
+    noParams: 'پارامتر query پیدا نشد.',
+    error: 'خطا در تجزیه',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section
+    class="up-tool"
+    dir={dir}
+    data-empty={copy.empty}
+    data-copied={copy.copied}
+    data-error={copy.error}
+    data-placeholder="https://api.example.com/users?page=1&limit=10&sort=name#section-2"
+  >
+    <div class="up-tool__controls">
+      <div class="up-tool__actions">
+        <Button id="up-copy" variant="outline" className="up-tool__icon-btn" aria-label={copy.copy}>{copy.copy}</Button>
+        <Button id="up-clear" variant="danger" className="up-tool__icon-btn" aria-label={copy.clear}>{copy.clear}</Button>
+        <Button id="up-example" variant="secondary" className="up-tool__icon-btn" aria-label={copy.loadExample}>{copy.loadExample}</Button>
+      </div>
+    </div>
+
+    <div class="up-tool__grid">
+      <div class="up-tool__panel">
+        <div class="up-tool__panel-head">
+          <label class="up-tool__label" for="up-input">{copy.inputLabel}</label>
+          <p class="up-tool__hint">{copy.inputHint}</p>
+        </div>
+        <TextArea
+          id="up-input"
+          className="up-tool__textarea"
+          placeholder="https://api.example.com/users?page=1&limit=10"
+          rows={6}
+          spellcheck="false"
+        />
+      </div>
+      <div class="up-tool__panel">
+        <div class="up-tool__panel-head">
+          <label class="up-tool__label" for="up-output">{copy.outputLabel}</label>
+          <p class="up-tool__hint">{copy.outputHint}</p>
+        </div>
+        <div id="up-output" class="up-tool__output" role="region" aria-live="polite">
+          <p class="up-tool__empty-state">{copy.empty}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="up-tool__toolbar">
+      <ToolActionButton id="up-run">{copy.parse}</ToolActionButton>
+    </div>
+
+    <div id="up-error" class="tool-error" style="display: none;" role="alert"></div>
+    <div class="tool-note up-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('up-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('up-output') as HTMLDivElement | null;
+  const errorDiv = document.getElementById('up-error') as HTMLDivElement | null;
+  const runBtn = document.getElementById('up-run') as HTMLButtonElement | null;
+  const copyBtn = document.getElementById('up-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('up-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('up-example') as HTMLButtonElement | null;
+  const section = document.querySelector('.up-tool') as HTMLElement | null;
+
+  const EMPTY = section?.dataset.empty || '';
+  const COPIED = section?.dataset.copied || '';
+  const ERROR = section?.dataset.error || '';
+  const PLACEHOLDER = section?.dataset.placeholder || '';
+
+  const decodeBase64Url = (str: string): string => {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) base64 += '=';
+    try {
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return new TextDecoder().decode(bytes);
+    } catch { return ''; }
+  };
+
+  const parseUrl = (inputStr: string): {
+    valid: boolean; protocol?: string; hostname?: string; port?: string;
+    pathname?: string; search?: string; hash?: string;
+    params?: { key: string; value: string }[]; error?: string;
+  } => {
+    let url: URL;
+    try {
+      const hasProto = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//.test(inputStr);
+      url = new URL(hasProto ? inputStr : `https://${inputStr}`);
+    } catch {
+      return { valid: false, error: 'Invalid URL' };
+    }
+    if (!url.hostname && !url.pathname) {
+      return { valid: false, error: 'Invalid URL' };
+    }
+    const params: { key: string; value: string }[] = [];
+    url.searchParams.forEach((val, key) => params.push({ key, value: val }));
+    return {
+      valid: true,
+      protocol: url.protocol.replace(':', ''),
+      hostname: url.hostname,
+      port: url.port || '(default)',
+      pathname: url.pathname,
+      search: url.search || '(none)',
+      hash: url.hash || '(none)',
+      params,
+    };
+  };
+
+  const renderOutput = (data: ReturnType<typeof parseUrl>) => {
+    if (!output) return '';
+    if (!data.valid) {
+      output.innerHTML = `<div class="up-tool__result-error">${ERROR}: ${data.error}</div>`;
+      return;
+    }
+    const sectionBasic = section?.querySelector('[data-i18n-section-basic]')?.textContent || 'Basic Info';
+    const sectionQuery = section?.querySelector('[data-i18n-section-query]')?.textContent || 'Query Parameters';
+    const protoLbl = section?.querySelector('[data-i18n-protocol]')?.textContent || 'Protocol';
+    const hostLbl = section?.querySelector('[data-i18n-hostname]')?.textContent || 'Hostname';
+    const portLbl = section?.querySelector('[data-i18n-port]')?.textContent || 'Port';
+    const pathLbl = section?.querySelector('[data-i18n-pathname]')?.textContent || 'Path';
+    const searchLbl = section?.querySelector('[data-i18n-search]')?.textContent || 'Query String';
+    const hashLbl = section?.querySelector('[data-i18n-hash]')?.textContent || 'Hash / Fragment';
+    const noParams = section?.querySelector('[data-i18n-noparams]')?.textContent || 'No query parameters found.';
+
+    let html = `<div class="up-tool__result"><h4 class="up-tool__result-heading">${sectionBasic}</h4><table class="up-tool__table">`;
+    for (const [label, val] of [[protoLbl, data.protocol], [hostLbl, data.hostname], [portLbl, data.port], [pathLbl, data.pathname], [searchLbl, data.search], [hashLbl, data.hash]] as const) {
+      if (val !== undefined) {
+        html += `<tr><td class="up-tool__table-key">${label}</td><td class="up-tool__table-val"><code>${val}</code></td></tr>`;
+      }
+    }
+    html += '</table>';
+    if (data.params && data.params.length > 0) {
+      const keyLbl = section?.querySelector('[data-i18n-key]')?.textContent || 'Key';
+      const valLbl = section?.querySelector('[data-i18n-value]')?.textContent || 'Value';
+      html += `<h4 class="up-tool__result-heading">${sectionQuery}</h4><table class="up-tool__table">`;
+      html += `<thead><tr><th>${keyLbl}</th><th>${valLbl}</th></tr></thead><tbody>`;
+      for (const p of data.params) {
+        html += `<tr><td class="up-tool__table-key"><code>${p.key}</code></td><td class="up-tool__table-val"><code>${p.value}</code></td></tr>`;
+      }
+      html += '</tbody></table>';
+    } else {
+      html += `<p class="up-tool__no-params">${noParams}</p>`;
+    }
+    html += '</div>';
+    output.innerHTML = html;
+  };
+
+  const runParse = () => {
+    if (!input || !output) return;
+    const val = input.value.trim();
+    if (!val) {
+      output.innerHTML = `<p class="up-tool__empty-state">${EMPTY}</p>`;
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+      return;
+    }
+    try {
+      const result = parseUrl(val);
+      renderOutput(result);
+      if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    } catch (e: any) {
+      output.innerHTML = '';
+      if (errorDiv) { errorDiv.textContent = e?.message || ERROR; errorDiv.style.display = ''; }
+    }
+  };
+
+  runBtn?.addEventListener('click', runParse);
+  copyBtn?.addEventListener('click', () => {
+    if (!output) return;
+    const text = output.textContent || '';
+    if (!text || text === EMPTY) return;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.classList.add('is-copied');
+      const orig = copyBtn.innerHTML;
+      copyBtn.innerHTML = COPIED;
+      setTimeout(() => { copyBtn.innerHTML = orig; copyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    if (output) output.innerHTML = `<p class="up-tool__empty-state">${EMPTY}</p>`;
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    if (input) input.focus();
+  });
+  exampleBtn?.addEventListener('click', () => {
+    if (input) { input.value = PLACEHOLDER; }
+    if (errorDiv) { errorDiv.style.display = 'none'; errorDiv.textContent = ''; }
+    runParse();
+  });
+  input?.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); runParse(); }
+  });
+</script>
+
+<style>
+  .up-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .up-tool__controls { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-3); flex-wrap: wrap; }
+  .up-tool__actions { display: flex; gap: var(--space-2); align-items: center; }
+  .up-tool__grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+  .up-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding: var(--space-3) var(--space-4); border: 1px solid transparent; border-radius: calc(var(--radius-lg) - 4px); background: var(--surface-tertiary); transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .up-tool__panel:focus-within { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .up-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .up-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .up-tool__hint { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: var(--leading-snug); }
+  .up-tool__textarea { width: 100%; min-height: 140px; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); resize: vertical; outline: none; transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out); }
+  .up-tool__textarea:focus { border-color: var(--color-tech-blue); box-shadow: 0 0 0 3px var(--color-tech-blue-subtle); }
+  .up-tool__textarea::placeholder { color: var(--text-muted); }
+  .up-tool__output { width: 100%; min-height: 140px; max-height: 400px; overflow-y: auto; padding: var(--space-4); font-family: var(--font-mono); font-size: var(--text-sm); line-height: 1.6; color: var(--text-primary); background: var(--surface-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .up-tool__empty-state { color: var(--text-muted); font-style: italic; margin: 0; }
+  .up-tool__result { display: flex; flex-direction: column; gap: var(--space-3); }
+  .up-tool__result-heading { margin: 0; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-secondary); }
+  .up-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .up-tool__table td, .up-tool__table th { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); text-align: start; font-family: var(--font-mono); }
+  .up-tool__table th { font-weight: var(--weight-semibold); color: var(--text-tertiary); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.06em; }
+  .up-tool__table-key { color: var(--color-tech-blue); font-weight: var(--weight-medium); white-space: nowrap; }
+  .up-tool__table-val { color: var(--text-primary); word-break: break-all; }
+  .up-tool__table code { font-family: inherit; }
+  .up-tool__no-params { color: var(--text-muted); font-style: italic; margin: 0; font-size: var(--text-sm); }
+  .up-tool__result-error { color: var(--color-danger); font-size: var(--text-sm); }
+  .up-tool__toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+  .up-tool .tool-action-button { min-width: 148px; }
+  .up-tool__note { margin-top: 0; }
+  @media (max-width: 768px) { .up-tool__grid { grid-template-columns: 1fr; } .up-tool .tool-action-button { width: 100%; min-width: 0; } .up-tool__controls { flex-direction: column; align-items: stretch; } .up-tool__actions { justify-content: center; } }
+</style>

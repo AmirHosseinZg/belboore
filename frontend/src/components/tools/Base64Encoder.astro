@@ -27,59 +27,112 @@ const t = ui[lang];
     data-decode-error={t['tools.base64.decodeError']}
     data-fix-error={t['tools.base64.fixError']}
     data-nothing-to-swap={t['tools.base64.nothingToSwap']}
+    data-file-too-large={t['tools.base64.fileTooLarge']}
+    data-no-file={t['tools.base64.noFile']}
+    data-data-url={t['tools.base64.dataUrl']}
+    data-raw-base64={t['tools.base64.rawBase64']}
+    data-file-name={t['tools.base64.fileName']}
+    data-file-size={t['tools.base64.fileSize']}
+    data-file-type={t['tools.base64.fileType']}
+    data-file-info={t['tools.base64.fileInfo']}
   >
-    <div class="b64-tool__toolbar">
-      <Tabs
-        id="b64-mode-tabs"
-        className="b64-tool__modes"
-        ariaLabel="Base64 action mode"
-        activeId="encode"
-        tabs={[
-          { id: 'encode', label: t['tools.base64.encode'] },
-          { id: 'decode', label: t['tools.base64.decode'] },
-        ]}
-      />
+    <Tabs
+      id="b64-type-tabs"
+      className="b64-tool__type-tabs"
+      ariaLabel="Base64 mode"
+      activeId="text"
+      tabs={[
+        { id: 'text', label: t['tools.base64.textMode'] },
+        { id: 'file', label: t['tools.base64.fileMode'] },
+      ]}
+    />
 
-      <div class="b64-tool__quick-actions">
-        <Button id="b64-run" variant="primary" className="b64-tool__run-btn" aria-label={t['tools.base64.run']}>
-          {t['tools.base64.run']}
-        </Button>
-        <Button id="b64-copy" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.copy']}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          {t['tools.base64.copy']}
-        </Button>
-        <Button id="b64-swap" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.swap']}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          {t['tools.base64.swap']}
-        </Button>
-        <Button id="b64-clear" variant="danger" className="b64-tool__icon-btn" aria-label={t['tools.base64.clear']}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-          {t['tools.base64.clear']}
-        </Button>
+    <div id="b64-text-mode">
+      <div class="b64-tool__toolbar">
+        <Tabs
+          id="b64-mode-tabs"
+          className="b64-tool__modes"
+          ariaLabel="Base64 action mode"
+          activeId="encode"
+          tabs={[
+            { id: 'encode', label: t['tools.base64.encode'] },
+            { id: 'decode', label: t['tools.base64.decode'] },
+          ]}
+        />
+
+        <div class="b64-tool__quick-actions">
+          <Button id="b64-run" variant="primary" className="b64-tool__run-btn" aria-label={t['tools.base64.run']}>
+            {t['tools.base64.run']}
+          </Button>
+          <Button id="b64-copy" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.copy']}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            {t['tools.base64.copy']}
+          </Button>
+          <Button id="b64-swap" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.swap']}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            {t['tools.base64.swap']}
+          </Button>
+          <Button id="b64-clear" variant="danger" className="b64-tool__icon-btn" aria-label={t['tools.base64.clear']}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            {t['tools.base64.clear']}
+          </Button>
+        </div>
+      </div>
+
+      <div id="b64-error" class="tool-error" style="display: none;" role="alert"></div>
+
+      <div class="b64-tool__grid">
+        <div class="b64-tool__panel">
+          <label class="b64-tool__label" for="b64-input">Input</label>
+          <TextArea
+            id="b64-input"
+            className="b64-tool__textarea"
+            placeholder={t['tools.base64.inputPlaceholder']}
+          />
+        </div>
+
+        <div class="b64-tool__panel">
+          <div class="b64-tool__label-row">
+            <label class="b64-tool__label" for="b64-output">{t['tools.base64.output']}</label>
+            <span class="b64-tool__hint">{t['tools.base64.liveResult']}</span>
+          </div>
+          <div id="b64-output" class="b64-tool__output b64-tool__output--empty" role="status" aria-live="polite">
+            {t['tools.base64.emptyOutput']}
+          </div>
+        </div>
       </div>
     </div>
 
-    <div id="b64-error" class="tool-error" style="display: none;" role="alert"></div>
-
-    <div class="b64-tool__grid">
-      <div class="b64-tool__panel">
-        <label class="b64-tool__label" for="b64-input">Input</label>
-        <TextArea
-          id="b64-input"
-          className="b64-tool__textarea"
-          placeholder={t['tools.base64.inputPlaceholder']}
-        />
+    <div id="b64-file-mode" style="display: none;">
+      <div class="b64-tool__file-upload">
+        <label class="b64-tool__file-label" for="b64-file-input">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>{t['tools.base64.fileInput']}</span>
+        </label>
+        <input id="b64-file-input" type="file" class="b64-tool__file-input" />
+        <div id="b64-file-error" class="tool-error" style="display: none;" role="alert"></div>
       </div>
 
-      <div class="b64-tool__panel">
-        <div class="b64-tool__label-row">
-          <label class="b64-tool__label" for="b64-output">{t['tools.base64.output']}</label>
-          <span class="b64-tool__hint">{t['tools.base64.liveResult']}</span>
-        </div>
-        <div id="b64-output" class="b64-tool__output b64-tool__output--empty" role="status" aria-live="polite">
-          {t['tools.base64.emptyOutput']}
+      <div id="b64-file-info" class="b64-tool__file-info" style="display: none;">
+        <div class="b64-tool__file-info-grid">
+          <div><span class="b64-tool__file-info-label">{t['tools.base64.fileName']}:</span> <span id="b64-filename">—</span></div>
+          <div><span class="b64-tool__file-info-label">{t['tools.base64.fileSize']}:</span> <span id="b64-filesize">—</span></div>
+          <div><span class="b64-tool__file-info-label">{t['tools.base64.fileType']}:</span> <span id="b64-filemime">—</span></div>
         </div>
       </div>
+
+      <div class="b64-tool__file-toolbar">
+        <Button id="b64-file-copy" variant="outline" className="b64-tool__icon-btn" aria-label={t['tools.base64.copy']}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          {t['tools.base64.copy']}
+        </Button>
+        <div class="b64-tool__file-mode-tabs">
+          <button id="b64-file-raw" class="b64-tool__file-mode-btn is-active" type="button" data-file-mode="raw">{t['tools.base64.rawBase64']}</button>
+          <button id="b64-file-dataurl" class="b64-tool__file-mode-btn" type="button" data-file-mode="dataurl">{t['tools.base64.dataUrl']}</button>
+        </div>
+      </div>
+
+      <textarea id="b64-file-output" class="b64-tool__textarea b64-tool__textarea--file-output" rows={10} readonly spellcheck="false" placeholder={t['tools.base64.emptyOutput']}></textarea>
     </div>
 
     <div class="tool-note b64-tool__note">
@@ -95,33 +148,43 @@ const t = ui[lang];
   const output = document.getElementById('b64-output')!;
   const errorDiv = document.getElementById('b64-error')!;
   const modeTabs = document.getElementById('b64-mode-tabs');
-  let activeMode: 'encode' | 'decode' = 'encode';
+  const typeTabs = document.getElementById('b64-type-tabs');
+  const textMode = document.getElementById('b64-text-mode')!;
+  const fileMode = document.getElementById('b64-file-mode')!;
+  const fileInput = document.getElementById('b64-file-input') as HTMLInputElement | null;
+  const fileOutput = document.getElementById('b64-file-output') as HTMLTextAreaElement | null;
+  const fileError = document.getElementById('b64-file-error') as HTMLDivElement | null;
+  const fileInfo = document.getElementById('b64-file-info')!;
+  const filenameEl = document.getElementById('b64-filename')!;
+  const filesizeEl = document.getElementById('b64-filesize')!;
+  const filemimeEl = document.getElementById('b64-filemime')!;
+  const fileCopyBtn = document.getElementById('b64-file-copy') as HTMLButtonElement | null;
+  const fileModeBtns = document.querySelectorAll('.b64-tool__file-mode-btn');
 
-  if (!root) {
-    throw new Error('Base64 tool initialization failed');
-  }
+  let activeMode: 'encode' | 'decode' = 'encode';
+  let activeType: 'text' | 'file' = 'text';
+  let fileModeType: 'raw' | 'dataurl' = 'raw';
+  let currentFileResult = '';
+
+  if (!root) throw new Error('Base64 tool initialization failed');
 
   function utf8ToBase64(str: string): string {
     const bytes = new TextEncoder().encode(str);
     let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
     return btoa(binary);
   }
 
   function base64ToUtf8(b64: string): string {
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
     return new TextDecoder().decode(bytes);
   }
 
   function runEncode() {
     const val = input.value;
-    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here'); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || ''); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
     try {
       window.__belbooreTools.showOutput(output, utf8ToBase64(val));
       output.classList.remove('b64-tool__output--empty');
@@ -133,22 +196,90 @@ const t = ui[lang];
 
   function runDecode() {
     const val = input.value.trim();
-    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here'); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
+    if (!val) { window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || ''); output.classList.add('b64-tool__output--empty'); window.__belbooreTools.clearErrorBox(errorDiv); return; }
     try {
       window.__belbooreTools.showOutput(output, base64ToUtf8(val));
       output.classList.remove('b64-tool__output--empty');
       window.__belbooreTools.clearErrorBox(errorDiv);
     } catch (e: any) {
-      window.__belbooreTools.setErrorBox(errorDiv, root.dataset.decodeError || 'Invalid Base64 string — could not decode');
+      window.__belbooreTools.setErrorBox(errorDiv, root.dataset.decodeError || 'Invalid Base64 string');
       window.__belbooreTools.showEmpty(output, root.dataset.fixError || 'Fix the error above and try again');
       output.classList.add('b64-tool__output--empty');
     }
   }
 
+  function formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function processFile(file: File) {
+    const sizeMB = file.size / (1024 * 1024);
+    if (sizeMB > 50) {
+      if (fileError) { fileError.textContent = root.dataset.fileTooLarge || 'File is too large'; fileError.style.display = ''; }
+      return;
+    }
+    if (fileError) fileError.style.display = 'none';
+
+    filenameEl.textContent = file.name;
+    filesizeEl.textContent = formatSize(file.size);
+    filemimeEl.textContent = file.type || 'unknown';
+    fileInfo.style.display = '';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      if (fileModeType === 'dataurl') {
+        currentFileResult = dataUrl;
+      } else {
+        currentFileResult = dataUrl.split(',')[1] || '';
+      }
+      if (fileOutput) fileOutput.value = currentFileResult;
+    };
+    reader.onerror = () => {
+      if (fileError) { fileError.textContent = 'Failed to read file'; fileError.style.display = ''; }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  typeTabs?.addEventListener('ui-tabs:change', (event: Event) => {
+    const customEvent = event as CustomEvent<{ tabId?: string }>;
+    const tabId = customEvent.detail?.tabId || 'text';
+    activeType = tabId as 'text' | 'file';
+    textMode.style.display = activeType === 'text' ? '' : 'none';
+    fileMode.style.display = activeType === 'file' ? '' : 'none';
+  });
+
   modeTabs?.addEventListener('ui-tabs:change', (event: Event) => {
     const customEvent = event as CustomEvent<{ tabId?: string }>;
-    const tabId = customEvent.detail?.tabId;
-    activeMode = tabId === 'decode' ? 'decode' : 'encode';
+    activeMode = customEvent.detail?.tabId === 'decode' ? 'decode' : 'encode';
+  });
+
+  fileModeBtns.forEach(btn => btn.addEventListener('click', () => {
+    fileModeType = (btn.dataset.fileMode || 'raw') as 'raw' | 'dataurl';
+    fileModeBtns.forEach(b => b.classList.toggle('is-active', b.dataset.fileMode === fileModeType));
+    if (currentFileResult) {
+      const dataUrl = currentFileResult;
+      if (fileOutput) {
+        if (fileModeType === 'dataurl') {
+          const raw = dataUrl;
+          fileOutput.value = raw.startsWith('data:') ? raw : '';
+        } else {
+          const parts = dataUrl.split(',');
+          fileOutput.value = parts.length > 1 ? parts[1] : dataUrl;
+        }
+      }
+    }
+  }));
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (!file) {
+      if (fileError) { fileError.textContent = root.dataset.noFile || 'Select a file'; fileError.style.display = ''; }
+      return;
+    }
+    processFile(file);
   });
 
   input.addEventListener('keydown', (event) => {
@@ -158,28 +289,23 @@ const t = ui[lang];
     }
   });
 
-  document.getElementById('b64-run')!.addEventListener('click', () => {
-    activeMode === 'encode' ? runEncode() : runDecode();
-  });
-
+  document.getElementById('b64-run')!.addEventListener('click', () => { activeMode === 'encode' ? runEncode() : runDecode(); });
   document.getElementById('b64-copy')!.addEventListener('click', async () => {
     const text = output.textContent || '';
     if (!text || output.classList.contains('b64-tool__output--empty')) return;
     window.__belbooreTools.copyToClipboard(text, document.getElementById('b64-copy')!, 1500);
   });
-
   document.getElementById('b64-clear')!.addEventListener('click', () => {
     input.value = '';
-    window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here');
+    window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || '');
     output.classList.add('b64-tool__output--empty');
     window.__belbooreTools.clearErrorBox(errorDiv);
   });
-
   document.getElementById('b64-swap')!.addEventListener('click', () => {
     const currentOutput = output.textContent || '';
     if (!output.classList.contains('b64-tool__output--empty') && currentOutput) {
       input.value = currentOutput;
-      window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || 'Encoded / decoded result will appear here');
+      window.__belbooreTools.showEmpty(output, root.dataset.emptyOutput || '');
       output.classList.add('b64-tool__output--empty');
       window.__belbooreTools.clearErrorBox(errorDiv);
     } else {
@@ -188,134 +314,47 @@ const t = ui[lang];
     }
   });
 
+  fileCopyBtn?.addEventListener('click', () => {
+    if (!fileOutput || !fileOutput.value) return;
+    navigator.clipboard.writeText(fileOutput.value).then(() => {
+      fileCopyBtn.classList.add('is-copied');
+      const orig = fileCopyBtn.innerHTML;
+      fileCopyBtn.innerHTML = 'Copied!';
+      setTimeout(() => { fileCopyBtn.innerHTML = orig; fileCopyBtn.classList.remove('is-copied'); }, 1200);
+    }).catch(() => {});
+  });
 </script>
 
 <style>
-  .b64-tool {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-5);
-  }
-
-  .b64-tool__toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-  }
-
-  .b64-tool__modes {
-    display: inline-flex;
-    gap: var(--space-2);
-    padding: var(--space-1);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-xl);
-    background: var(--surface-tertiary);
-  }
-
-  .b64-tool__modes {
-    margin-inline-end: auto;
-  }
-
-  .b64-tool__run-btn {
-    min-height: 40px;
-    border-radius: var(--radius-lg);
-  }
-
-  .b64-tool__quick-actions {
-    display: inline-flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-
-  .b64-tool__icon-btn {
-    min-height: 40px;
-    border-radius: var(--radius-lg);
-  }
-
-  .b64-tool__grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-4);
-  }
-
-  .b64-tool__panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-
-  .b64-tool__label-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-  }
-
-  .b64-tool__label {
-    margin: 0;
-    font-size: var(--text-xs);
-    color: var(--text-tertiary);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: var(--weight-semibold);
-  }
-
-  .b64-tool__hint {
-    font-size: var(--text-xs);
-    color: var(--text-muted);
-  }
-
-  .b64-tool__textarea {
-    min-height: 260px;
-    font-family: var(--font-mono);
-  }
-
-  .b64-tool__output {
-    min-height: 260px;
-    max-height: 420px;
-    overflow: auto;
-    padding: var(--space-4);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    background:
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 88%, transparent));
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    line-height: 1.7;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .b64-tool__output--empty {
-    display: grid;
-    place-items: center;
-    color: var(--text-muted);
-    font-style: italic;
-  }
-
-  .b64-tool__note {
-    margin-top: 0;
-  }
-
-  @media (max-width: 960px) {
-    .b64-tool__grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .b64-tool__modes,
-    .b64-tool__quick-actions {
-      width: 100%;
-    }
-
-    .b64-tool__modes .b64-tool__mode-btn,
-    .b64-tool__quick-actions .b64-tool__icon-btn {
-      width: 100%;
-      justify-content: center;
-    }
-  }
+  .b64-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .b64-tool__type-tabs { margin-bottom: 0; }
+  .b64-tool__toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+  .b64-tool__modes { display: inline-flex; gap: var(--space-2); padding: var(--space-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); background: var(--surface-tertiary); margin-inline-end: auto; }
+  .b64-tool__run-btn { min-height: 40px; border-radius: var(--radius-lg); }
+  .b64-tool__quick-actions { display: inline-flex; gap: var(--space-2); flex-wrap: wrap; }
+  .b64-tool__icon-btn { min-height: 40px; border-radius: var(--radius-lg); }
+  .b64-tool__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+  .b64-tool__panel { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+  .b64-tool__label-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+  .b64-tool__label { margin: 0; font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; font-weight: var(--weight-semibold); }
+  .b64-tool__hint { font-size: var(--text-xs); color: var(--text-muted); }
+  .b64-tool__textarea { min-height: 260px; font-family: var(--font-mono); }
+  .b64-tool__textarea--file-output { min-height: 180px; }
+  .b64-tool__output { min-height: 260px; max-height: 420px; overflow: auto; padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 98%, transparent), color-mix(in srgb, var(--surface-secondary) 88%, transparent)); color: var(--text-primary); font-family: var(--font-mono); line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+  .b64-tool__output--empty { display: grid; place-items: center; color: var(--text-muted); font-style: italic; }
+  .b64-tool__file-upload { display: flex; flex-direction: column; gap: var(--space-3); align-items: center; padding: var(--space-8); border: 2px dashed var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-tertiary); text-align: center; }
+  .b64-tool__file-label { display: flex; flex-direction: column; align-items: center; gap: var(--space-3); cursor: pointer; color: var(--color-tech-blue); font-weight: var(--weight-semibold); font-size: var(--text-sm); }
+  .b64-tool__file-label:hover { color: var(--color-tech-blue-hover); }
+  .b64-tool__file-input { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  .b64-tool__file-info { padding: var(--space-4); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); background: var(--surface-primary); }
+  .b64-tool__file-info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); font-size: var(--text-sm); }
+  .b64-tool__file-info-label { color: var(--text-tertiary); font-weight: var(--weight-semibold); }
+  .b64-tool__file-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
+  .b64-tool__file-mode-tabs { display: inline-flex; gap: var(--space-1); padding: var(--space-1); background: var(--surface-tertiary); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); }
+  .b64-tool__file-mode-btn { border: 0; border-radius: var(--radius-lg); padding: var(--space-2) var(--space-4); font: inherit; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-tertiary); background: transparent; cursor: pointer; transition: all var(--duration-fast) var(--ease-out); }
+  .b64-tool__file-mode-btn.is-active { color: var(--color-tech-blue); background: var(--surface-primary); box-shadow: var(--shadow-sm); }
+  .b64-tool__file-mode-btn:focus-visible { outline: 2px solid var(--color-tech-blue); outline-offset: 2px; }
+  .b64-tool__note { margin-top: 0; }
+  @media (max-width: 960px) { .b64-tool__grid { grid-template-columns: 1fr; } .b64-tool__file-info-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 640px) { .b64-tool__modes, .b64-tool__quick-actions { width: 100%; } .b64-tool__modes .b64-tool__mode-btn, .b64-tool__quick-actions .b64-tool__icon-btn { width: 100%; justify-content: center; } }
 </style>

@@ -1,0 +1,214 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import { ui } from '../../i18n/ui';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import ToolCalendarField from './ToolCalendarField.astro';
+import ToolResultCard from './ToolResultCard.astro';
+import Tabs from '../ui/Tabs.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const t = ui[lang];
+const dir = languages[lang].dir;
+const defaultCal = lang === 'fa' ? 'jalali' : 'gregorian';
+---
+
+<ToolWorkspace title={t['tools.dateDifference.title']}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="date-diff" dir={dir}
+    data-empty={t['tools.dateDifference.selectDates']}
+    data-same-day={t['tools.dateDifference.sameDay']}
+    data-weeks-days={t['tools.dateDifference.weeksDays']}
+    data-total-days={t['tools.dateDifference.totalDays']}
+    data-absolute-days={t['tools.dateDifference.absoluteDays']}
+    data-signed-days={t['tools.dateDifference.signedDays']}
+    data-copy-result={t['tools.dateDifference.copyResult']}
+    data-default-calendar={defaultCal}
+  >
+    <div class="date-diff__controls">
+      <div class="tool-field date-diff__calendar-mode">
+        <Tabs
+          id="dd-cal-tabs"
+          className="date-diff__calendar-tabs"
+          ariaLabel={lang === 'fa' ? 'تقویم' : 'Calendar'}
+          activeId={defaultCal}
+          tabs={[
+            { id: 'gregorian', label: t['tools.dateDifference.gregorian'] },
+            { id: 'jalali', label: t['tools.dateDifference.jalali'] },
+          ]}
+        />
+      </div>
+
+      <div class="tool-grid-2 date-diff__fields">
+        <ToolCalendarField id="dd-start" label={t['tools.dateDifference.startDate']} lang={lang} calendar={defaultCal} className="date-diff__start-field" />
+        <ToolCalendarField id="dd-end" label={t['tools.dateDifference.endDate']} lang={lang} calendar={defaultCal} />
+      </div>
+
+      <div class="tool-toolbar date-diff__toolbar">
+        <ToolActionButton id="dd-calc">{t['tools.dateDifference.calculate']}</ToolActionButton>
+      </div>
+    </div>
+
+    <div id="dd-error" class="tool-error" style="display: none;" role="alert"></div>
+
+    <div id="dd-relation" class="date-diff__relation" style="display: none;"></div>
+
+    <ToolResultCard id="dd-results" className="date-diff__results" copyId="dd-copy" copyLabel={t['tools.dateDifference.copyResult']}>
+      <div class="tool-result date-diff__result-surface">
+        <div class="date-diff__rows">
+          <div class="date-diff__row">
+            <span class="tool-result__label">{t['tools.dateDifference.totalDays']}</span>
+            <span class="tool-result__value" id="dd-total">0</span>
+          </div>
+          <div class="date-diff__row">
+            <span class="tool-result__label">{t['tools.dateDifference.absoluteDays']}</span>
+            <span class="tool-result__value" id="dd-abs">0</span>
+          </div>
+          <div class="date-diff__row">
+            <span class="tool-result__label">{t['tools.dateDifference.signedDays']}</span>
+            <span class="tool-result__value" id="dd-signed">0</span>
+          </div>
+          <div class="date-diff__row">
+            <span class="tool-result__label">{t['tools.dateDifference.weeksDays'].replace('{weeks}', '').replace('{days}', '')}</span>
+            <span class="tool-result__value" id="dd-wd">0</span>
+          </div>
+        </div>
+      </div>
+    </ToolResultCard>
+
+    <div id="dd-empty" class="tool-output tool-output--empty">{t['tools.dateDifference.selectDates']}</div>
+
+    <div class="tool-note">
+      <span class="tool-note__icon">i</span>
+      {t['tools.dateDifference.note']}
+    </div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  var root = document.querySelector('.date-diff');
+  var results = document.getElementById('dd-results');
+  var emptyEl = document.getElementById('dd-empty');
+  var relation = document.getElementById('dd-relation');
+  var totalEl = document.getElementById('dd-total');
+  var absEl = document.getElementById('dd-abs');
+  var signedEl = document.getElementById('dd-signed');
+  var wdEl = document.getElementById('dd-wd');
+  var errorDiv = document.getElementById('dd-error');
+  var calcBtn = document.getElementById('dd-calc');
+  var copyBtn = document.getElementById('dd-copy');
+  var calTabs = document.getElementById('dd-cal-tabs');
+
+  function setError(m){if(!errorDiv) return;window.__belbooreTools.setErrorBox(errorDiv,m);}
+  function clearError(){if(!errorDiv) return;window.__belbooreTools.clearErrorBox(errorDiv);}
+
+  var currentMode = root ? root.getAttribute('data-default-calendar') || 'gregorian' : 'gregorian';
+
+  function setCalMode(mode){
+    currentMode = mode;
+    if(window.__belbooreCalendars){
+      if(window.__belbooreCalendars['dd-start']) window.__belbooreCalendars['dd-start'].setCalendarMode(mode);
+      if(window.__belbooreCalendars['dd-end']) window.__belbooreCalendars['dd-end'].setCalendarMode(mode);
+    }
+  }
+
+  calTabs?.addEventListener('ui-tabs:change', function(event){
+    var customEvent = event;
+    var tabId = customEvent.detail && customEvent.detail.tabId;
+    setCalMode(tabId === 'jalali' ? 'jalali' : 'gregorian');
+  });
+  setCalMode(currentMode);
+
+  function calcDiff(){
+    if(!root||!results||!emptyEl||!totalEl||!absEl||!signedEl||!wdEl||!relation) return;
+    var cals = window.__belbooreCalendars;
+    var startVal = cals && cals['dd-start'] ? cals['dd-start'].getNormalized() : null;
+    var endVal = cals && cals['dd-end'] ? cals['dd-end'].getNormalized() : null;
+
+    if(!startVal||!endVal||!startVal.iso||!endVal.iso){
+      clearError();
+      results.style.display='none';
+      relation.style.display='none';
+      emptyEl.style.display='';
+      return;
+    }
+
+    var p1=startVal.iso.split('-'), p2=endVal.iso.split('-');
+    var start=new Date(+p1[0],+p1[1]-1,+p1[2]);
+    var end=new Date(+p2[0],+p2[1]-1,+p2[2]);
+    if(isNaN(start.getTime())||isNaN(end.getTime())) return;
+
+    clearError();
+    emptyEl.style.display='none';
+    var diffTime=end.getTime()-start.getTime();
+    var diffDays=Math.round(diffTime/(1000*60*60*24));
+    var absDiff=Math.abs(diffDays);
+
+    if(diffDays===0){
+      relation.textContent=root.getAttribute('data-same-day')||'Same day — difference is 0';
+    } else {
+      relation.textContent=(diffDays>0
+        ? (startVal.gregorian.year+'-'+String(startVal.gregorian.month).padStart(2,'0')+'-'+String(startVal.gregorian.day).padStart(2,'0') + ' → ' + endVal.gregorian.year+'-'+String(endVal.gregorian.month).padStart(2,'0')+'-'+String(endVal.gregorian.day).padStart(2,'0'))
+        : (endVal.gregorian.year+'-'+String(endVal.gregorian.month).padStart(2,'0')+'-'+String(endVal.gregorian.day).padStart(2,'0') + ' → ' + startVal.gregorian.year+'-'+String(startVal.gregorian.month).padStart(2,'0')+'-'+String(startVal.gregorian.day).padStart(2,'0'))
+      );
+    }
+    relation.style.display='';
+
+    totalEl.textContent=String(absDiff);
+    absEl.textContent=String(absDiff);
+    signedEl.textContent=String(diffDays);
+
+    var absWeeks=Math.floor(absDiff/7);
+    var absRem=absDiff%7;
+    wdEl.textContent=(root.getAttribute('data-weeks-days')||'{weeks} weeks and {days} days')
+      .replace('{weeks}',String(absWeeks)).replace('{days}',String(absRem));
+
+    results.style.display='';
+  }
+
+  calcBtn.addEventListener('click', calcDiff);
+
+  copyBtn.addEventListener('click', function(){
+    if(!results||!totalEl||!absEl||!signedEl||!wdEl) return;
+    if(results.style.display==='none') return;
+    var td=root.getAttribute('data-total-days')||'Total Days';
+    var ad=root.getAttribute('data-absolute-days')||'Absolute Days';
+    var sd=root.getAttribute('data-signed-days')||'Signed Difference';
+    var text=td+': '+totalEl.textContent+'\n'+ad+': '+absEl.textContent+'\n'+sd+': '+signedEl.textContent+'\n'+wdEl.textContent;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+</script>
+
+<style>
+  .date-diff{display:flex;flex-direction:column;gap:var(--space-5);}
+  .date-diff__controls{display:flex;flex-direction:column;gap:var(--space-6);padding:var(--space-5);border:1px solid var(--border-subtle);border-radius:var(--radius-xl);background:linear-gradient(180deg,color-mix(in srgb,var(--surface-primary) 96%,transparent),var(--surface-secondary));box-shadow:var(--shadow-sm);}
+  .date-diff__calendar-mode{flex:0 0 auto;}
+  .date-diff__calendar-tabs{width:max-content;max-width:100%;}
+  .date-diff__fields{width:min(100%, 760px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-5);align-items:start;}
+  .date-diff__start-field{margin-bottom:0;}
+  .date-diff__toolbar{justify-content:flex-end;padding:0;}
+  .date-diff__relation{padding:var(--space-4) var(--space-5);background:var(--color-tech-blue-subtle);border:1px solid rgba(0,82,255,0.12);border-radius:var(--radius-lg);font-size:var(--text-sm);font-weight:var(--weight-medium);color:var(--color-tech-blue);}
+  .date-diff__results{display:flex;flex-direction:column;gap:var(--space-4);}
+  .date-diff__result-surface{padding:var(--space-5);border-radius:var(--radius-xl);background:radial-gradient(circle at top right,rgba(0,82,255,0.08),transparent 38%),linear-gradient(180deg,var(--surface-primary),var(--surface-secondary));border:1px solid var(--border-subtle);box-shadow:var(--shadow-sm);}
+  .date-diff__rows{display:flex;flex-direction:column;gap:var(--space-1);}
+  .date-diff__row{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle);}
+  .date-diff__row:last-child{border-bottom:none;}
+  .date-diff__row :global(.tool-result__label){text-align:start;color:var(--text-secondary);}
+  .date-diff__row :global(.tool-result__value){font-size:clamp(1.1rem,2vw,1.5rem);text-align:end;}
+  @media(max-width:640px){
+    .date-diff__controls{padding:var(--space-4);}
+    .date-diff__fields{width:100%;grid-template-columns:1fr;gap:var(--space-4);}
+    .date-diff__relation,.date-diff__result-surface{padding:var(--space-4);}
+    .date-diff__row{align-items:flex-start;flex-direction:column;}
+    .date-diff__row :global(.tool-result__value){text-align:start;}
+  }
+</style>

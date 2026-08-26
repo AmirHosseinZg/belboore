@@ -1,0 +1,327 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+import TextArea from '../ui/TextArea.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'List Converter',
+    inputLabel: 'Input list',
+    outputLabel: 'Output list',
+    inputPlaceholder: 'Enter items, one per line...',
+    outputEmpty: 'Transformed list will appear here',
+    copy: 'Copy',
+    clear: 'Clear',
+    loadExample: 'Load example',
+    note: 'All processing happens in your browser. Your data is never uploaded.',
+    sortOrder: 'Sort order',
+    sortAZ: 'A → Z',
+    sortZA: 'Z → A',
+    sortLenAsc: 'Length (short→long)',
+    sortLenDesc: 'Length (long→short)',
+    random: 'Random',
+    removeDuplicates: 'Remove duplicates',
+    removeEmpty: 'Remove empty lines',
+    trimLines: 'Trim lines',
+    prefix: 'Prefix',
+    suffix: 'Suffix',
+    truncate: 'Truncate at',
+    ellipsis: 'Add ellipsis',
+    transpose: 'Transpose',
+    transposeDelimiter: 'Column delimiter',
+    delimiterComma: 'Comma',
+    delimiterTab: 'Tab',
+    delimiterSpace: 'Space',
+    delimiterSemicolon: 'Semicolon',
+    delimiterCustom: 'Custom',
+    reverse: 'Reverse lines',
+    numberLines: 'Number lines',
+    joinLines: 'Join lines with',
+    transform: 'Transform',
+    cleanup: 'Cleanup & Sort',
+    prefixSuffix: 'Prefix / Suffix',
+    advanced: 'Advanced',
+    chars: 'chars',
+  },
+  fa: {
+    title: 'تبدیل لیست',
+    inputLabel: 'لیست ورودی',
+    outputLabel: 'لیست خروجی',
+    inputPlaceholder: 'آیتم‌ها را هر یک در یک خط وارد کنید...',
+    outputEmpty: 'لیست تبدیل شده اینجا نمایش داده می‌شود',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    loadExample: 'نمونه',
+    note: 'تمام پردازش‌ها در مرورگر شما انجام می‌شود. داده‌های شما آپلود نمی‌شود.',
+    sortOrder: 'ترتیب مرتب‌سازی',
+    sortAZ: 'الفبا (A → Z)',
+    sortZA: 'الفبا (Z → A)',
+    sortLenAsc: 'طول (کوتاه→بلند)',
+    sortLenDesc: 'طول (بلند→کوتاه)',
+    random: 'تصادفی',
+    removeDuplicates: 'حذف موارد تکراری',
+    removeEmpty: 'حذف خطوط خالی',
+    trimLines: 'حذف فاصله‌ها',
+    prefix: 'پیشوند',
+    suffix: 'پسوند',
+    truncate: 'محدودیت کاراکتر',
+    ellipsis: 'اضافه کردن ...',
+    transpose: 'ترانهاده',
+    transposeDelimiter: 'جداکننده ستون',
+    delimiterComma: 'کاما',
+    delimiterTab: 'تب',
+    delimiterSpace: 'فاصله',
+    delimiterSemicolon: 'سمی‌کالن',
+    delimiterCustom: 'دلخواه',
+    reverse: 'معکوس کردن خطوط',
+    numberLines: 'شماره‌گذاری خطوط',
+    joinLines: 'اتصال خطوط با',
+    transform: 'تبدیل',
+    cleanup: 'پاک‌سازی و مرتب‌سازی',
+    prefixSuffix: 'پیشوند / پسوند',
+    advanced: 'پیشرفته',
+    chars: 'کاراکتر',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="lc-tool" dir={dir} data-empty={copy.outputEmpty}>
+    <div class="lc-tool__controls">
+      <div class="lc-tool__actions">
+        <Button id="lc-copy" variant="primary">{copy.copy}</Button>
+        <Button id="lc-clear" variant="secondary">{copy.clear}</Button>
+        <Button id="lc-example" variant="outline">{copy.loadExample}</Button>
+      </div>
+      <Button id="lc-run" variant="primary" className="lc-tool__run-btn">{copy.transform}</Button>
+    </div>
+
+    <div class="lc-tool__grid">
+      <TextArea id="lc-input" label={copy.inputLabel} className="lc-tool__textarea" placeholder={copy.inputPlaceholder} rows={12} spellcheck="false" />
+      <div class="lc-tool__output-shell">
+        <div class="lc-tool__panel-head">
+          <label class="lc-tool__label" for="lc-output">{copy.outputLabel}</label>
+        </div>
+        <div id="lc-output" class="tool-output tool-output--empty lc-tool__output" role="status" aria-live="polite">{copy.outputEmpty}</div>
+      </div>
+    </div>
+
+    <div class="lc-tool__settings">
+      <div class="lc-tool__section">
+        <h4 class="lc-tool__section-title">{copy.cleanup}</h4>
+        <div class="lc-tool__section-body">
+          <Select id="lc-sort-order" label={copy.sortOrder} className="lc-tool__select" selectedValue="none" options={[
+            { value: 'none', label: '—' },
+            { value: 'alpha-asc', label: copy.sortAZ },
+            { value: 'alpha-desc', label: copy.sortZA },
+            { value: 'len-asc', label: copy.sortLenAsc },
+            { value: 'len-desc', label: copy.sortLenDesc },
+            { value: 'random', label: copy.random },
+          ]} />
+          <div class="lc-tool__checkboxes">
+            <label class="lc-tool__checkbox"><input type="checkbox" id="lc-unique" /> {copy.removeDuplicates}</label>
+            <label class="lc-tool__checkbox"><input type="checkbox" id="lc-empty" /> {copy.removeEmpty}</label>
+            <label class="lc-tool__checkbox"><input type="checkbox" id="lc-trim" checked /> {copy.trimLines}</label>
+            <label class="lc-tool__checkbox"><input type="checkbox" id="lc-reverse" /> {copy.reverse}</label>
+            <label class="lc-tool__checkbox"><input type="checkbox" id="lc-number" /> {copy.numberLines}</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="lc-tool__section">
+        <h4 class="lc-tool__section-title">{copy.prefixSuffix}</h4>
+        <div class="lc-tool__section-body lc-tool__section-body--row">
+          <Input id="lc-prefix" label={copy.prefix} className="lc-tool__input" placeholder="" />
+          <Input id="lc-suffix" label={copy.suffix} className="lc-tool__input" placeholder="" />
+        </div>
+        <div class="lc-tool__section-body lc-tool__section-body--row">
+          <Input id="lc-truncate" label={copy.truncate} type="number" className="lc-tool__input lc-tool__input--sm" placeholder="0" min="0" />
+          <label class="lc-tool__checkbox lc-tool__checkbox--mt"><input type="checkbox" id="lc-ellipsis" checked /> {copy.ellipsis}</label>
+          <Input id="lc-join" label={copy.joinLines} className="lc-tool__input lc-tool__input--sm" placeholder="—" />
+        </div>
+      </div>
+
+      <div class="lc-tool__section">
+        <h4 class="lc-tool__section-title">{copy.transpose}</h4>
+        <div class="lc-tool__section-body lc-tool__section-body--row">
+          <Select id="lc-delimiter" label={copy.transposeDelimiter} className="lc-tool__select lc-tool__select--sm" selectedValue="," options={[
+            { value: ',', label: copy.delimiterComma },
+            { value: '\t', label: copy.delimiterTab },
+            { value: ' ', label: copy.delimiterSpace },
+            { value: ';', label: copy.delimiterSemicolon },
+            { value: 'custom', label: copy.delimiterCustom },
+          ]} />
+          <Input id="lc-custom-delim" label={copy.delimiterCustom} className="lc-tool__input lc-tool__input--sm" placeholder="" disabled />
+          <Button id="lc-transpose-btn" variant="outline" className="lc-tool__transpose-btn">{copy.transpose}</Button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tool-note lc-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const input = document.getElementById('lc-input') as HTMLTextAreaElement | null;
+  const output = document.getElementById('lc-output')!;
+  const copyBtn = document.getElementById('lc-copy') as HTMLButtonElement | null;
+  const clearBtn = document.getElementById('lc-clear') as HTMLButtonElement | null;
+  const exampleBtn = document.getElementById('lc-example') as HTMLButtonElement | null;
+  const runBtn = document.getElementById('lc-run') as HTMLButtonElement | null;
+  const sortOrder = document.getElementById('lc-sort-order') as HTMLSelectElement | null;
+  const uniqueCb = document.getElementById('lc-unique') as HTMLInputElement | null;
+  const emptyCb = document.getElementById('lc-empty') as HTMLInputElement | null;
+  const trimCb = document.getElementById('lc-trim') as HTMLInputElement | null;
+  const reverseCb = document.getElementById('lc-reverse') as HTMLInputElement | null;
+  const numberCb = document.getElementById('lc-number') as HTMLInputElement | null;
+  const prefixInput = document.getElementById('lc-prefix') as HTMLInputElement | null;
+  const suffixInput = document.getElementById('lc-suffix') as HTMLInputElement | null;
+  const truncateInput = document.getElementById('lc-truncate') as HTMLInputElement | null;
+  const ellipsisCb = document.getElementById('lc-ellipsis') as HTMLInputElement | null;
+  const joinInput = document.getElementById('lc-join') as HTMLInputElement | null;
+  const delimiterSelect = document.getElementById('lc-delimiter') as HTMLSelectElement | null;
+  const customDelimInput = document.getElementById('lc-custom-delim') as HTMLInputElement | null;
+  const transposeBtn = document.getElementById('lc-transpose-btn') as HTMLButtonElement | null;
+
+  const EXAMPLE = 'apple\nbanana\ncherry\ndate\nelderberry\nfig\ngrape';
+
+  function getLines(): string[] {
+    if (!input) return [];
+    return input.value.split('\n');
+  }
+
+  function showResult(text: string) {
+    if (!text) { window.__belbooreTools.showEmpty(output, ''); return; }
+    window.__belbooreTools.showOutput(output, text);
+  }
+
+  function transform() {
+    if (!input) return;
+    let lines = input.value.split('\n');
+
+    if (trimCb?.checked) lines = lines.map(l => l.trim());
+    if (emptyCb?.checked) lines = lines.filter(l => l.length > 0);
+    if (uniqueCb?.checked) lines = [...new Set(lines)];
+
+    const order = sortOrder?.value || 'none';
+    if (order === 'alpha-asc') lines.sort((a, b) => a.localeCompare(b));
+    else if (order === 'alpha-desc') lines.sort((a, b) => b.localeCompare(a));
+    else if (order === 'len-asc') lines.sort((a, b) => a.length - b.length);
+    else if (order === 'len-desc') lines.sort((a, b) => b.length - a.length);
+    else if (order === 'random') { for (let i = lines.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [lines[i], lines[j]] = [lines[j], lines[i]]; } }
+
+    if (reverseCb?.checked) lines.reverse();
+
+    const prefix = prefixInput?.value || '';
+    const suffix = suffixInput?.value || '';
+    if (prefix || suffix) lines = lines.map(l => prefix + l + suffix);
+
+    const truncateVal = parseInt(truncateInput?.value || '0', 10);
+    if (truncateVal > 0) {
+      const useEllipsis = ellipsisCb?.checked ?? true;
+      lines = lines.map(l => l.length > truncateVal ? l.slice(0, truncateVal) + (useEllipsis ? '…' : '') : l);
+    }
+
+    if (numberCb?.checked) lines = lines.map((l, i) => `${i + 1}. ${l}`);
+
+    const joinDelim = joinInput?.value;
+    if (joinDelim != null && joinDelim.length > 0) {
+      showResult(lines.join(joinDelim));
+      return;
+    }
+
+    showResult(lines.join('\n'));
+  }
+
+  function doTranspose() {
+    if (!input) return;
+    const lines = input.value.split('\n').filter(l => l.trim().length > 0);
+    if (lines.length === 0) { showResult(''); return; }
+
+    const delim = delimiterSelect?.value === 'custom'
+      ? (customDelimInput?.value || ',')
+      : (delimiterSelect?.value || ',');
+    const actualDelim = delim === '\\t' ? '\t' : delim;
+
+    const rows = lines.map(l => l.split(actualDelim));
+    const maxCols = Math.max(...rows.map(r => r.length));
+
+    const resultRows: string[] = [];
+    for (let col = 0; col < maxCols; col++) {
+      const newRow: string[] = [];
+      for (let row = 0; row < rows.length; row++) {
+        newRow.push(rows[row][col] !== undefined ? rows[row][col].trim() : '');
+      }
+      resultRows.push(newRow.join(actualDelim));
+    }
+    showResult(resultRows.join('\n'));
+  }
+
+  runBtn?.addEventListener('click', transform);
+  transposeBtn?.addEventListener('click', doTranspose);
+  delimiterSelect?.addEventListener('change', () => {
+    if (customDelimInput) customDelimInput.disabled = delimiterSelect.value !== 'custom';
+  });
+
+  copyBtn?.addEventListener('click', () => {
+    const text = output.textContent || '';
+    if (!text || output.classList.contains('tool-output--empty')) return;
+    window.__belbooreTools.copyToClipboard(text, copyBtn, 1500);
+  });
+
+  clearBtn?.addEventListener('click', () => {
+    if (input) input.value = '';
+    window.__belbooreTools.showEmpty(output, '');
+    input?.focus();
+  });
+
+  exampleBtn?.addEventListener('click', () => {
+    if (input) input.value = EXAMPLE;
+    transform();
+  });
+</script>
+
+<style>
+  .lc-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .lc-tool__controls { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+  .lc-tool__actions { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .lc-tool__run-btn { min-width: 140px; }
+  .lc-tool__grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: var(--space-5); align-items: stretch; }
+  .lc-tool__textarea { display: block; min-height: 260px; height: 100%; }
+  .lc-tool__output-shell { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; height: 100%; }
+  .lc-tool__panel-head { display: flex; flex-direction: column; gap: var(--space-1); }
+  .lc-tool__label { color: var(--text-secondary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; }
+  .lc-tool__output { min-height: 260px; padding: var(--space-5); line-height: 1.8; }
+  .lc-tool__settings { display: flex; flex-direction: column; gap: var(--space-4); }
+  .lc-tool__section { border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface-tertiary); }
+  .lc-tool__section-title { margin: 0; padding: var(--space-3) var(--space-4); font-size: var(--text-xs); font-weight: var(--weight-semibold); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; background: var(--surface-secondary); border-bottom: 1px solid var(--border-subtle); }
+  .lc-tool__section-body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
+  .lc-tool__section-body--row { flex-direction: row; flex-wrap: wrap; align-items: flex-end; gap: var(--space-4); }
+  .lc-tool__checkboxes { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); padding-top: var(--space-1); }
+  .lc-tool__checkbox { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-secondary); cursor: pointer; }
+  .lc-tool__checkbox input { accent-color: var(--color-tech-blue); width: 16px; height: 16px; }
+  .lc-tool__checkbox--mt { margin-top: 6px; }
+  .lc-tool__select { min-width: 180px; }
+  .lc-tool__select--sm { min-width: 130px; }
+  .lc-tool__input { min-width: 120px; }
+  .lc-tool__input--sm { max-width: 100px; }
+  .lc-tool__transpose-btn { align-self: flex-end; min-height: 42px; }
+  .lc-tool__note { margin-top: 0; }
+  @media (max-width: 900px) { .lc-tool__grid { grid-template-columns: 1fr; } .lc-tool__controls { flex-direction: column; align-items: stretch; } .lc-tool__actions { justify-content: flex-start; } .lc-tool__section-body--row { flex-direction: column; align-items: stretch; } .lc-tool__input, .lc-tool__select { width: 100%; min-width: 0; } .lc-tool__input--sm { max-width: none; } }
+</style>

@@ -1,0 +1,210 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'MIME Types',
+    hint: 'Search file extensions and MIME content types by extension, description, category, or MIME type.',
+    search: 'Search MIME types...',
+    empty: 'No matching MIME types found.',
+    emptyAll: 'Start typing to search MIME types.',
+    note: 'All data is stored locally. No network requests are made.',
+    extension: 'Extension',
+    mime: 'MIME Type',
+    category: 'Category',
+    description: 'Description',
+    tableCaption: 'MIME Type reference table',
+  },
+  fa: {
+    title: 'انواع MIME',
+    hint: 'جستجوی پسوند فایل‌ها و انواع MIME بر اساس پسوند، توضیحات، دسته یا نوع MIME.',
+    search: 'جستجوی انواع MIME...',
+    empty: 'نوع MIME مطابقی یافت نشد.',
+    emptyAll: 'تایپ را شروع کنید تا انواع MIME جستجو شود.',
+    note: 'تمام داده‌ها به صورت محلی ذخیره شده است. هیچ درخواست شبکه‌ای انجام نمی‌شود.',
+    extension: 'پسوند',
+    mime: 'نوع MIME',
+    category: 'دسته',
+    description: 'توضیحات',
+    tableCaption: 'جدول مرجع انواع MIME',
+  },
+}[lang];
+---
+
+<ToolWorkspace title={copy.title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <section class="mt-tool" dir={dir} data-noquery="" data-empty={copy.empty} data-emptyall={copy.emptyAll}>
+    <p class="mt-tool__hint">{copy.hint}</p>
+
+    <div class="mt-tool__search">
+      <Input
+        id="mt-search"
+        label={copy.search}
+        placeholder="e.g. json, image, .woff2"
+        inputClassName="mt-tool__search-input"
+        spellcheck={false}
+      />
+    </div>
+
+    <div id="mt-count" class="mt-tool__count" role="status"></div>
+    <div id="mt-table-wrap" class="mt-tool__table-wrap">
+      <table class="mt-tool__table" id="mt-table" role="table" aria-label={copy.tableCaption}>
+        <thead>
+          <tr>
+            <th>{copy.extension}</th>
+            <th>{copy.mime}</th>
+            <th>{copy.category}</th>
+            <th>{copy.description}</th>
+          </tr>
+        </thead>
+        <tbody id="mt-tbody"></tbody>
+      </table>
+    </div>
+
+    <div class="tool-note mt-tool__note">{copy.note}</div>
+  </section>
+</ToolWorkspace>
+
+<script>
+  const searchInput = document.getElementById('mt-search') as HTMLInputElement | null;
+  const tbody = document.getElementById('mt-tbody') as HTMLElement | null;
+  const countEl = document.getElementById('mt-count') as HTMLElement | null;
+  const section = document.querySelector('.mt-tool') as HTMLElement | null;
+  const EMPTY = section?.dataset.empty || '';
+  const EMPTY_ALL = section?.dataset.emptyall || '';
+
+  const MIME_DATA: { ext: string; mime: string; category: string; description: string }[] = [
+    { ext: 'html', mime: 'text/html', category: 'Document', description: 'HyperText Markup Language' },
+    { ext: 'htm', mime: 'text/html', category: 'Document', description: 'HyperText Markup Language' },
+    { ext: 'css', mime: 'text/css', category: 'Style', description: 'Cascading Style Sheets' },
+    { ext: 'js', mime: 'application/javascript', category: 'Script', description: 'JavaScript' },
+    { ext: 'mjs', mime: 'application/javascript', category: 'Script', description: 'ES Module JavaScript' },
+    { ext: 'json', mime: 'application/json', category: 'Data', description: 'JSON Data' },
+    { ext: 'xml', mime: 'application/xml', category: 'Data', description: 'Extensible Markup Language' },
+    { ext: 'txt', mime: 'text/plain', category: 'Document', description: 'Plain Text' },
+    { ext: 'csv', mime: 'text/csv', category: 'Data', description: 'Comma-Separated Values' },
+    { ext: 'md', mime: 'text/markdown', category: 'Document', description: 'Markdown' },
+    { ext: 'yaml', mime: 'application/yaml', category: 'Data', description: 'YAML' },
+    { ext: 'yml', mime: 'application/yaml', category: 'Data', description: 'YAML' },
+    { ext: 'pdf', mime: 'application/pdf', category: 'Document', description: 'Portable Document Format' },
+    { ext: 'zip', mime: 'application/zip', category: 'Archive', description: 'ZIP Archive' },
+    { ext: 'gz', mime: 'application/gzip', category: 'Archive', description: 'GZip Compressed' },
+    { ext: 'tar', mime: 'application/x-tar', category: 'Archive', description: 'Tape Archive' },
+    { ext: 'rar', mime: 'application/vnd.rar', category: 'Archive', description: 'RAR Archive' },
+    { ext: '7z', mime: 'application/x-7z-compressed', category: 'Archive', description: '7-Zip Archive' },
+    { ext: 'png', mime: 'image/png', category: 'Image', description: 'Portable Network Graphics' },
+    { ext: 'jpg', mime: 'image/jpeg', category: 'Image', description: 'JPEG Image' },
+    { ext: 'jpeg', mime: 'image/jpeg', category: 'Image', description: 'JPEG Image' },
+    { ext: 'gif', mime: 'image/gif', category: 'Image', description: 'Graphics Interchange Format' },
+    { ext: 'webp', mime: 'image/webp', category: 'Image', description: 'WebP Image' },
+    { ext: 'svg', mime: 'image/svg+xml', category: 'Image', description: 'Scalable Vector Graphics' },
+    { ext: 'ico', mime: 'image/x-icon', category: 'Image', description: 'Favicon' },
+    { ext: 'bmp', mime: 'image/bmp', category: 'Image', description: 'Bitmap Image' },
+    { ext: 'avif', mime: 'image/avif', category: 'Image', description: 'AVIF Image' },
+    { ext: 'tiff', mime: 'image/tiff', category: 'Image', description: 'Tagged Image File Format' },
+    { ext: 'tif', mime: 'image/tiff', category: 'Image', description: 'Tagged Image File Format' },
+    { ext: 'mp3', mime: 'audio/mpeg', category: 'Audio', description: 'MPEG Audio Layer III' },
+    { ext: 'wav', mime: 'audio/wav', category: 'Audio', description: 'Waveform Audio' },
+    { ext: 'ogg', mime: 'audio/ogg', category: 'Audio', description: 'OGG Audio' },
+    { ext: 'flac', mime: 'audio/flac', category: 'Audio', description: 'Free Lossless Audio Codec' },
+    { ext: 'aac', mime: 'audio/aac', category: 'Audio', description: 'Advanced Audio Coding' },
+    { ext: 'wma', mime: 'audio/x-ms-wma', category: 'Audio', description: 'Windows Media Audio' },
+    { ext: 'mp4', mime: 'video/mp4', category: 'Video', description: 'MPEG-4 Video' },
+    { ext: 'webm', mime: 'video/webm', category: 'Video', description: 'WebM Video' },
+    { ext: 'avi', mime: 'video/x-msvideo', category: 'Video', description: 'Audio Video Interleave' },
+    { ext: 'mov', mime: 'video/quicktime', category: 'Video', description: 'QuickTime Movie' },
+    { ext: 'wmv', mime: 'video/x-ms-wmv', category: 'Video', description: 'Windows Media Video' },
+    { ext: 'mkv', mime: 'video/x-matroska', category: 'Video', description: 'Matroska Video' },
+    { ext: 'mpeg', mime: 'video/mpeg', category: 'Video', description: 'MPEG Video' },
+    { ext: 'mpg', mime: 'video/mpeg', category: 'Video', description: 'MPEG Video' },
+    { ext: 'woff', mime: 'font/woff', category: 'Font', description: 'Web Open Font Format' },
+    { ext: 'woff2', mime: 'font/woff2', category: 'Font', description: 'Web Open Font Format 2' },
+    { ext: 'ttf', mime: 'font/ttf', category: 'Font', description: 'TrueType Font' },
+    { ext: 'otf', mime: 'font/otf', category: 'Font', description: 'OpenType Font' },
+    { ext: 'eot', mime: 'application/vnd.ms-fontobject', category: 'Font', description: 'Embedded OpenType Font' },
+    { ext: 'wasm', mime: 'application/wasm', category: 'Code', description: 'WebAssembly Binary' },
+    { ext: 'bin', mime: 'application/octet-stream', category: 'Binary', description: 'Generic Binary Data' },
+    { ext: 'exe', mime: 'application/vnd.microsoft.portable-executable', category: 'Binary', description: 'Windows Executable' },
+    { ext: 'dmg', mime: 'application/x-apple-diskimage', category: 'Binary', description: 'macOS Disk Image' },
+    { ext: 'iso', mime: 'application/x-iso9660-image', category: 'Binary', description: 'ISO Disk Image' },
+    { ext: 'jsonld', mime: 'application/ld+json', category: 'Data', description: 'JSON-LD' },
+    { ext: 'rtf', mime: 'application/rtf', category: 'Document', description: 'Rich Text Format' },
+    { ext: 'doc', mime: 'application/msword', category: 'Document', description: 'Microsoft Word' },
+    { ext: 'docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', category: 'Document', description: 'Microsoft Word (OpenXML)' },
+    { ext: 'xls', mime: 'application/vnd.ms-excel', category: 'Data', description: 'Microsoft Excel' },
+    { ext: 'xlsx', mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', category: 'Data', description: 'Microsoft Excel (OpenXML)' },
+    { ext: 'ppt', mime: 'application/vnd.ms-powerpoint', category: 'Document', description: 'Microsoft PowerPoint' },
+    { ext: 'pptx', mime: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', category: 'Document', description: 'Microsoft PowerPoint (OpenXML)' },
+    { ext: 'apk', mime: 'application/vnd.android.package-archive', category: 'Binary', description: 'Android Package' },
+    { ext: 'deb', mime: 'application/vnd.debian.binary-package', category: 'Binary', description: 'Debian Package' },
+    { ext: 'rpm', mime: 'application/x-rpm', category: 'Binary', description: 'RPM Package' },
+    { ext: 'webmanifest', mime: 'application/manifest+json', category: 'Web', description: 'Web App Manifest' },
+    { ext: 'ics', mime: 'text/calendar', category: 'Data', description: 'iCalendar' },
+    { ext: 'vcf', mime: 'text/vcard', category: 'Data', description: 'vCard Contact' },
+  ];
+
+  function renderTable(query: string) {
+    if (!tbody || !countEl) return;
+    const q = query.toLowerCase().replace(/^\./, '');
+    const results = q
+      ? MIME_DATA.filter(e =>
+          e.ext.toLowerCase().includes(q) ||
+          e.mime.toLowerCase().includes(q) ||
+          e.category.toLowerCase().includes(q) ||
+          e.description.toLowerCase().includes(q)
+        )
+      : [];
+
+    if (q && results.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="mt-tool__empty-row">${EMPTY}</td></tr>`;
+      countEl.textContent = '0 results';
+      return;
+    }
+    if (!q) {
+      tbody.innerHTML = `<tr><td colspan="4" class="mt-tool__empty-row">${EMPTY_ALL}</td></tr>`;
+      countEl.textContent = '';
+      return;
+    }
+
+    countEl.textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+    tbody.innerHTML = results.map(e =>
+      `<tr><td class="mt-tool__ext"><code>.${e.ext}</code></td><td class="mt-tool__mime"><code>${e.mime}</code></td><td class="mt-tool__cat">${e.category}</td><td class="mt-tool__desc">${e.description}</td></tr>`
+    ).join('');
+  }
+
+  searchInput?.addEventListener('input', () => renderTable(searchInput.value));
+  renderTable('');
+</script>
+
+<style>
+  .mt-tool { display: flex; flex-direction: column; gap: var(--space-4); }
+  .mt-tool__hint { margin: 0; font-size: var(--text-sm); color: var(--text-secondary); }
+  .mt-tool__search { max-width: 480px; }
+  .mt-tool__search-input { font-family: var(--font-mono); }
+  .mt-tool__count { font-size: var(--text-xs); color: var(--text-muted); }
+  .mt-tool__table-wrap { overflow-x: auto; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); }
+  .mt-tool__table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); min-width: 500px; }
+  .mt-tool__table th { padding: var(--space-2) var(--space-3); background: var(--surface-tertiary); color: var(--text-tertiary); font-size: var(--text-xs); font-weight: var(--weight-semibold); text-transform: uppercase; letter-spacing: 0.06em; text-align: start; border-bottom: 2px solid var(--border-subtle); }
+  .mt-tool__table td { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); }
+  .mt-tool__empty-row { text-align: center; color: var(--text-muted); font-style: italic; padding: var(--space-6) var(--space-3); }
+  .mt-tool__ext code { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--color-tech-blue); font-weight: var(--weight-medium); }
+  .mt-tool__mime code { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--text-primary); }
+  .mt-tool__cat { color: var(--text-secondary); }
+  .mt-tool__desc { color: var(--text-primary); }
+  .mt-tool__note { margin-top: var(--space-2); }
+  @media (max-width: 640px) { .mt-tool__table { font-size: var(--text-xs); } .mt-tool__search { max-width: 100%; } }
+</style>

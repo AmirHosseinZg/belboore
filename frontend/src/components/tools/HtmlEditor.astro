@@ -1,0 +1,258 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'HTML WYSIWYG Editor',
+    htmlLabel: 'HTML Source',
+    previewLabel: 'Preview',
+    emptyState: 'Enter HTML in the source tab or use the editor toolbar',
+    note: 'Rich text editor powered by contentEditable. Switch between visual editing and HTML source. No scripts are executed in the preview. All processing is client-side.',
+    edit: 'Edit',
+    source: 'Source',
+    bold: 'Bold',
+    italic: 'Italic',
+    underline: 'Underline',
+    strikethrough: 'Strikethrough',
+    orderedList: 'Ordered List',
+    unorderedList: 'Unordered List',
+    link: 'Link',
+    unlink: 'Remove Link',
+    heading: 'Heading',
+    paragraph: 'Paragraph',
+    copy: 'Copy HTML',
+    clear: 'Clear',
+  },
+  fa: {
+    title: 'ویرایشگر HTML WYSIWYG',
+    htmlLabel: 'کد HTML',
+    previewLabel: 'پیش‌نمایش',
+    emptyState: 'HTML را در برگه منبع وارد کنید یا از نوار ابزار ویرایشگر استفاده کنید',
+    note: 'ویرایشگر متن غنی با contentEditable. بین ویرایش بصری و کد HTML جابجا شوید. هیچ اسکریپتی در پیش‌نمایش اجرا نمی‌شود. تمام پردازش در سمت کاربر است.',
+    edit: 'ویرایش',
+    source: 'منبع',
+    bold: 'پررنگ',
+    italic: 'مورب',
+    underline: 'زیرخط',
+    strikethrough: 'خط‌خورده',
+    orderedList: 'لیست شماره‌دار',
+    unorderedList: 'لیست',
+    link: 'پیوند',
+    unlink: 'حذف پیوند',
+    heading: 'عنوان',
+    paragraph: 'پاراگراف',
+    copy: 'کپی HTML',
+    clear: 'پاک کردن',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="html-tool">
+    <div class="tool-toolbar html-mode-row">
+      <button id="html-edit-btn" type="button" class="tool-btn tool-btn--primary">{copy[lang].edit}</button>
+      <button id="html-source-btn" type="button" class="tool-btn">{copy[lang].source}</button>
+    </div>
+    <div id="html-editor-toolbar" class="html-toolbar">
+      <button class="tool-btn html-cmd" data-cmd="bold" title={copy[lang].bold}><strong>B</strong></button>
+      <button class="tool-btn html-cmd" data-cmd="italic" title={copy[lang].italic}><em>I</em></button>
+      <button class="tool-btn html-cmd" data-cmd="underline" title={copy[lang].underline}><u>U</u></button>
+      <button class="tool-btn html-cmd" data-cmd="strikeThrough" title={copy[lang].strikethrough}><s>S</s></button>
+      <span class="html-toolbar-sep"></span>
+      <button class="tool-btn html-cmd" data-cmd="insertOrderedList" title={copy[lang].orderedList}>1.</button>
+      <button class="tool-btn html-cmd" data-cmd="insertUnorderedList" title={copy[lang].unorderedList}>&bull;</button>
+      <span class="html-toolbar-sep"></span>
+      <button class="tool-btn html-cmd" data-cmd="createLink" title={copy[lang].link}>&#x1F517;</button>
+      <button class="tool-btn html-cmd" data-cmd="unlink" title={copy[lang].unlink}>&#x1F517;&#x2716;</button>
+      <span class="html-toolbar-sep"></span>
+      <button class="tool-btn html-cmd" data-cmd="formatBlock-h1" title={copy[lang].heading}>H1</button>
+      <button class="tool-btn html-cmd" data-cmd="formatBlock-h2" title="Heading 2">H2</button>
+      <button class="tool-btn html-cmd" data-cmd="formatBlock-p" title={copy[lang].paragraph}>P</button>
+    </div>
+    <div id="html-edit-area" class="html-edit-area" contenteditable="true" role="textbox" aria-multiline="true"></div>
+    <textarea id="html-source-area" class="html-source-area" style="display:none" spellcheck="false" aria-label={copy[lang].htmlLabel}></textarea>
+    <div class="tool-toolbar">
+      <Button id="html-copy" variant="outline">{copy[lang].copy}</Button>
+      <Button id="html-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+    <div id="html-preview-label" class="tool-field__label html-preview-label" style="display:none">{copy[lang].previewLabel}</div>
+    <div id="html-preview" class="html-preview" style="display:none"></div>
+    <div id="html-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  const editBtn = document.getElementById('html-edit-btn') as HTMLButtonElement;
+  const sourceBtn = document.getElementById('html-source-btn') as HTMLButtonElement;
+  const toolbar = document.getElementById('html-editor-toolbar')!;
+  const editArea = document.getElementById('html-edit-area')!;
+  const sourceArea = document.getElementById('html-source-area') as HTMLTextAreaElement;
+  const copyBtn = document.getElementById('html-copy') as HTMLButtonElement;
+  const clearBtn = document.getElementById('html-clear') as HTMLButtonElement;
+  const previewLabel = document.getElementById('html-preview-label')!;
+  const previewEl = document.getElementById('html-preview')!;
+  const emptyEl = document.getElementById('html-empty')!;
+
+  let currentMode: 'edit' | 'source' = 'edit';
+
+  function syncPreview() {
+    const html = currentMode === 'edit' ? editArea.innerHTML : sourceArea.value;
+    if (html.trim()) {
+      previewEl.innerHTML = html;
+      previewLabel.style.display = '';
+      previewEl.style.display = '';
+      emptyEl.style.display = 'none';
+    } else {
+      previewLabel.style.display = 'none';
+      previewEl.style.display = 'none';
+      emptyEl.style.display = '';
+    }
+  }
+
+  function setMode(mode: 'edit' | 'source') {
+    currentMode = mode;
+    if (mode === 'edit') {
+      editArea.innerHTML = sourceArea.value;
+      editArea.style.display = '';
+      sourceArea.style.display = 'none';
+      toolbar.style.display = '';
+      editBtn.classList.add('tool-btn--primary');
+      sourceBtn.classList.remove('tool-btn--primary');
+    } else {
+      sourceArea.value = editArea.innerHTML;
+      editArea.style.display = 'none';
+      sourceArea.style.display = '';
+      toolbar.style.display = 'none';
+      sourceBtn.classList.add('tool-btn--primary');
+      editBtn.classList.remove('tool-btn--primary');
+    }
+    syncPreview();
+  }
+
+  editBtn.addEventListener('click', () => setMode('edit'));
+  sourceBtn.addEventListener('click', () => setMode('source'));
+
+  document.querySelectorAll('.html-cmd').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const cmd = (this as HTMLElement).dataset.cmd || '';
+      if (cmd.startsWith('formatBlock-')) {
+        const tag = cmd.split('-')[1];
+        document.execCommand('formatBlock', false, `<${tag}>`);
+      } else if (cmd === 'createLink') {
+        const url = prompt('Enter URL:');
+        if (url) document.execCommand('createLink', false, url);
+      } else {
+        document.execCommand(cmd, false);
+      }
+      editArea.focus();
+      syncPreview();
+    });
+  });
+
+  editArea.addEventListener('input', syncPreview);
+  sourceArea.addEventListener('input', syncPreview);
+
+  copyBtn.addEventListener('click', function() {
+    const html = currentMode === 'edit' ? editArea.innerHTML : sourceArea.value;
+    if (!html.trim()) return;
+    window.__belbooreTools.copyToClipboard(html, copyBtn, 1500);
+  });
+
+  clearBtn.addEventListener('click', () => {
+    editArea.innerHTML = '';
+    sourceArea.value = '';
+    syncPreview();
+  });
+
+  syncPreview();
+</script>
+
+<style>
+  .html-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .html-tool .tool-note { margin-top: 0; }
+  .html-mode-row { gap: var(--space-2); }
+  .html-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-bottom: none;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    flex-wrap: wrap;
+  }
+  .html-toolbar .tool-btn {
+    font-size: var(--text-xs) !important;
+    padding: var(--space-1) var(--space-2) !important;
+    min-width: unset;
+  }
+  .html-toolbar-sep {
+    width: 1px;
+    height: 20px;
+    background: var(--border-subtle);
+    margin: 0 var(--space-1);
+  }
+  .html-edit-area {
+    min-height: 200px;
+    padding: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    outline: none;
+    cursor: text;
+  }
+  .html-edit-area:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px var(--accent-primary);
+  }
+  .html-source-area {
+    width: 100%;
+    min-height: 200px;
+    padding: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    resize: vertical;
+    outline: none;
+  }
+  .html-source-area:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px var(--accent-primary);
+  }
+  .html-preview {
+    padding: var(--space-3);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .html-preview img { max-width: 100%; height: auto; }
+  .html-preview table { border-collapse: collapse; }
+  .html-preview td, .html-preview th { border: 1px solid var(--border-subtle); padding: var(--space-1) var(--space-2); }
+</style>

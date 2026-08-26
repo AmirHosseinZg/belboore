@@ -1,6 +1,6 @@
 ---
 import type { Lang } from '../../i18n/utils';
-import { Copy, Expand, Minimize2, Shrink, Trash2 } from '@lucide/astro';
+import { Copy, Maximize2, Minimize2, Trash2 } from '@lucide/astro';
 import { languages } from '../../i18n/utils';
 import ToolWorkspace from './ToolWorkspace.astro';
 import ToolPrimitives from './ToolPrimitives.astro';
@@ -94,18 +94,14 @@ console.log("Hello Markdown")
     <div class="tool-toolbar markdown-editor__toolbar">
       <div class="markdown-editor__actions">
         <Button id="md-copy-html" variant="primary" className="markdown-editor__action markdown-editor__action--copy" aria-label={copy.copyHtml} title={copy.copyHtml}>
-          <Copy />
+          <Copy class="markdown-editor__action-icon" size={22} strokeWidth={2.2} aria-hidden="true" />
         </Button>
         <Button id="md-fullscreen" variant="outline" className="markdown-editor__action markdown-editor__action--fullscreen" aria-label={copy.fullscreen} title={copy.fullscreen} data-label-open={copy.fullscreen} data-label-close={copy.exitFullscreen}>
-          <span class="markdown-editor__action-icon markdown-editor__action-icon--enter" aria-hidden="true">
-            <Expand />
-          </span>
-          <span class="markdown-editor__action-icon markdown-editor__action-icon--exit" aria-hidden="true">
-            <Shrink />
-          </span>
+          <Maximize2 class="markdown-editor__action-icon markdown-editor__toggle-icon markdown-editor__toggle-icon--enter" size={22} strokeWidth={2.2} aria-hidden="true" />
+          <Minimize2 class="markdown-editor__action-icon markdown-editor__toggle-icon markdown-editor__toggle-icon--exit" size={22} strokeWidth={2.2} aria-hidden="true" />
         </Button>
         <Button id="md-clear" variant="danger" className="markdown-editor__action markdown-editor__action--clear" aria-label={copy.clear} title={copy.clear}>
-          <Trash2 />
+          <Trash2 class="markdown-editor__action-icon" size={22} strokeWidth={2.2} aria-hidden="true" />
         </Button>
       </div>
       <Tabs
@@ -128,9 +124,10 @@ console.log("Hello Markdown")
         aria-labelledby="md-mode-tabs-tab-edit"
         data-panel="edit"
       >
-        <label class="tool-field__label" for="md-input">{copy.editor}</label>
         <TextArea
           id="md-input"
+          label={copy.editor}
+          fieldClassName="markdown-editor__editor-field"
           className="tool-textarea--mono markdown-editor__textarea"
           placeholder={copy.placeholder}
           spellcheck="false"
@@ -148,7 +145,7 @@ console.log("Hello Markdown")
         <div class="markdown-editor__preview-head">
           <div class="markdown-editor__preview-label">{copy.preview}</div>
           <Button id="md-minimize" variant="outline" className="markdown-editor__minimize" aria-label={copy.minimize} title={copy.minimize}>
-            <Minimize2 />
+            <Minimize2 class="markdown-editor__action-icon" size={22} strokeWidth={2.2} aria-hidden="true" />
           </Button>
         </div>
         <div id="md-preview" class="markdown-editor__preview markdown-editor__preview--empty" dir="auto" tabindex="-1" aria-live="polite">
@@ -349,10 +346,12 @@ console.log("Hello Markdown")
 
 <style is:global>
   .markdown-editor {
+    --markdown-action-size: 42px;
+    --markdown-action-icon-size: 20px;
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-  }
+    }
 
   .markdown-editor__toolbar {
     display: flex;
@@ -370,42 +369,46 @@ console.log("Hello Markdown")
   }
 
   .markdown-editor__tabs {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1);
     margin-inline-start: auto;
-    background: var(--surface-tertiary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
     order: 1;
   }
 
   .markdown-editor__action {
-    justify-content: center;
-    min-height: 40px;
-    width: 42px;
-    padding: 0;
-    border-radius: var(--radius-lg);
-    font-weight: var(--weight-semibold);
-    box-shadow: var(--shadow-sm);
-  }
-
-  .markdown-editor__action-icon {
+    inline-size: var(--markdown-action-size);
+    block-size: var(--markdown-action-size);
+    min-inline-size: var(--markdown-action-size);
+    min-block-size: var(--markdown-action-size);
+    flex: 0 0 var(--markdown-action-size);
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 22px;
-    border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.16);
+    padding: 0;
+    line-height: 0;
+    font-size: 0;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    transition:
+      background var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
   }
 
-  .markdown-editor__action svg {
+  .markdown-editor__action-icon,
+  .markdown-editor__action :where(svg),
+  .markdown-editor__minimize :where(svg) {
+    inline-size: var(--markdown-action-icon-size) ;
+    block-size: var(--markdown-action-icon-size) ;
+    min-inline-size: var(--markdown-action-icon-size);
+    min-block-size: var(--markdown-action-icon-size);
+    flex: 0 0 var(--markdown-action-icon-size);
     display: block;
-    width: 18px;
-    height: 18px;
-    flex: 0 0 18px;
+    stroke-width: 2.2;
+  }
+
+  .markdown-editor__toggle-icon--exit {
+    display: none;
   }
 
   .markdown-editor__action--copy {
@@ -417,7 +420,7 @@ console.log("Hello Markdown")
   .markdown-editor__action--copy:hover {
     color: white;
     border-color: transparent;
-    box-shadow: 0 10px 24px rgba(0, 82, 255, 0.22);
+    box-shadow: 0 12px 24px rgba(0, 82, 255, 0.28);
     transform: translateY(-1px);
   }
 
@@ -427,25 +430,18 @@ console.log("Hello Markdown")
     border-color: rgba(0, 82, 255, 0.16);
   }
 
-  .markdown-editor__action--fullscreen .markdown-editor__action-icon {
-    background: rgba(0, 82, 255, 0.1);
-  }
-
   .markdown-editor__action--fullscreen:hover {
     color: var(--color-tech-blue);
     background: rgba(0, 82, 255, 0.12);
     border-color: rgba(0, 82, 255, 0.24);
+    transform: translateY(-1px);
   }
 
-  .markdown-editor__action-icon--exit {
+  .markdown-editor--fullscreen .markdown-editor__toggle-icon--enter {
     display: none;
   }
 
-  .markdown-editor--fullscreen .markdown-editor__action-icon--enter {
-    display: none;
-  }
-
-  .markdown-editor--fullscreen .markdown-editor__action-icon--exit {
+  .markdown-editor--fullscreen .markdown-editor__toggle-icon--exit {
     display: inline-flex;
   }
 
@@ -455,44 +451,11 @@ console.log("Hello Markdown")
     border-color: var(--color-error-border);
   }
 
-  .markdown-editor__action--clear .markdown-editor__action-icon {
-    background: rgba(239, 68, 68, 0.1);
-  }
-
   .markdown-editor__action--clear:hover {
     color: white;
     background: var(--color-error);
     border-color: var(--color-error);
-  }
-
-  .markdown-editor__action--clear:hover .markdown-editor__action-icon {
-    background: rgba(255, 255, 255, 0.16);
-  }
-
-  .markdown-editor__tabs .ui-tabs__tab {
-    border: 0;
-    border-radius: var(--radius-md);
-    padding: var(--space-2) var(--space-4);
-    font: inherit;
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--text-tertiary);
-    background: transparent;
-    cursor: pointer;
-    transition:
-      color var(--duration-fast) var(--ease-out),
-      background var(--duration-fast) var(--ease-out),
-      box-shadow var(--duration-fast) var(--ease-out);
-  }
-
-  .markdown-editor__tabs .ui-tabs__tab:hover {
-    color: var(--text-primary);
-  }
-
-  .markdown-editor__tabs .ui-tabs__tab.is-active {
-    color: var(--color-tech-blue);
-    background: var(--surface-primary);
-    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   @media (max-width: 640px) {
@@ -515,21 +478,22 @@ console.log("Hello Markdown")
   .markdown-editor__stage {
     width: 100%;
     padding: var(--space-3);
-    background:
-      radial-gradient(circle at top right, rgba(0, 82, 255, 0.08), transparent 34%),
-      linear-gradient(180deg, var(--surface-primary), var(--surface-secondary));
-    border: 1px solid var(--border-subtle);
-    border-radius: calc(var(--radius-lg) + 4px);
     box-shadow: var(--shadow-sm);
   }
 
   .markdown-editor__panel {
+    display: flex;
+    flex-direction: column;
     min-width: 0;
     gap: var(--space-3);
   }
 
   .markdown-editor__panel[hidden] {
     display: none;
+  }
+
+  .markdown-editor__editor-field {
+    height: 100%;
   }
 
   .markdown-editor__textarea,
@@ -542,17 +506,12 @@ console.log("Hello Markdown")
   }
 
   .markdown-editor__textarea {
-    padding: var(--space-6);
     font-size: var(--text-base);
     line-height: 1.85;
     color: var(--text-primary);
-    background:
-      linear-gradient(90deg, rgba(0, 82, 255, 0.035) 0 1px, transparent 1px) 0 0 / 28px 28px,
-      linear-gradient(180deg, color-mix(in srgb, var(--surface-primary) 96%, transparent), color-mix(in srgb, var(--surface-secondary) 92%, transparent));
-    border: 1px solid rgba(0, 82, 255, 0.14);
-    box-shadow:
-      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent),
-      inset 0 0 0 1px color-mix(in srgb, var(--surface-elevated) 42%, transparent);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
     resize: vertical;
     unicode-bidi: plaintext;
     caret-color: var(--color-tech-blue);
@@ -566,8 +525,7 @@ console.log("Hello Markdown")
     border-color: var(--color-tech-blue);
     box-shadow:
       0 0 0 4px var(--color-tech-blue-subtle),
-      0 14px 34px rgba(0, 82, 255, 0.08),
-      inset 0 1px 0 color-mix(in srgb, var(--surface-elevated) 72%, transparent);
+      var(--shadow-sm);
   }
 
   .markdown-editor__textarea::placeholder {
@@ -577,7 +535,7 @@ console.log("Hello Markdown")
   .markdown-editor__preview-label {
     font-size: var(--text-xs);
     font-weight: var(--weight-semibold);
-    color: var(--text-tertiary);
+    color: var(--color-tech-blue);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -593,12 +551,17 @@ console.log("Hello Markdown")
     display: none;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    inline-size: var(--markdown-action-size);
+    block-size: var(--markdown-action-size);
+    min-inline-size: var(--markdown-action-size);
+    min-block-size: var(--markdown-action-size);
+    padding: 0;
+    line-height: 0;
+    font-size: 0;
     color: var(--color-tech-blue);
     background: var(--color-tech-blue-subtle);
     border: 1px solid rgba(0, 82, 255, 0.16);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     cursor: pointer;
     box-shadow: var(--shadow-sm);
     transition:
@@ -698,13 +661,9 @@ console.log("Hello Markdown")
   }
 
   [data-theme="dark"] .markdown-editor__textarea {
-    background:
-      linear-gradient(90deg, rgba(61, 139, 255, 0.055) 0 1px, transparent 1px) 0 0 / 28px 28px,
-      linear-gradient(180deg, var(--surface-elevated), var(--surface-tertiary));
-    border-color: rgba(61, 139, 255, 0.22);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      inset 0 0 0 1px rgba(255, 255, 255, 0.025);
+    background: transparent;
+    border-color: var(--border-default);
+    box-shadow: var(--shadow-sm);
   }
 
   [data-theme="dark"] .markdown-editor__preview {
@@ -873,7 +832,8 @@ console.log("Hello Markdown")
     }
 
     .markdown-editor__action {
-      width: 42px;
+      inline-size: var(--markdown-action-size);
+      block-size: var(--markdown-action-size);
       justify-content: center;
     }
 
@@ -887,7 +847,6 @@ console.log("Hello Markdown")
       padding: var(--space-2);
     }
 
-    .markdown-editor__textarea,
     .markdown-editor__preview {
       padding: var(--space-4);
     }

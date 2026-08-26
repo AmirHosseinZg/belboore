@@ -1,0 +1,275 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import Select from '../ui/Select.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+import { getDefaultPhoneCountries } from './Phase10Utils.ts';
+const phoneCountryOptions = getDefaultPhoneCountries();
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Phone Parser / Formatter',
+    inputLabel: 'Phone Number',
+    inputPlaceholder: 'Enter a phone number...',
+    defaultCountryLabel: 'Default Country',
+    parse: 'Parse',
+    clear: 'Clear',
+    emptyState: 'Enter a phone number to parse and format',
+    note: 'Parse, validate, and format international phone numbers using libphonenumber-js. All processing is client-side. Phone numbers are never sent to any server.',
+    country: 'Country',
+    countryCode: 'Country Code',
+    national: 'National',
+    international: 'International',
+    e164: 'E.164',
+    rfc3966: 'RFC 3966',
+    valid: 'Valid',
+    possible: 'Possible',
+    type: 'Type',
+    extension: 'Extension',
+    carrier: 'Carrier',
+    location: 'Location',
+    yes: 'Yes',
+    no: 'No',
+    invalid: 'Invalid number',
+    copy: 'Copy',
+  },
+  fa: {
+    title: 'تجزیه / قالب‌بندی شماره تلفن',
+    inputLabel: 'شماره تلفن',
+    inputPlaceholder: 'شماره تلفن را وارد کنید...',
+    defaultCountryLabel: 'کشور پیش‌فرض',
+    parse: 'تجزیه',
+    clear: 'پاک کردن',
+    emptyState: 'یک شماره تلفن برای تجزیه و قالب‌بندی وارد کنید',
+    note: 'تجزیه، اعتبارسنجی و قالب‌بندی شماره تلفن‌های بین‌المللی با libphonenumber-js. تمام پردازش در سمت کاربر است. شماره تلفن‌ها هرگز به سروری ارسال نمی‌شوند.',
+    country: 'کشور',
+    countryCode: 'کد کشور',
+    national: 'ملی',
+    international: 'بین‌المللی',
+    e164: 'E.164',
+    rfc3966: 'RFC 3966',
+    valid: 'معتبر',
+    possible: 'ممکن',
+    type: 'نوع',
+    extension: 'افزونه',
+    carrier: 'اپراتور',
+    location: 'موقعیت',
+    yes: 'بله',
+    no: 'خیر',
+    invalid: 'شماره نامعتبر',
+    copy: 'کپی',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="phone-tool">
+    <Input id="phone-input" label={copy[lang].inputLabel} type="tel" placeholder={copy[lang].inputPlaceholder} inputClassName="phone-input" />
+    <Select id="phone-country" label={copy[lang].defaultCountryLabel} options={phoneCountryOptions} selectedValue="IR" selectClassName="phone-country-select" />
+    <div class="tool-toolbar">
+      <ToolActionButton id="phone-parse">{copy[lang].parse}</ToolActionButton>
+      <Button id="phone-clear" variant="secondary">{copy[lang].clear}</Button>
+    </div>
+    <div id="phone-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div id="phone-output-card" class="phone-output-card" style="display:none">
+      <div class="ph-output-header">
+        <span class="ph-output-label">Parse Result</span>
+        <button id="ph-copy-all" class="ph-copy-all-btn" type="button">Copy All</button>
+      </div>
+      <div class="ph-output-rows">
+        <div class="ph-row"><span class="ph-label">{copy[lang].country}</span><span id="ph-country" class="ph-value"></span></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].countryCode}</span><span id="ph-country-code" class="ph-value ph-value--mono"></span></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].national}</span><span id="ph-national" class="ph-value ph-value--mono"></span><Button className="ph-row-copy" data-target="ph-national">{copy[lang].copy}</Button></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].international}</span><span id="ph-intl" class="ph-value ph-value--mono"></span><Button className="ph-row-copy" data-target="ph-intl">{copy[lang].copy}</Button></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].e164}</span><span id="ph-e164" class="ph-value ph-value--mono"></span><Button className="ph-row-copy" data-target="ph-e164">{copy[lang].copy}</Button></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].rfc3966}</span><span id="ph-rfc" class="ph-value ph-value--mono"></span><Button className="ph-row-copy" data-target="ph-rfc">{copy[lang].copy}</Button></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].valid}</span><span id="ph-valid" class="ph-value"></span></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].possible}</span><span id="ph-possible" class="ph-value"></span></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].type}</span><span id="ph-type" class="ph-value"></span></div>
+        <div class="ph-row"><span class="ph-label">{copy[lang].extension}</span><span id="ph-ext" class="ph-value"></span></div>
+      </div>
+    </div>
+    <div id="phone-error" class="tool-error" style="display:none"></div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  const phoneInput = document.getElementById('phone-input') as HTMLInputElement;
+  const countrySelect = document.getElementById('phone-country') as HTMLSelectElement;
+  const parseBtn = document.getElementById('phone-parse') as HTMLButtonElement;
+  const clearBtn = document.getElementById('phone-clear') as HTMLButtonElement;
+  const emptyEl = document.getElementById('phone-empty')!;
+  const outputCard = document.getElementById('phone-output-card')!;
+  const errorEl = document.getElementById('phone-error')!;
+  const phCountry = document.getElementById('ph-country')!;
+  const phCountryCode = document.getElementById('ph-country-code')!;
+  const phNational = document.getElementById('ph-national')!;
+  const phIntl = document.getElementById('ph-intl')!;
+  const phE164 = document.getElementById('ph-e164')!;
+  const phRfc = document.getElementById('ph-rfc')!;
+  const phValid = document.getElementById('ph-valid')!;
+  const phPossible = document.getElementById('ph-possible')!;
+  const phType = document.getElementById('ph-type')!;
+  const phExt = document.getElementById('ph-ext')!;
+
+  async function doParse() {
+    const val = phoneInput.value.trim();
+    if (!val) {
+      showError('Please enter a phone number');
+      return;
+    }
+    try {
+      const mod = await import('libphonenumber-js');
+      const { parsePhoneNumber } = mod;
+      const defaultCountry = countrySelect.value || undefined;
+      const phoneNumber = parsePhoneNumber(val, defaultCountry);
+      if (!phoneNumber) {
+        showError('Invalid phone number');
+        return;
+      }
+      emptyEl.style.display = 'none';
+      outputCard.style.display = '';
+      errorEl.style.display = 'none';
+
+      phCountry.textContent = phoneNumber.country || '—';
+      phCountryCode.textContent = phoneNumber.countryCallingCode ? `+${phoneNumber.countryCallingCode}` : '—';
+      phNational.textContent = phoneNumber.formatNational();
+      phIntl.textContent = phoneNumber.formatInternational();
+      phE164.textContent = phoneNumber.format('E.164');
+      phRfc.textContent = phoneNumber.format('RFC3966');
+      phValid.textContent = phoneNumber.isValid() ? 'Yes' : 'No';
+      phPossible.textContent = phoneNumber.isPossible() ? 'Yes' : 'No';
+      phType.textContent = phoneNumber.getType() || '—';
+      phExt.textContent = phoneNumber.ext || '—';
+    } catch (e: any) {
+      showError(e.message || 'Invalid number');
+    }
+  }
+
+  function showError(msg: string) {
+    emptyEl.style.display = 'none';
+    outputCard.style.display = 'none';
+    errorEl.textContent = msg;
+    errorEl.style.display = '';
+  }
+
+  parseBtn.addEventListener('click', doParse);
+  clearBtn.addEventListener('click', () => {
+    phoneInput.value = '';
+    emptyEl.style.display = '';
+    outputCard.style.display = 'none';
+    errorEl.style.display = 'none';
+  });
+
+  document.querySelectorAll('.ph-row-copy').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const targetId = (this as HTMLElement).dataset.target;
+      if (!targetId) return;
+      const el = document.getElementById(targetId);
+      if (!el) return;
+      window.__belbooreTools.copyToClipboard(el.textContent || '', this as HTMLElement, 1500);
+    });
+  });
+
+  document.getElementById('ph-copy-all')!.addEventListener('click', () => {
+    const parts: string[] = [];
+    document.querySelectorAll('.ph-row').forEach(row => {
+      const label = row.querySelector('.ph-label')?.textContent || '';
+      const val = row.querySelector('.ph-value')?.textContent || '';
+      if (label && val) parts.push(`${label}: ${val}`);
+    });
+    if (parts.length === 0) return;
+    window.__belbooreTools.copyToClipboard(parts.join('\n'), document.getElementById('ph-copy-all') as HTMLElement, 1500);
+  });
+
+  phoneInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doParse(); });
+</script>
+
+<style>
+  .phone-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .phone-tool .tool-note { margin-top: 0; }
+  .phone-input { width: 100%; font-family: var(--font-mono); }
+
+  .phone-output-card {
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-top: var(--space-4);
+  }
+  .ph-output-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+    background: var(--surface-primary);
+  }
+  .ph-output-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .ph-copy-all-btn {
+    background: none;
+    border: 1px solid var(--border-subtle);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+  }
+  .ph-copy-all-btn:hover { color: var(--text-primary); border-color: var(--border-strong); }
+  .ph-output-rows { padding: var(--space-2) var(--space-4); }
+  .ph-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .ph-row:last-child { border-bottom: none; }
+  .ph-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--text-tertiary);
+    min-width: 140px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+  }
+  .ph-value { font-size: var(--text-sm); color: var(--text-primary); flex: 1; }
+  .ph-value--mono { font-family: var(--font-mono); word-break: break-all; }
+  .ph-row-copy {
+    flex-shrink: 0;
+    font-size: var(--text-xs) !important;
+    padding: var(--space-1) var(--space-2) !important;
+  }
+  @media (max-width: 640px) {
+    .ph-row { flex-wrap: wrap; gap: var(--space-1); }
+    .ph-label { min-width: 100%; margin-bottom: var(--space-1); }
+    .ph-output-rows { padding: var(--space-2) var(--space-3); }
+    .phone-country-select { min-width: 100%; }
+  }
+</style>

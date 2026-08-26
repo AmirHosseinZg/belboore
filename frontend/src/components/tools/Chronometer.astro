@@ -1,0 +1,228 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Button from '../ui/Button.astro';
+
+interface Props { lang?: Lang; }
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Chronometer',
+    start: 'Start',
+    pause: 'Pause',
+    resume: 'Resume',
+    lap: 'Lap',
+    reset: 'Reset',
+    copyLaps: 'Copy Laps',
+    emptyState: 'Press Start to begin timing',
+    note: 'Accurate UI stopwatch using performance.now(). Laps are not persisted.',
+    lapHeader: 'Lap',
+    timeHeader: 'Time',
+    splitHeader: 'Split',
+  },
+  fa: {
+    title: 'کرنومتر',
+    start: 'شروع',
+    pause: 'توقف موقت',
+    resume: 'ادامه',
+    lap: 'دور',
+    reset: 'بازنشانی',
+    copyLaps: 'کپی دورها',
+    emptyState: 'برای شروع زمان‌گیری Start را فشار دهید',
+    note: 'کرنومتر دقیق با استفاده از performance.now(). دورها ذخیره نمی‌شوند.',
+    lapHeader: 'دور',
+    timeHeader: 'زمان',
+    splitHeader: 'Split',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="chrono-tool">
+    <div class="chrono-display" id="chrono-display">00:00:00.000</div>
+    <div class="chrono-btns-row">
+      <Button id="ch-start" variant="primary" className="chrono-btn">{copy[lang].start}</Button>
+      <Button id="ch-pause" variant="secondary" className="chrono-btn" style="display:none">{copy[lang].pause}</Button>
+      <Button id="ch-resume" variant="secondary" className="chrono-btn" style="display:none">{copy[lang].resume}</Button>
+      <Button id="ch-lap" variant="outline" className="chrono-btn" disabled>{copy[lang].lap}</Button>
+      <Button id="ch-reset" variant="outline" className="chrono-btn">{copy[lang].reset}</Button>
+    </div>
+    <div class="chrono-copy-row">
+      <Button id="ch-copy-laps" variant="outline" style="display:none">{copy[lang].copyLaps}</Button>
+    </div>
+    <div id="ch-lap-table" class="chrono-lap-table" style="display:none">
+      <table class="chrono-table">
+        <thead><tr><th class="chrono-th chrono-th--left">#</th><th class="chrono-th chrono-th--right">{copy[lang].timeHeader}</th><th class="chrono-th chrono-th--right">{copy[lang].splitHeader}</th></tr></thead>
+        <tbody id="ch-tbody"></tbody>
+      </table>
+    </div>
+    <div id="ch-empty" class="tool-output tool-output--empty" role="status">{copy[lang].emptyState}</div>
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  const display = document.getElementById('chrono-display')!;
+  const startBtn = document.getElementById('ch-start') as HTMLButtonElement;
+  const pauseBtn = document.getElementById('ch-pause') as HTMLButtonElement;
+  const resumeBtn = document.getElementById('ch-resume') as HTMLButtonElement;
+  const lapBtn = document.getElementById('ch-lap') as HTMLButtonElement;
+  const resetBtn = document.getElementById('ch-reset') as HTMLButtonElement;
+  const copyLapsBtn = document.getElementById('ch-copy-laps') as HTMLButtonElement;
+  const emptyEl = document.getElementById('ch-empty')!;
+  const lapTable = document.getElementById('ch-lap-table')!;
+  const tbody = document.getElementById('ch-tbody')!;
+
+  let running = false;
+  let paused = false;
+  let startTime = 0;
+  let pausedTime = 0;
+  let elapsed = 0;
+  let animFrame: number | null = null;
+  let lapCount = 0;
+  const laps: { lap: number; time: string; split: string }[] = [];
+  let lastLapTime = 0;
+
+  function formatTime(ms: number): string {
+    const totalMs = Math.floor(ms);
+    const hours = Math.floor(totalMs / 3600000);
+    const minutes = Math.floor((totalMs % 3600000) / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const millis = totalMs % 1000;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+  }
+
+  function updateDisplay() {
+    if (!running) return;
+    if (!paused) {
+      const now = performance.now();
+      elapsed = (now - startTime) + pausedTime;
+    }
+    display.textContent = formatTime(elapsed);
+    animFrame = requestAnimationFrame(updateDisplay);
+  }
+
+  function startChrono() {
+    running = true;
+    paused = false;
+    startTime = performance.now();
+    pausedTime = 0;
+    elapsed = 0;
+    lastLapTime = 0;
+    display.textContent = '00:00:00.000';
+    startBtn.style.display = 'none';
+    pauseBtn.style.display = '';
+    resumeBtn.style.display = 'none';
+    lapBtn.disabled = false;
+    emptyEl.style.display = 'none';
+    updateDisplay();
+  }
+
+  function pauseChrono() {
+    if (!running || paused) return;
+    paused = true;
+    pausedTime = elapsed;
+    if (animFrame) cancelAnimationFrame(animFrame);
+    pauseBtn.style.display = 'none';
+    resumeBtn.style.display = '';
+    lapBtn.disabled = true;
+  }
+
+  function resumeChrono() {
+    if (!running || !paused) return;
+    paused = false;
+    startTime = performance.now();
+    pauseBtn.style.display = '';
+    resumeBtn.style.display = 'none';
+    lapBtn.disabled = false;
+    updateDisplay();
+  }
+
+  function addLap() {
+    if (!running || paused) return;
+    lapCount++;
+    const lapTime = elapsed - lastLapTime;
+    const lapStr = formatTime(lapTime);
+    const splitStr = formatTime(elapsed);
+    laps.push({ lap: lapCount, time: lapStr, split: splitStr });
+    lastLapTime = elapsed;
+    renderLaps();
+    lapTable.style.display = '';
+    copyLapsBtn.style.display = '';
+  }
+
+  function renderLaps() {
+    let html = '';
+    for (const l of laps) {
+      html += `<tr><td style="padding:var(--space-1) var(--space-3);border-bottom:1px solid var(--border-subtle)">${l.lap}</td><td style="text-align:right;padding:var(--space-1) var(--space-3);font-family:var(--font-mono);border-bottom:1px solid var(--border-subtle)">${l.time}</td><td style="text-align:right;padding:var(--space-1) var(--space-3);font-family:var(--font-mono);border-bottom:1px solid var(--border-subtle)">${l.split}</td></tr>`;
+    }
+    tbody.innerHTML = html;
+  }
+
+  function resetChrono() {
+    running = false;
+    paused = false;
+    if (animFrame) cancelAnimationFrame(animFrame);
+    elapsed = 0;
+    lapCount = 0;
+    laps.length = 0;
+    lastLapTime = 0;
+    display.textContent = '00:00:00.000';
+    startBtn.style.display = '';
+    pauseBtn.style.display = 'none';
+    resumeBtn.style.display = 'none';
+    lapBtn.disabled = true;
+    lapTable.style.display = 'none';
+    copyLapsBtn.style.display = 'none';
+    emptyEl.style.display = '';
+  }
+
+  startBtn.addEventListener('click', startChrono);
+  pauseBtn.addEventListener('click', pauseChrono);
+  resumeBtn.addEventListener('click', resumeChrono);
+  lapBtn.addEventListener('click', addLap);
+  resetBtn.addEventListener('click', resetChrono);
+
+  copyLapsBtn.addEventListener('click', function() {
+    if (laps.length === 0) return;
+    const text = laps.map(l => `Lap ${l.lap}: ${l.time} (Split: ${l.split})`).join('\n');
+    window.__belbooreTools.copyToClipboard(text, copyLapsBtn, 1500);
+  });
+</script>
+
+<style>
+  .chrono-tool { display: flex; flex-direction: column; gap: var(--space-5); }
+  .chrono-tool .tool-note { margin-top: 0; }
+  .chrono-btns-row { display: flex; justify-content: center; flex-wrap: wrap; gap: var(--space-2); }
+  .chrono-btn { min-width: 100px; }
+  .chrono-copy-row { display: flex; justify-content: center; }
+  .chrono-lap-table { margin-top: var(--space-4); max-height: 250px; overflow-y: auto; }
+  .chrono-lap-table .chrono-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+  .chrono-th { padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--border-subtle); color: var(--text-tertiary); text-transform: uppercase; font-size: var(--text-xs); }
+  .chrono-th--left { text-align: left; }
+  .chrono-th--right { text-align: right; }
+  #ch-empty { margin-top: 0; }
+  .chrono-display {
+    font-family: var(--font-mono);
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    font-weight: var(--weight-bold);
+    text-align: center;
+    padding: var(--space-6) var(--space-4);
+    background: var(--surface-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+  }
+</style>

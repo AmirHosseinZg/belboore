@@ -3,6 +3,7 @@ import type { Tool } from '../data/tools';
 import type { Lang } from '../i18n/utils';
 import { languages } from '../i18n/utils';
 import { ui } from '../i18n/ui';
+import LucideIcon from './ui/LucideIcon.astro';
 
 interface Props {
   tool: Tool;
@@ -17,6 +18,7 @@ const toolUrl = tool.type === 'builtin'
   ? `/${lang}/tools/${tool.slug}`
   : tool.url || '#';
 const isExternal = tool.type === 'external';
+const hasLucideIcon = Boolean(tool.lucideIcon);
 const hasImageIcon = Boolean(tool.iconPath);
 const dir = languages[lang].dir;
 const ctaText = tool.type === 'builtin' ? t['tools.useNow'] : t['tools.visit'];
@@ -30,8 +32,10 @@ const ctaText = tool.type === 'builtin' ? t['tools.useNow'] : t['tools.visit'];
   {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
 >
   <div class="tool-card__header">
-    <span class={`tool-card__icon ${hasImageIcon ? 'tool-card__icon--image' : ''}`}>
-      {hasImageIcon ? (
+    <span class={`tool-card__icon ${hasImageIcon ? 'tool-card__icon--image' : ''} ${hasLucideIcon ? 'tool-card__icon--lucide' : ''}`}>
+      {hasLucideIcon ? (
+        <LucideIcon name={tool.lucideIcon!} size={32} className="tool-card__icon-lucide" />
+      ) : hasImageIcon ? (
         <img
           src={tool.iconPath}
           alt=""
@@ -110,6 +114,10 @@ const ctaText = tool.type === 'builtin' ? t['tools.useNow'] : t['tools.visit'];
     width: 32px;
     height: 32px;
     object-fit: contain;
+  }
+
+  .tool-card__icon--lucide {
+    color: var(--color-tech-blue);
   }
 
   .tool-card__badge {

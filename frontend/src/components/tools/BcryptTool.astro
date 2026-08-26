@@ -1,0 +1,304 @@
+---
+import type { Lang } from '../../i18n/utils';
+import { languages } from '../../i18n/utils';
+import ToolWorkspace from './ToolWorkspace.astro';
+import ToolPrimitives from './ToolPrimitives.astro';
+import ToolUtils from './ToolUtils.astro';
+import Input from '../ui/Input.astro';
+import TextArea from '../ui/TextArea.astro';
+import Button from '../ui/Button.astro';
+import ToolActionButton from './ToolActionButton.astro';
+
+interface Props {
+  lang?: Lang;
+}
+
+const { lang = 'en' } = Astro.props;
+const dir = languages[lang].dir;
+
+const copy = {
+  en: {
+    title: 'Bcrypt',
+    modeHash: 'Hash Password',
+    modeVerify: 'Verify Password',
+    passwordLabel: 'Password',
+    hashLabel: 'Bcrypt Hash',
+    roundsLabel: 'Rounds (cost factor)',
+    resultEmpty: 'Enter a password and click Hash',
+    verifyPassword: 'Password',
+    verifyHash: 'Bcrypt Hash',
+    verifyEmpty: 'Enter password and hash to verify',
+    hash: 'Hash',
+    verify: 'Verify',
+    copy: 'Copy',
+    clear: 'Clear',
+    hashSuccess: 'Hashed successfully',
+    match: '✓ Match — password is correct',
+    noMatch: '✗ Does not match',
+    loading: 'Hashing...',
+    note: 'All hashing happens locally in your browser using bcryptjs. Your password never leaves your device.',
+    rounds: 'rounds',
+    verified: 'Verified!',
+  },
+  fa: {
+    title: 'Bcrypt',
+    modeHash: 'هش کردن رمز عبور',
+    modeVerify: 'تأیید رمز عبور',
+    passwordLabel: 'رمز عبور',
+    hashLabel: 'هش Bcrypt',
+    roundsLabel: 'تعداد دور (ضریب هزینه)',
+    resultEmpty: 'رمز عبور را وارد کنید و روی Hash کلیک کنید',
+    verifyPassword: 'رمز عبور',
+    verifyHash: 'هش Bcrypt',
+    verifyEmpty: 'برای تأیید، رمز عبور و هش را وارد کنید',
+    hash: 'هش کردن',
+    verify: 'تأیید',
+    copy: 'کپی',
+    clear: 'پاک کردن',
+    hashSuccess: 'هش با موفقیت انجام شد',
+    match: '✓ مطابقت دارد — رمز عبور صحیح است',
+    noMatch: '✗ مطابقت ندارد',
+    loading: 'در حال هش کردن...',
+    note: 'تمام هش کردن به صورت محلی در مرورگر شما با bcryptjs انجام می‌شود. رمز عبور شما هرگز دستگاه را ترک نمی‌کند.',
+    rounds: 'دور',
+    verified: 'تأیید شد!',
+  },
+};
+---
+
+<ToolWorkspace title={copy[lang].title}>
+  <ToolPrimitives />
+  <ToolUtils />
+
+  <div class="bt-tool">
+    <div class="tool-toolbar" role="group" aria-label="Mode">
+      <button id="bt-mode-hash" type="button" class="tool-btn tool-btn--primary is-active">{copy[lang].modeHash}</button>
+      <button id="bt-mode-verify" type="button" class="tool-btn">{copy[lang].modeVerify}</button>
+    </div>
+
+    <div id="bt-hash-section">
+      <div class="bt-password-wrap">
+        <Input id="bt-password" label={copy[lang].passwordLabel} type="password" placeholder={copy[lang].passwordLabel} autocomplete="off" spellcheck={false} />
+        <button id="bt-toggle" class="bt-password-wrap__toggle" type="button" aria-label="Toggle visibility" tabindex="-1">
+          <svg class="bt-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="bt-eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+      <div class="bt-rounds-field">
+        <Input id="bt-rounds" label={copy[lang].roundsLabel} type="number" inputmode="numeric" value={10} inputClassName="bt-rounds-input" />
+        <span class="bt-rounds-hint">10 {copy[lang].rounds}</span>
+      </div>
+      <div class="tool-toolbar">
+        <ToolActionButton id="bt-hash">{copy[lang].hash}</ToolActionButton>
+        <Button id="bt-clear" variant="secondary">{copy[lang].clear}</Button>
+      </div>
+    </div>
+
+    <div id="bt-verify-section" style="display:none">
+      <Input id="bt-verify-pw" label={copy[lang].verifyPassword} type="password" autocomplete="off" spellcheck={false} />
+      <TextArea id="bt-verify-hash" label={copy[lang].verifyHash} placeholder="$2b$10$..." rows={3} />
+      <div class="tool-toolbar">
+        <ToolActionButton id="bt-verify">{copy[lang].verify}</ToolActionButton>
+      </div>
+    </div>
+
+    <div id="bt-empty" class="tool-output tool-output--empty" role="status">{copy[lang].resultEmpty}</div>
+    <div id="bt-result" class="tool-output" style="display:none" role="status" aria-live="polite"></div>
+    <div id="bt-error" class="tool-error" style="display:none"></div>
+
+    <div class="tool-note">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      {copy[lang].note}
+    </div>
+  </div>
+</ToolWorkspace>
+
+<script>
+  import bcrypt from 'bcryptjs';
+
+  const modeHash = document.getElementById('bt-mode-hash')!;
+  const modeVerify = document.getElementById('bt-mode-verify')!;
+  const hashSection = document.getElementById('bt-hash-section')!;
+  const verifySection = document.getElementById('bt-verify-section')!;
+  const pwInput = document.getElementById('bt-password') as HTMLInputElement;
+  const roundsInput = document.getElementById('bt-rounds') as HTMLInputElement;
+  const hashBtn = document.getElementById('bt-hash') as HTMLButtonElement;
+  const clearBtn = document.getElementById('bt-clear') as HTMLButtonElement;
+  const verifyPw = document.getElementById('bt-verify-pw') as HTMLInputElement;
+  const verifyHash = document.getElementById('bt-verify-hash') as HTMLTextAreaElement;
+  const verifyBtn = document.getElementById('bt-verify') as HTMLButtonElement;
+  const emptyEl = document.getElementById('bt-empty')!;
+  const resultEl = document.getElementById('bt-result')!;
+  const errorEl = document.getElementById('bt-error')!;
+  const toggle = document.getElementById('bt-toggle')!;
+  const eyeIcon = toggle.querySelector('.bt-eye') as HTMLElement;
+  const eyeOffIcon = toggle.querySelector('.bt-eye-off') as HTMLElement;
+
+  toggle.addEventListener('click', function () {
+    if (pwInput.type === 'password') {
+      pwInput.type = 'text';
+      eyeIcon.style.display = 'none';
+      eyeOffIcon.style.display = '';
+    } else {
+      pwInput.type = 'password';
+      eyeIcon.style.display = '';
+      eyeOffIcon.style.display = 'none';
+    }
+  });
+
+  function setMode(mode: 'hash' | 'verify') {
+    const isHash = mode === 'hash';
+    modeHash.classList.toggle('tool-btn--primary', isHash);
+    modeVerify.classList.toggle('tool-btn--primary', !isHash);
+    hashSection.style.display = isHash ? '' : 'none';
+    verifySection.style.display = isHash ? 'none' : '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+  }
+
+  modeHash.addEventListener('click', function () { setMode('hash'); });
+  modeVerify.addEventListener('click', function () { setMode('verify'); });
+
+  hashBtn.addEventListener('click', async function () {
+    const password = pwInput.value;
+    const rounds = parseInt(roundsInput.value, 10) || 10;
+
+    if (!password) {
+      errorEl.textContent = 'Please enter a password';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      return;
+    }
+
+    hashBtn.disabled = true;
+    hashBtn.textContent = 'Hashing...';
+    errorEl.style.display = 'none';
+
+    try {
+      const hash = bcrypt.hashSync(password, rounds);
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+      resultEl.style.background = 'var(--surface-primary)';
+      resultEl.style.border = '1px solid var(--border-subtle)';
+      resultEl.style.color = 'var(--text-primary)';
+      resultEl.style.fontFamily = 'var(--font-mono)';
+      resultEl.style.fontSize = 'var(--text-sm)';
+      resultEl.style.wordBreak = 'break-all';
+      resultEl.textContent = hash;
+    } catch (e: any) {
+      errorEl.textContent = 'Error: ' + (e.message || 'Failed to hash');
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    } finally {
+      hashBtn.disabled = false;
+      hashBtn.textContent = 'Hash';
+    }
+  });
+
+  clearBtn.addEventListener('click', function () {
+    pwInput.value = '';
+    emptyEl.style.display = '';
+    resultEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    pwInput.focus();
+  });
+
+  verifyBtn.addEventListener('click', function () {
+    const password = verifyPw.value;
+    const hash = verifyHash.value.trim();
+
+    if (!password || !hash) {
+      errorEl.textContent = 'Please enter both password and hash';
+      errorEl.style.display = '';
+      emptyEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      return;
+    }
+
+    errorEl.style.display = 'none';
+    try {
+      const match = bcrypt.compareSync(password, hash);
+      emptyEl.style.display = 'none';
+      resultEl.style.display = '';
+      resultEl.style.fontFamily = 'inherit';
+      resultEl.style.fontSize = 'var(--text-base)';
+      if (match) {
+        resultEl.textContent = '✓ Match — password is correct';
+        resultEl.style.color = 'var(--color-success)';
+        resultEl.style.background = 'var(--color-success-subtle)';
+        resultEl.style.border = '1px solid var(--color-success-border)';
+      } else {
+        resultEl.textContent = '✗ Does not match';
+        resultEl.style.color = 'var(--color-error)';
+        resultEl.style.background = 'var(--color-error-subtle)';
+        resultEl.style.border = '1px solid var(--color-error-border)';
+      }
+    } catch (e: any) {
+      errorEl.textContent = 'Error: ' + (e.message || 'Invalid hash format');
+      errorEl.style.display = '';
+      resultEl.style.display = 'none';
+    }
+  });
+</script>
+
+<style>
+  .bt-tool {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  #bt-hash-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  #bt-verify-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+  .bt-tool .tool-note {
+    margin-top: 0;
+  }
+  .bt-password-wrap {
+    position: relative;
+  }
+  .bt-password-wrap__toggle {
+    position: absolute;
+    inset-inline-end: var(--space-2);
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: var(--space-2);
+    color: var(--text-tertiary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+  }
+  .bt-password-wrap__toggle:hover {
+    color: var(--text-primary);
+    background: var(--surface-tertiary);
+  }
+  .bt-rounds-field {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+  .bt-rounds-field > :first-child {
+    max-width: 120px;
+  }
+  .bt-rounds-input {
+    text-align: center;
+    font-weight: var(--weight-semibold);
+  }
+  .bt-rounds-hint {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+  }
+</style>
